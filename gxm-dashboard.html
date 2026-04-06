@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GXM Insight Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root { color-scheme: light only; }
+html, body { color-scheme: light only; background: #f8fafc; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, sans-serif; color: #1e293b; font-size: 14px; }
+
+.topnav { background: #fff; border-bottom: 1.5px solid #e2e8f0; padding: 0 28px; display: flex; height: 56px; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 28px; height: 28px; background: #1a9e6e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+.logo-name { font-size: 15px; font-weight: 700; color: #1e293b; }
+.nav-actions { display: flex; gap: 10px; align-items: center; }
+.nav-link { font-size: 13px; color: #64748b; text-decoration: none; }
+.nav-link:hover { color: #1a9e6e; }
+
+button.btn-outline { display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 16px; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; font-family: inherit; }
+button.btn-outline:hover { border-color: #1a9e6e; color: #1a9e6e; }
+button.btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #1a9e6e; border: 2px solid #1a9e6e; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; font-family: inherit; text-decoration: none; }
+button.btn-primary:hover { background: #158a5e; }
+a.btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #1a9e6e; border: 2px solid #1a9e6e; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; font-family: inherit; text-decoration: none; }
+a.btn-primary:hover { background: #158a5e; }
+
+.page { padding: 28px; max-width: 1200px; margin: 0 auto; }
+.dh { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.dtit { font-size: 20px; font-weight: 700; color: #1e293b; }
+.dsub { font-size: 13px; color: #64748b; margin-top: 3px; }
+.dactions { display: flex; gap: 10px; align-items: center; }
+
+.mets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.mc { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 18px; }
+.mclbl { font-size: 11px; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+.mclbl svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+.mcv { font-size: 26px; font-weight: 700; color: #1e293b; line-height: 1; }
+.mct { font-size: 12px; margin-top: 6px; }
+.tg { color: #1a9e6e; } .tr { color: #dc2626; } .tn { color: #64748b; }
+
+.fts { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 20px; overflow-x: auto; }
+.ft { padding: 10px 16px; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; border-bottom: 2.5px solid transparent; transition: all .14s; user-select: none; white-space: nowrap; }
+.ft.active { color: #1a9e6e; border-bottom-color: #1a9e6e; }
+.fb { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; border-radius: 9px; background: #e2e8f0; font-size: 10px; font-weight: 700; margin-left: 5px; color: #64748b; padding: 0 4px; }
+.ft.active .fb { background: #1a9e6e; color: #fff; }
+
+.cg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.cc { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 18px; }
+.cc.full { grid-column: 1 / -1; }
+.ctit { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 16px; }
+
+.br { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.bl { font-size: 12px; color: #64748b; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+.bt { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+.bf { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.bc { font-size: 12px; color: #64748b; width: 22px; text-align: right; flex-shrink: 0; font-weight: 600; }
+
+.dw { display: flex; align-items: center; gap: 18px; }
+.dl { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.dlr { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+.itbl { width: 100%; border-collapse: collapse; }
+.itbl th { font-size: 11px; font-weight: 700; color: #64748b; text-align: left; padding: 10px 14px; border-bottom: 1.5px solid #e2e8f0; white-space: nowrap; }
+.itbl td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #1e293b; vertical-align: top; }
+.itbl tr:last-child td { border-bottom: none; }
+.itbl tr:hover td { background: #f8fafc; }
+.sbdg { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 500; }
+.stg { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #f1f5f9; color: #64748b; }
+.sltg { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; background: rgba(26,158,110,.1); color: #1a9e6e; }
+
+.empty { text-align: center; padding: 64px 20px; color: #64748b; }
+.empty strong { display: block; font-size: 16px; color: #1e293b; margin-bottom: 8px; font-weight: 700; }
+.empty p { font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+
+.quote-cell { font-style: italic; color: #64748b; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pain-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="logo">
+    <div class="logo-mark">GX</div>
+    <div class="logo-name">GXM Insight Dashboard</div>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-link" href="gxm-insight-form.html">← Back to form</a>
+    <a class="btn-primary" href="gxm-insight-form.html">+ Log insight</a>
+  </div>
+</div>
+
+<div class="page">
+  <div class="dh">
+    <div>
+      <div class="dtit">Insight dashboard</div>
+      <div class="dsub" id="dsub">Loading...</div>
+    </div>
+    <div class="dactions">
+      <button class="btn-outline" onclick="clearData()">Clear data</button>
+      <button class="btn-outline" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+  <div class="mets" id="dmets"></div>
+  <div class="fts" id="fts"></div>
+  <div class="cg" id="dcharts"></div>
+  <div id="dtable"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'gxm_insights_v1';
+const SEV = { Critical: { c:'#dc2626', bg:'rgba(220,38,38,.1)' }, Significant: { c:'#d97706', bg:'rgba(217,119,6,.1)' }, Minor: { c:'#1a9e6e', bg:'rgba(26,158,110,.1)' } };
+const AC = ['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2','#0e7490','#7c3aed','#be185d','#065f46'];
+
+let filterSrc = 'All', donutChart = null;
+
+// Prefilled demo data
+const DEMO_DATA = [
+  { id:'d1', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'LSP', sourceType:'LSP', firstName:'Maria', lastName:'González', contactEmail:'maria@grupofiscal.com', company:'Grupo Fiscal BR', role:'Compliance Manager', serviceLine:'Payroll', trying:'Upload payslips', painPattern:'Process Complexity', pain:'Had to upload payslips one by one — no bulk upload option. With 120 employees this takes over 2 hours every cycle.', quote:'"My clients pay for this to save time, but I spend more time here than in Excel."', severity:'Critical', frequency:'Always', relatedFeature:'Task Execution Layer', date:'2026-03-28', ts:1711584000000 },
+  { id:'d2', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'Customer', sourceType:'Customer', firstName:'James', lastName:'Osei', contactEmail:'james@aligntech.com', company:'AlignTech Global', role:'Finance Director', serviceLine:'Entities', trying:'Navigate to active processes', painPattern:'Navigation & Findability', pain:'Cannot find the processes table from the entity profile page. Always has to go back to the main menu and navigate manually.', quote:'"I know the process exists but I can never find it from here."', severity:'Significant', frequency:'Always', relatedFeature:'Entity Management', date:'2026-03-27', ts:1711497600000 },
+  { id:'d3', submitterName:'Ana Pérez', submitterEmail:'ana@hspgroup.com', sourceLabel:'Ops', sourceType:'Ops', firstName:'Internal', lastName:'', contactEmail:'ops@hspgroup.com', company:'HSP Group', role:'Operations', serviceLine:'Payroll', trying:'Match payslips to employees', painPattern:'Data & Accuracy', pain:'AI matching fails when employee names have accents or special characters. About 30% of LATAM payslips need manual matching.', quote:'', severity:'Critical', frequency:'Sometimes', relatedFeature:'Data Layer & Matching', date:'2026-03-26', ts:1711411200000 },
+  { id:'d4', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'LSP', sourceType:'LSP', firstName:'Yuki', lastName:'Tanaka', contactEmail:'yuki@hsp-japan.com', company:'HSP Japan', role:'LSP Manager', serviceLine:'Entities Plus', trying:'Track compliance deadlines', painPattern:'System Feedback', pain:'No reminder system for upcoming filing deadlines. LSPs need to manually track dates outside the platform in spreadsheets.', quote:'"We pay for a compliance platform that doesn\'t remind us about compliance."', severity:'Significant', frequency:'Always', relatedFeature:'Notifications & Feedback', date:'2026-03-25', ts:1711324800000 },
+  { id:'d5', submitterName:'Ana Pérez', submitterEmail:'ana@hspgroup.com', sourceLabel:'Sales', sourceType:'Sales', firstName:'Chris', lastName:'Hammond', contactEmail:'chris@hspgroup.com', company:'HSP Group', role:'Account Executive', serviceLine:'HR', trying:'Manage employee records', painPattern:'Navigation & Findability', pain:'Customers ask why employee list and payroll are on separate screens. They expect one unified view of an employee.', quote:'"Every demo I have to explain why HR and payroll are disconnected."', severity:'Significant', frequency:'Sometimes', relatedFeature:'Entity Management', date:'2026-03-24', ts:1711238400000 },
+  { id:'d6', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'Customer', sourceType:'Customer', firstName:'Priya', lastName:'Sharma', contactEmail:'priya@wisa.in', company:'Wisa Technologies', role:'HR Manager', serviceLine:'Payroll', trying:'Track payroll status', painPattern:'System Feedback', pain:'Status labels like "In Progress" don\'t explain what stage the payroll is at. Is it waiting for LSP? Waiting for approval? No way to tell.', quote:'"I don\'t know if I should be doing something or waiting for someone else."', severity:'Significant', frequency:'Always', relatedFeature:'Process & Workflow Engine', date:'2026-03-23', ts:1711152000000 },
+  { id:'d7', submitterName:'Ana Pérez', submitterEmail:'ana@hspgroup.com', sourceLabel:'Ops', sourceType:'Ops', firstName:'Internal', lastName:'', contactEmail:'ops@hspgroup.com', company:'HSP Group', role:'Operations', serviceLine:'Books & Tax', trying:'Manage tax filings', painPattern:'Process Complexity', pain:'Tax filing workflow requires switching between 4 different screens. No single view shows all pending filings across entities.', quote:'', severity:'Critical', frequency:'Always', relatedFeature:'Process & Workflow Engine', date:'2026-03-22', ts:1711065600000 },
+  { id:'d8', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'LSP', sourceType:'LSP', firstName:'Carlos', lastName:'Méndez', contactEmail:'carlos@latampartners.com', company:'LATAM Partners', role:'Payroll Specialist', serviceLine:'Payroll', trying:'Submit payroll for approval', painPattern:'Access & Permissions', pain:'Approval button is greyed out with no explanation. Had to contact support to find out the milestone was incomplete — no in-app indication.', quote:'"The system blocks me but won\'t tell me why."', severity:'Critical', frequency:'Sometimes', relatedFeature:'Approval & Release Flow', date:'2026-03-21', ts:1710979200000 },
+  { id:'d9', submitterName:'Ana Pérez', submitterEmail:'ana@hspgroup.com', sourceLabel:'Customer', sourceType:'Customer', firstName:'Sarah', lastName:'Mitchell', contactEmail:'sarah@techcorp.com', company:'TechCorp EU', role:'Operations Manager', serviceLine:'Entities', trying:'Access entity-related documents', painPattern:'Navigation & Findability', pain:'Document section is buried inside entity profile. Customers frequently ask where to find uploaded files from previous months.', quote:'"I know you uploaded it, I just can\'t find it."', severity:'Minor', frequency:'Sometimes', relatedFeature:'File Management', date:'2026-03-20', ts:1710892800000 },
+  { id:'d10', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'LSP', sourceType:'LSP', firstName:'Amara', lastName:'Diallo', contactEmail:'amara@africahsp.com', company:'Africa HSP', role:'Entity Manager', serviceLine:'EoR', trying:'Manage employee contracts', painPattern:'Data & Accuracy', pain:'Contract templates don\'t auto-populate entity data. Have to manually re-enter company name, jurisdiction, and registered address for every contract.', quote:'"This is exactly the kind of manual work the platform should eliminate."', severity:'Significant', frequency:'Always', relatedFeature:'Task Execution Layer', date:'2026-03-19', ts:1710806400000 },
+  { id:'d11', submitterName:'Ana Pérez', submitterEmail:'ana@hspgroup.com', sourceLabel:'Internal', sourceType:'Internal', firstName:'Product', lastName:'Team', contactEmail:'product@hspgroup.com', company:'HSP Group', role:'Product', serviceLine:'Not service-specific', trying:'Navigate the platform', painPattern:'Performance & Reliability', pain:'Dashboard takes 6-8 seconds to load on first visit. Several users have reported thinking the page was broken.', quote:'', severity:'Significant', frequency:'Sometimes', relatedFeature:'Dashboard', date:'2026-03-18', ts:1710720000000 },
+  { id:'d12', submitterName:'Steven Cooper', submitterEmail:'steven@hspgroup.com', sourceLabel:'Sales', sourceType:'Sales', firstName:'Emma', lastName:'Clarke', contactEmail:'emma@hspgroup.com', company:'HSP Group', role:'Account Executive', serviceLine:'Tax', trying:'Submit tax filings', painPattern:'Navigation & Findability', pain:'Prospects ask for a deadline calendar showing all upcoming tax obligations. Currently not available — loses deals to competitors who have it.', quote:'"Your competitor showed me a calendar view in the first 5 minutes of the demo."', severity:'Critical', frequency:'Always', relatedFeature:'Calendar & Time Navigation', date:'2026-03-17', ts:1710633600000 },
+];
+
+function loadAll() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    // Merge demo data with real submissions, avoiding duplicates
+    const storedIds = new Set(stored.map(i => i.id));
+    const demo = DEMO_DATA.filter(d => !storedIds.has(d.id));
+    return [...demo, ...stored].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  } catch(e) { return DEMO_DATA; }
+}
+
+function saveAll(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data.filter(i => !DEMO_DATA.find(d => d.id === i.id)))); } catch(e) {} }
+
+function clearData() {
+  if (!confirm('Clear all submitted insights? Demo data will remain visible.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  loadDashboard();
+}
+
+function exportCSV() {
+  const all = loadAll();
+  const headers = ['Date','Submitter','Source','Contact','Company','Service Line','Goal','Pain Category','Pain Description','Quote','Severity','Frequency','GXM Area'];
+  const rows = all.map(i => [
+    i.date, i.submitterName, i.sourceLabel, i.contact || i.firstName,
+    i.company, i.serviceLine, i.trying, i.painPattern,
+    '"' + (i.pain || '').replace(/"/g, '""') + '"',
+    '"' + (i.quote || '').replace(/"/g, '""') + '"',
+    i.severity, i.frequency, i.relatedFeature
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'gxm-insights-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+function loadDashboard() {
+  const all = loadAll();
+  const srcs = [...new Set(all.map(i => i.sourceLabel || i.sourceType).filter(Boolean))];
+  const f = filterSrc === 'All' ? all : all.filter(i => (i.sourceLabel || i.sourceType) === filterSrc);
+  document.getElementById('dsub').textContent = all.length === 0 ? 'No insights yet' : `${all.length} insight${all.length !== 1 ? 's' : ''} across ${srcs.length} source type${srcs.length !== 1 ? 's' : ''}`;
+  renderMetrics(all, f);
+  renderFtabs(all, srcs);
+  renderCharts(f);
+  renderTable(f);
+}
+
+function renderMetrics(all, f) {
+  const t = f.length, c = f.filter(i => i.severity === 'Critical').length;
+  const cp = t > 0 ? Math.round((c / t) * 100) : 0;
+  const ar = [...new Set(f.map(i => i.relatedFeature).filter(Boolean))].length;
+  const always = f.filter(i => i.frequency === 'Always').length;
+  document.getElementById('dmets').innerHTML = `
+    <div class="mc"><div class="mclbl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Total insights</div><div class="mcv">${t}</div><div class="mct tg">↑ ${f.filter(i => { try { return (new Date() - new Date(i.date)) < 7*864e5; } catch { return false; } }).length} this week</div></div>
+    <div class="mc"><div class="mclbl"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Critical issues</div><div class="mcv" style="color:#dc2626">${c}</div><div class="mct ${c > 0 ? 'tr' : 'tn'}">${cp}% of total</div></div>
+    <div class="mc"><div class="mclbl"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Recurring issues</div><div class="mcv" style="color:#d97706">${always}</div><div class="mct tn">happening always</div></div>
+    <div class="mc"><div class="mclbl"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>GXM areas hit</div><div class="mcv">${ar}</div><div class="mct tn">of 12 areas</div></div>`;
+}
+
+function renderFtabs(all, srcs) {
+  const c = { All: all.length };
+  srcs.forEach(s => c[s] = all.filter(i => (i.sourceLabel || i.sourceType) === s).length);
+  document.getElementById('fts').innerHTML = ['All', ...srcs].map(t =>
+    `<div class="ft${filterSrc === t ? ' active' : ''}" onclick="setFilter(${JSON.stringify(t)})">${t}<span class="fb">${c[t] || 0}</span></div>`
+  ).join('');
+}
+
+function setFilter(s) { filterSrc = s; loadDashboard(); }
+function countBy(a, k) { const c = {}; a.forEach(i => { const v = i[k] || 'Unknown'; c[v] = (c[v] || 0) + 1; }); return Object.entries(c).sort((a, b) => b[1] - a[1]); }
+
+function renderCharts(f) {
+  if (donutChart) { donutChart.destroy(); donutChart = null; }
+  if (!f.length) { document.getElementById('dcharts').innerHTML = ''; return; }
+  const bS = countBy(f, 'severity');
+  const bSL = countBy(f, 'serviceLine').slice(0, 8);
+  const bP = countBy(f, 'painPattern').slice(0, 7);
+  const bFreq = countBy(f, 'frequency');
+  const mSL = bSL[0]?.[1] || 1;
+  const mP = bP[0]?.[1] || 1;
+
+  document.getElementById('dcharts').innerHTML = `
+    <div class="cc">
+      <div class="ctit">Severity breakdown</div>
+      <div class="dw">
+        <canvas id="dc" width="120" height="120" style="flex-shrink:0"></canvas>
+        <div class="dl" id="dleg"></div>
+      </div>
+    </div>
+    <div class="cc">
+      <div class="ctit">Frequency distribution</div>
+      <canvas id="fc" height="140"></canvas>
+    </div>
+    <div class="cc">
+      <div class="ctit">Friction categories</div>
+      ${bP.map(([l, v]) => `<div class="br"><div class="bl" style="width:150px" title="${l}">${l.length > 22 ? l.slice(0, 22) + '…' : l}</div><div class="bt"><div class="bf" style="width:${Math.round((v / mP) * 100)}%;background:#7f77dd"></div></div><div class="bc">${v}</div></div>`).join('')}
+    </div>
+    <div class="cc">
+      <div class="ctit">By service line</div>
+      ${bSL.map(([l, v], i) => `<div class="br"><div class="bl" style="width:120px" title="${l}">${l}</div><div class="bt"><div class="bf" style="width:${Math.round((v / mSL) * 100)}%;background:${AC[i % AC.length]}"></div></div><div class="bc">${v}</div></div>`).join('')}
+    </div>`;
+
+  // Donut chart
+  const ctx = document.getElementById('dc').getContext('2d');
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: bS.map(([l]) => l), datasets: [{ data: bS.map(([, v]) => v), backgroundColor: bS.map(([l]) => SEV[l]?.c || '#888'), borderWidth: 3, borderColor: '#fff', hoverOffset: 4 }] },
+    options: { cutout: '68%', plugins: { legend: { display: false } }, animation: { duration: 600 } }
+  });
+  document.getElementById('dleg').innerHTML = bS.map(([l, v]) => `<div class="dlr"><div class="dot" style="background:${SEV[l]?.c || '#888'}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:#1e293b">${v}</span></div>`).join('');
+
+  // Frequency bar chart
+  const fCtx = document.getElementById('fc').getContext('2d');
+  const freqOrder = ['First time', 'Sometimes', 'Always'];
+  const freqData = freqOrder.map(k => (bFreq.find(([l]) => l === k) || [k, 0])[1]);
+  new Chart(fCtx, {
+    type: 'bar',
+    data: { labels: freqOrder, datasets: [{ data: freqData, backgroundColor: ['#94a3b8', '#d97706', '#dc2626'], borderRadius: 5, borderSkipped: false }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 12 } }, grid: { display: false } } }, animation: { duration: 600 } }
+  });
+}
+
+function renderTable(f) {
+  if (!f.length) {
+    document.getElementById('dtable').innerHTML = `<div class="empty"><strong>No insights yet</strong><p>Submit your first insight using the capture form.<br>Demo data is shown above — your real submissions will appear here.</p><a class="btn-primary" href="gxm-insight-form.html">Log your first insight</a></div>`;
+    return;
+  }
+  const rows = [...f].slice(0, 20).map(i => {
+    const sv = SEV[i.severity] || { c: '#888', bg: '#eee' };
+    const freqColor = i.frequency === 'Always' ? '#dc2626' : i.frequency === 'Sometimes' ? '#d97706' : '#64748b';
+    return `<tr>
+      <td style="white-space:nowrap;color:#64748b;font-size:12px">${i.date || '—'}</td>
+      <td><span class="stg">${i.sourceLabel || i.sourceType || '—'}</span></td>
+      <td style="color:#1e293b;font-weight:500">${i.firstName || '—'}${i.company ? `<div style="font-size:11px;color:#94a3b8;font-weight:400">${i.company}</div>` : ''}</td>
+      <td><span class="sltg">${i.serviceLine || '—'}</span></td>
+      <td style="color:#64748b;font-size:12.5px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.trying||''}">${i.trying || '—'}</td>
+      <td class="pain-cell" title="${i.pain||''}">${i.pain || '—'}</td>
+      <td class="quote-cell" title="${i.quote||''}">${i.quote ? `"${i.quote}"` : '—'}</td>
+      <td><span class="sbdg" style="background:${sv.bg};color:${sv.c}"><span class="dot" style="background:${sv.c}"></span>${i.severity || '—'}</span></td>
+      <td style="font-size:12px;color:${freqColor};font-weight:500">${i.frequency || '—'}</td>
+      <td style="color:#64748b;font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.relatedFeature||''}">${i.relatedFeature || '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('dtable').innerHTML = `
+    <div class="cc" style="overflow-x:auto;padding:0">
+      <table class="itbl">
+        <thead><tr>
+          <th>Date</th><th>Source</th><th>Contact</th><th>Service line</th>
+          <th>Goal</th><th>Friction</th><th>Quote</th>
+          <th>Severity</th><th>Frequency</th><th>GXM area</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

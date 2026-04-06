@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GXM Insight Capture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: light only; }
+html, body { color-scheme: light only; background: #f8fafc; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; color-scheme: light only; }
+body { font-family: 'Inter', -apple-system, sans-serif; color: #1e293b; font-size: 14px; min-height: 100vh; }
+
+.topnav { background: #fff; border-bottom: 1.5px solid #e2e8f0; padding: 0 24px; display: flex; height: 52px; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 28px; height: 28px; background: #1a9e6e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+.logo-name { font-size: 14px; font-weight: 600; color: #1e293b; }
+.nav-link { font-size: 13px; color: #64748b; text-decoration: none; }
+.nav-link:hover { color: #1a9e6e; }
+
+.page { padding: 32px 24px; max-width: 620px; margin: 0 auto; }
+
+.fc { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; }
+.ftop { padding: 24px 28px 0; }
+.ftitle { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+.fsub { font-size: 13px; color: #64748b; margin-bottom: 18px; }
+.prow { display: flex; justify-content: space-between; margin-bottom: 7px; }
+.plbl { font-size: 11px; font-weight: 700; color: #1a9e6e; text-transform: uppercase; letter-spacing: .07em; }
+.ptime { font-size: 11px; color: #94a3b8; }
+.ptrack { height: 4px; background: #e2e8f0; border-radius: 2px; }
+.pfill { height: 100%; background: #1a9e6e; border-radius: 2px; transition: width .4s ease; }
+.fbody { padding: 24px 28px; }
+
+.sey { font-size: 10.5px; font-weight: 700; color: #1a9e6e; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 6px; }
+.stit { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+.shin { font-size: 13px; color: #64748b; margin-bottom: 20px; line-height: 1.55; }
+.sdiv { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin: 16px 0 10px; padding-bottom: 7px; border-bottom: 1px solid #e2e8f0; }
+
+.rgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 10px; }
+.rc { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 13px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; background: #fff; user-select: none; transition: border-color .13s, background .13s; }
+.rc:hover { border-color: #1a9e6e; background: rgba(26,158,110,.08); }
+.rc.sel { border-color: #1a9e6e; background: rgba(26,158,110,.08); }
+.rci { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all .13s; }
+.rc.sel .rci { border-color: #1a9e6e; background: #1a9e6e; }
+.rcd { width: 6px; height: 6px; border-radius: 50%; background: #fff; display: none; }
+.rc.sel .rcd { display: block; }
+.rct { font-size: 12.5px; font-weight: 600; color: #1e293b; margin-bottom: 2px; line-height: 1.3; }
+.rc.sel .rct { color: #1a9e6e; }
+.rcs { font-size: 11px; color: #64748b; line-height: 1.35; }
+
+.sl-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.sl-card { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px; cursor: pointer; background: #fff; user-select: none; transition: border-color .13s, background .13s; display: flex; flex-direction: column; gap: 6px; }
+.sl-card:hover { border-color: #1a9e6e; background: rgba(26,158,110,.05); }
+.sl-card.sel { border-color: #1a9e6e; background: rgba(26,158,110,.08); }
+.sl-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.sl-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.sl-card.sel .sl-name { color: #1a9e6e; }
+.sl-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
+
+.fstack { display: flex; flex-direction: column; gap: 14px; }
+.fld { display: flex; flex-direction: column; gap: 4px; }
+.flbl { font-size: 12.5px; font-weight: 600; color: #1e293b; }
+.req { color: #dc2626; font-size: 11px; margin-left: 2px; }
+.opt { font-size: 11px; color: #94a3b8; font-weight: 400; margin-left: 4px; }
+input.inp, textarea.inp { display: block; width: 100%; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #ffffff; outline: none; font-family: 'Inter', inherit; resize: none; line-height: 1.5; -webkit-appearance: none; appearance: none; transition: border-color .15s, box-shadow .15s; }
+input.inp:focus, textarea.inp:focus { border-color: #1a9e6e; box-shadow: 0 0 0 3px rgba(26,158,110,.1); }
+input.inp::placeholder, textarea.inp::placeholder { color: #94a3b8; }
+input.inp.err, textarea.inp.err { border-color: #dc2626; }
+.ferr { font-size: 11.5px; color: #dc2626; display: none; margin-top: 2px; }
+.ferr.show { display: block; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
+.chip { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: #fff; color: #64748b; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all .13s; user-select: none; }
+.chip:hover { border-color: #1a9e6e; color: #1a9e6e; background: rgba(26,158,110,.08); }
+.chip.sel { border-color: #1a9e6e; background: rgba(26,158,110,.08); color: #1a9e6e; }
+.reveal { margin-top: 10px; }
+
+.nav-row { display: flex; align-items: center; gap: 10px; padding: 16px 28px; border-top: 1.5px solid #e2e8f0; background: #fff; border-radius: 0 0 10px 10px; }
+.nrl { flex: 1; }
+button.bcnl { background: transparent; border: none; padding: 6px 0; font-size: 13.5px; font-weight: 700; color: #1e293b; cursor: pointer; text-decoration: underline; font-family: 'Inter', inherit; line-height: 1; }
+button.bbk { display: inline-flex; align-items: center; justify-content: center; background-color: #fff; border: 2px solid #1a9e6e; border-radius: 8px; padding: 9px 22px; font-size: 13.5px; font-weight: 600; color: #1a9e6e; cursor: pointer; font-family: 'Inter', inherit; line-height: 1; }
+button.bbk:hover { background-color: rgba(26,158,110,.08); }
+button.bnxt { display: inline-flex; align-items: center; justify-content: center; background-color: #1a9e6e; border: 2px solid #1a9e6e; border-radius: 8px; padding: 9px 22px; font-size: 13.5px; font-weight: 600; color: #fff; cursor: pointer; font-family: 'Inter', inherit; line-height: 1; }
+button.bnxt:hover { background-color: #158a5e; border-color: #158a5e; }
+
+.succ { text-align: center; padding: 40px 16px; }
+.sico { width: 52px; height: 52px; border-radius: 50%; background: rgba(26,158,110,.1); border: 2px solid #1a9e6e; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.sico svg { width: 24px; height: 24px; stroke: #1a9e6e; stroke-width: 2.5; fill: none; }
+.sstat { display: inline-flex; gap: 6px; align-items: center; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 13px; color: #64748b; margin: 10px 0 20px; }
+.sstat strong { color: #1a9e6e; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="logo">
+    <div class="logo-mark">GX</div>
+    <div class="logo-name">GXM Insight Capture</div>
+  </div>
+  <a class="nav-link" href="gxm-dashboard.html">View dashboard →</a>
+</div>
+
+<div class="page">
+  <div class="fc">
+    <div class="ftop" id="ftop">
+      <div class="ftitle">Log a GXM insight</div>
+      <div class="fsub">One step at a time — most answers are a single tap.</div>
+      <div class="prow">
+        <span class="plbl" id="plbl">Before you begin</span>
+        <span class="ptime" id="ptime">About 1 min</span>
+      </div>
+      <div class="ptrack"><div class="pfill" id="pfill" style="width:9%"></div></div>
+    </div>
+    <div class="fbody" id="fbody"></div>
+    <div class="nav-row" id="navrow">
+      <div class="nrl"><button class="bcnl" onclick="confirmCancel()">Cancel</button></div>
+      <span id="bbwrap"></span>
+      <button class="bnxt" id="bnxt" onclick="advance()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'gxm_insights_v1';
+const SEV_C = { Critical: '#dc2626', Significant: '#d97706', Minor: '#1a9e6e' };
+const TIMES = ['About 1 min','About 55s','About 48s','About 40s','About 32s','About 24s','About 16s','About 10s','About 5s','Almost done'];
+const TOTAL = 10;
+
+const SERVICE_LINES = [
+  { k:'Payroll', icon:'💳', color:'#f0f9ff', desc:'Payroll cycles and payslip processing', jobs:['Upload payslips','Match payslips to employees','Validate payroll data','Submit payroll for approval','Track payroll status'] },
+  { k:'Entities', icon:'🏢', color:'#f0fdf4', desc:'Entity profiles and governance', jobs:['View entity profile','Manage directors and shareholders','Access entity-related documents','Navigate to active processes'] },
+  { k:'Entities Plus', icon:'⭐', color:'#fefce8', desc:'Legal and compliance obligations', jobs:['Track compliance deadlines','Submit required filings','Manage corporate changes','Coordinate with registered agents'] },
+  { k:'HR', icon:'👥', color:'#fdf4ff', desc:'Employee data and HR administration', jobs:['Manage employee records','Support onboarding and offboarding','Handle HR-related documentation','Coordinate with payroll processes'] },
+  { k:'Books & Tax', icon:'📊', color:'#fff7ed', desc:'Financial tracking and reporting', jobs:['Record financial transactions','Prepare financial statements','Manage tax filings','Reconcile accounts'] },
+  { k:'Tax', icon:'🧾', color:'#fef2f2', desc:'Tax compliance and filings', jobs:['Submit tax filings','Track tax deadlines','Manage VAT/GST reporting','Ensure compliance with local regulations'] },
+  { k:'EoR', icon:'🌍', color:'#f0fdfa', desc:'Employer of Record services', jobs:['Manage employee contracts','Handle off-cycle changes','Ensure compliance with local employment laws','Coordinate payroll and HR activities'] },
+  { k:'Not service-specific', icon:'⚙️', color:'#f8fafc', desc:'General platform feedback', jobs:['Navigate the platform','Find information','Manage notifications','Configure settings','Access reports'] },
+];
+
+const GLOBAL_CATS = ['Navigation & Findability','System Feedback','Process Complexity','Data & Accuracy','Performance & Reliability','Access & Permissions','Other'];
+const SOURCES = [
+  { k:'LSP', d:'Local Service Partner' },
+  { k:'Customer', d:'End customer or user' },
+  { k:'Sales', d:'Sales team member' },
+  { k:'Ops', d:'Internal operations' },
+  { k:'Internal', d:'Other internal team' },
+  { k:'Other', d:'Specify below' },
+];
+const AREAS = [
+  { k:'Access & Entry Points', d:'Login, SSO, OTP, email triggers, first-time experience' },
+  { k:'Dashboard', d:'Overview, alerts, pending actions, role-based summaries' },
+  { k:'Entity Management', d:'Entity profiles, employee registry, files, conversations' },
+  { k:'Process & Workflow Engine', d:'Payroll, CoSec, Books — milestones, tasks, status' },
+  { k:'Task Execution Layer', d:'Uploads, matching, approvals, submissions' },
+  { k:'Communication Layer', d:'Conversations, file sharing, notifications' },
+  { k:'Calendar & Time Navigation', d:'Global/entity calendar, deadlines, payroll cycles' },
+  { k:'File Management', d:'Uploads, categorization, processing states, metadata' },
+  { k:'Notifications & Feedback', d:'Email/in-app notifications, status indicators, alerts' },
+  { k:'Approval & Release Flow', d:'LSP submission, GXM review, final release to ESS' },
+  { k:'Employee Self-Service', d:'Payslip access, employee notifications, OTP auth' },
+  { k:'Data Layer & Matching', d:'AI matching, employee registry linkage, data validation' },
+];
+
+const STEP_LABELS = ['Before you begin','Step 1 of 9','Step 2 of 9','Step 3 of 9','Step 4 of 9','Step 5 of 9','Step 6 of 9','Step 7 of 9','Step 8 of 9','Step 9 of 9'];
+let cur = 0, ans = {};
+
+function getJobs() {
+  const sl = SERVICE_LINES.find(s => s.k === ans.serviceLine);
+  return sl ? sl.jobs : ['Navigate the platform','Find information','Complete a task'];
+}
+
+function renderStep() {
+  document.getElementById('fbody').innerHTML = [r0,r1,r2,r3,r4,r5,r6,r7,r8,r9][cur]();
+  document.getElementById('bbwrap').innerHTML = cur > 0 ? `<button class="bbk" onclick="goBack()">Back</button>` : '';
+  document.getElementById('bnxt').textContent = cur === TOTAL - 1 ? 'Submit insight' : 'Continue';
+  document.getElementById('plbl').textContent = STEP_LABELS[cur] || `Step ${cur} of 9`;
+  document.getElementById('ptime').textContent = TIMES[cur] || 'Almost done';
+  document.getElementById('pfill').style.width = Math.max(9, Math.round((cur / TOTAL) * 100)) + '%';
+}
+
+function r0() {
+  return `<div class="sey">Before you begin</div>
+    <div class="stit">Your details</div>
+    <div class="shin">We'll use this to attribute the insight and follow up if needed.</div>
+    <div class="fstack">
+      <div class="fld"><label class="flbl">Your name<span class="req">*</span></label><input class="inp${ans._en?' err':''}" id="f-name" placeholder="e.g. Desirae Herwitz" value="${ans.submitterName||''}" autocomplete="name"><span class="ferr${ans._en?' show':''}">Please enter your name</span></div>
+      <div class="fld"><label class="flbl">Your email<span class="req">*</span></label><input class="inp${ans._ee?' err':''}" id="f-email" type="email" placeholder="e.g. desirae@hspgroup.com" value="${ans.submitterEmail||''}" autocomplete="email"><span class="ferr${ans._ee?' show':''}">Please enter a valid email</span></div>
+    </div>`;
+}
+
+function r1() {
+  return `<div class="sey">Step 1 of 9</div>
+    <div class="stit">Who did this come from?</div>
+    <div class="shin">Select the source type for this insight.</div>
+    <div class="rgrid">${SOURCES.map(s=>`<div class="rc${ans.sourceType===s.k?' sel':''}" onclick="pickV('sourceType','${s.k}')"><div class="rci"><div class="rcd"></div></div><div><div class="rct">${s.k}</div><div class="rcs">${s.d}</div></div></div>`).join('')}</div>
+    ${ans.sourceType==='Other'?`<div class="reveal fld"><label class="flbl">Describe the source<span class="req">*</span></label><input class="inp${ans._eo?' err':''}" id="f-other-src" placeholder="e.g. Partner agency..." value="${ans.otherSource||''}"><span class="ferr${ans._eo?' show':''}">Please describe the source</span></div>`:''}
+    ${!ans.sourceType&&ans._es?`<span class="ferr show">Please select a source type</span>`:''}`;
+}
+
+function r2() {
+  return `<div class="sey">Step 2 of 9</div>
+    <div class="stit">Contact details</div>
+    <div class="shin">Who did you speak with? First name and email are required.</div>
+    <div class="fstack">
+      <div class="fld"><label class="flbl">First name<span class="req">*</span></label><input class="inp${ans._ef?' err':''}" id="f-first" placeholder="e.g. Maria" value="${ans.firstName||''}" autocomplete="given-name"><span class="ferr${ans._ef?' show':''}">First name is required</span></div>
+      <div class="fld"><label class="flbl">Last name<span class="opt">(optional)</span></label><input class="inp" id="f-last" placeholder="e.g. González" value="${ans.lastName||''}" autocomplete="family-name"></div>
+      <div class="fld"><label class="flbl">Email<span class="req">*</span></label><input class="inp${ans._ecemail?' err':''}" id="f-cemail" type="email" placeholder="e.g. maria@empresa.com" value="${ans.contactEmail||''}" autocomplete="email"><span class="ferr${ans._ecemail?' show':''}">Please enter a valid email</span></div>
+      <div class="fld"><label class="flbl">Company<span class="opt">(optional)</span></label><input class="inp" id="f-company" placeholder="e.g. Grupo Fiscal BR" value="${ans.company||''}" autocomplete="organization"></div>
+      <div class="fld"><label class="flbl">Role<span class="opt">(optional)</span></label><input class="inp" id="f-role" placeholder="e.g. Compliance Manager" value="${ans.role||''}" autocomplete="organization-title"></div>
+    </div>`;
+}
+
+function r3() {
+  return `<div class="sey">Step 3 of 9</div>
+    <div class="stit">Which service line does this relate to?</div>
+    <div class="shin">Select the area they were working in. This helps show relevant options in the next step.</div>
+    <div class="sl-grid">
+      ${SERVICE_LINES.map(s=>`<div class="sl-card${ans.serviceLine===s.k?' sel':''}" onclick="pickServiceLine('${s.k}')"><div style="display:flex;align-items:center;gap:8px"><div class="sl-icon" style="background:${s.color}">${s.icon}</div><div class="sl-name">${s.k}</div></div><div class="sl-desc">${s.desc}</div></div>`).join('')}
+    </div>
+    ${!ans.serviceLine&&ans._esl?`<span class="ferr show">Please select a service line</span>`:''}`;
+}
+
+function r4() {
+  const jobs = getJobs();
+  const iso = ans._goalIsCustom;
+  return `<div class="sey">Step 4 of 9</div>
+    <div class="stit">What were they trying to do?</div>
+    <div class="shin">Tasks specific to <strong>${ans.serviceLine||'the platform'}</strong> — tap the closest one or pick <strong>Other</strong>.</div>
+    <div class="chips">
+      ${jobs.map(j=>`<div class="chip${ans.trying===j&&!iso?' sel':''}" onclick="pickGoal(${JSON.stringify(j)})">${j}</div>`).join('')}
+      <div class="chip${iso?' sel':''}" onclick="pickGoal('Other')">Other</div>
+    </div>
+    ${iso?`<div class="reveal fld"><label class="flbl">Describe their goal<span class="req">*</span></label><input class="inp${ans._et?' err':''}" id="f-trying-custom" placeholder="Describe what they were trying to accomplish..." value="${iso?ans.trying:''}"><span class="ferr${ans._et?' show':''}">Please describe their goal</span></div>`:''}
+    ${!ans.trying&&ans._et&&!iso?`<span class="ferr show">Please select a goal or choose Other</span>`:''}`;
+}
+
+function r5() {
+  const ipo = ans._patternIsCustom;
+  return `<div class="sey">Step 5 of 9</div>
+    <div class="stit">What was the friction?</div>
+    <div class="shin">First pick the <strong>category</strong>, then describe what specifically happened.</div>
+    <div class="sdiv">1 — Friction category<span style="color:#dc2626;margin-left:4px">*</span></div>
+    <div class="chips">
+      ${GLOBAL_CATS.map(c=>`<div class="chip${ans.painPattern===c&&!ipo?' sel':''}" onclick="pickPattern(${JSON.stringify(c)})">${c}</div>`).join('')}
+    </div>
+    ${ipo?`<div class="reveal fld" style="margin-bottom:8px"><label class="flbl">Describe the category<span class="req">*</span></label><input class="inp${ans._ep?' err':''}" id="f-pattern-custom" placeholder="e.g. Integration issue..." value="${ipo?ans.painPattern:''}"><span class="ferr${ans._ep?' show':''}">Please describe the category</span></div>`:''}
+    ${ans._epm?`<span class="ferr show" style="display:block;margin-bottom:6px">Please select a category</span>`:''}
+    <div class="sdiv">2 — Describe what happened<span style="color:#dc2626;margin-left:4px">*</span></div>
+    <div class="fld"><textarea class="inp${ans._epain?' err':''}" id="f-pain" rows="3" placeholder='Be specific — e.g. "Couldn\'t match payslips — employee name format didn\'t match the registry"'>${ans.pain||''}</textarea><span class="ferr${ans._epain?' show':''}">Please describe what happened</span></div>`;
+}
+
+function r6() {
+  return `<div class="sey">Step 6 of 9</div>
+    <div class="stit">Direct quote</div>
+    <div class="shin">The most memorable thing they said verbatim. Skip if nothing stands out.</div>
+    <div class="fld"><label class="flbl">Quote<span class="opt">(optional)</span></label><textarea class="inp" id="f-quote" rows="3" placeholder='"My clients pay for this to save time, but I spend more time in Excel than in the platform"'>${ans.quote||''}</textarea></div>`;
+}
+
+function r7() {
+  const sevs = [
+    { k:'Critical', d:'Blocked or losing trust' },
+    { k:'Significant', d:'Major friction, workarounds needed' },
+    { k:'Minor', d:'Nice to have, low urgency' },
+  ];
+  return `<div class="sey">Step 7 of 9</div>
+    <div class="stit">How severe was it?</div>
+    <div class="shin">Selecting an option advances automatically.</div>
+    <div class="rgrid">${sevs.map(s=>`<div class="rc${ans.severity===s.k?' sel':''}" onclick="pickSev('${s.k}')"><div class="rci"><div class="rcd"></div></div><div><div class="rct" style="color:${ans.severity===s.k?(SEV_C[s.k]||'#1e293b'):'#1e293b'}">${s.k}</div><div class="rcs">${s.d}</div></div></div>`).join('')}</div>
+    ${ans._esev?`<span class="ferr show">Please select a severity level</span>`:''}`;
+}
+
+function r8() {
+  const freqs = [
+    { k:'First time', d:'Never seen this before' },
+    { k:'Sometimes', d:'Happens occasionally' },
+    { k:'Always', d:'Consistent, recurring issue' },
+  ];
+  return `<div class="sey">Step 8 of 9</div>
+    <div class="stit">How often does this happen?</div>
+    <div class="shin">Helps distinguish one-off issues from systemic problems. Selecting advances automatically.</div>
+    <div class="rgrid">${freqs.map(f=>`<div class="rc${ans.frequency===f.k?' sel':''}" onclick="pickFreq('${f.k}')"><div class="rci"><div class="rcd"></div></div><div><div class="rct">${f.k}</div><div class="rcs">${f.d}</div></div></div>`).join('')}</div>
+    ${ans._efreq?`<span class="ferr show">Please select a frequency</span>`:''}`;
+}
+
+function r9() {
+  return `<div class="sey">Step 9 of 9</div>
+    <div class="stit">Which GXM area does this relate to?</div>
+    <div class="shin">Select the area most affected — or skip if unsure.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${AREAS.map(a=>`<div class="rc${ans.relatedFeature===a.k?' sel':''}" onclick="pickArea(${JSON.stringify(a.k)})"><div class="rci"><div class="rcd"></div></div><div><div class="rct">${a.k}</div><div class="rcs">${a.d}</div></div></div>`).join('')}
+      <div class="rc${ans.relatedFeature===''?' sel':''}" onclick="pickArea('')"><div class="rci"><div class="rcd"></div></div><div><div class="rct">Skip — identify later</div><div class="rcs">Can be matched during synthesis</div></div></div>
+    </div>
+    ${ans._earea?`<span class="ferr show" style="margin-top:6px">Please select a GXM area or skip</span>`:''}`;
+}
+
+function pickV(k, v) { ans[k] = v; renderStep(); }
+function pickServiceLine(k) { ans.serviceLine = k; ans._esl = false; ans.trying = ''; ans._goalIsCustom = false; renderStep(); }
+function pickGoal(g) { if (g === 'Other') { ans._goalIsCustom = true; } else { ans._goalIsCustom = false; ans.trying = g; } ans._et = false; renderStep(); }
+function pickPattern(p) { ans._patternIsCustom = false; ans.painPattern = p; ans._ep = false; ans._epm = false; renderStep(); }
+function pickSev(k) { ans.severity = k; ans._esev = false; renderStep(); setTimeout(() => advance(), 250); }
+function pickFreq(k) { ans.frequency = k; ans._efreq = false; renderStep(); setTimeout(() => advance(), 250); }
+function pickArea(k) { ans.relatedFeature = k; ans._earea = false; renderStep(); }
+
+function validate() {
+  if (cur === 0) {
+    const n = document.getElementById('f-name')?.value.trim(), e = document.getElementById('f-email')?.value.trim();
+    const ev = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || '');
+    let ok = true;
+    if (!n) { ans._en = true; ok = false; } else { ans._en = false; ans.submitterName = n; }
+    if (!e || !ev) { ans._ee = true; ok = false; } else { ans._ee = false; ans.submitterEmail = e; }
+    if (!ok) { renderStep(); return false; } return true;
+  }
+  if (cur === 1) {
+    if (!ans.sourceType) { ans._es = true; renderStep(); return false; }
+    if (ans.sourceType === 'Other') { const v = document.getElementById('f-other-src')?.value.trim(); if (!v) { ans._eo = true; renderStep(); return false; } ans.otherSource = v; ans._eo = false; }
+    return true;
+  }
+  if (cur === 2) {
+    const fn = document.getElementById('f-first')?.value.trim();
+    const ce = document.getElementById('f-cemail')?.value.trim();
+    const cev = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ce || '');
+    let ok = true;
+    if (!fn) { ans._ef = true; ok = false; } else { ans._ef = false; ans.firstName = fn; }
+    if (!ce || !cev) { ans._ecemail = true; ok = false; } else { ans._ecemail = false; ans.contactEmail = ce; }
+    if (!ok) { renderStep(); return false; }
+    ans.lastName = document.getElementById('f-last')?.value.trim() || '';
+    ans.company = document.getElementById('f-company')?.value.trim() || '';
+    ans.role = document.getElementById('f-role')?.value.trim() || '';
+    ans.contact = [ans.firstName, ans.lastName].filter(Boolean).join(' ') + (ans.company ? ', ' + ans.company : '');
+    return true;
+  }
+  if (cur === 3) { if (!ans.serviceLine) { ans._esl = true; renderStep(); return false; } return true; }
+  if (cur === 4) {
+    if (ans._goalIsCustom) { const v = document.getElementById('f-trying-custom')?.value.trim(); if (!v) { ans._et = true; renderStep(); return false; } ans.trying = v; ans._et = false; }
+    else if (!ans.trying) { ans._et = true; renderStep(); return false; }
+    return true;
+  }
+  if (cur === 5) {
+    let ok = true;
+    if (!ans.painPattern) { ans._epm = true; ok = false; }
+    const pv = document.getElementById('f-pain')?.value.trim();
+    if (!pv) { ans._epain = true; ok = false; } else { ans.pain = pv; ans._epain = false; }
+    if (!ok) { renderStep(); return false; } ans._epm = false; return true;
+  }
+  if (cur === 6) { ans.quote = document.getElementById('f-quote')?.value.trim() || ''; return true; }
+  if (cur === 7) { if (!ans.severity) { ans._esev = true; renderStep(); return false; } return true; }
+  if (cur === 8) { if (!ans.frequency) { ans._efreq = true; renderStep(); return false; } return true; }
+  if (cur === 9) { if (ans.relatedFeature === undefined) { ans._earea = true; renderStep(); return false; } return true; }
+  return true;
+}
+
+function advance() { if (!validate()) return; if (cur < TOTAL - 1) { cur++; renderStep(); } else doSubmit(); }
+function goBack() { if (cur > 0) { cur--; renderStep(); } }
+function confirmCancel() { if (confirm("Cancel? Your answers won't be saved.")) { cur = 0; ans = {}; renderStep(); } }
+
+function doSubmit() {
+  const sl = ans.sourceType === 'Other' ? (ans.otherSource || 'Other') : ans.sourceType;
+  const rec = { ...ans, sourceLabel: sl, date: new Date().toISOString().split('T')[0], ts: Date.now(), id: Date.now().toString(36) };
+  const all = loadAll(); all.push(rec); saveAll(all);
+  document.getElementById('ftop').style.display = 'none';
+  document.getElementById('navrow').style.display = 'none';
+  document.getElementById('fbody').innerHTML = `
+    <div class="succ">
+      <div class="sico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:5px">Insight captured</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:10px">Saved locally. Open the dashboard to view all insights.</div>
+      <div class="sstat">Insight <strong>#${all.length}</strong> in the GXM repository</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="bnxt" onclick="resetForm()">Log another</button>
+        <button class="bbk" onclick="window.location.href='gxm-dashboard.html'">View dashboard</button>
+      </div>
+    </div>`;
+}
+
+function resetForm() {
+  cur = 0; ans = {};
+  document.getElementById('ftop').style.display = '';
+  document.getElementById('navrow').style.display = '';
+  renderStep();
+}
+
+function loadAll() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; } }
+function saveAll(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {} }
+
+renderStep();
+</script>
+</body>
+</html>
