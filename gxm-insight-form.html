@@ -223,14 +223,15 @@ function r3() {
 function r4() {
   const jobs = getJobs();
   const iso = ans._goalIsCustom;
+  const customVal = iso && ans.trying !== 'Other' ? ans.trying : '';
   return `<div class="sey">Step 4 of 9</div>
     <div class="stit">What were they trying to do?</div>
     <div class="shin">Tasks specific to <strong>${ans.serviceLine||'the platform'}</strong> — tap the closest one or pick <strong>Other</strong>.</div>
     <div class="chips">
-      ${jobs.map(j=>`<div class="chip${ans.trying===j&&!iso?' sel':''}" onclick="pickGoal(${JSON.stringify(j)})">${j}</div>`).join('')}
+      ${jobs.map(j=>`<div class="chip${ans.trying===j&&!iso?' sel':''}" onclick="pickGoalIdx(${jobs.indexOf(j)})">${j}</div>`).join('')}
       <div class="chip${iso?' sel':''}" onclick="pickGoal('Other')">Other</div>
     </div>
-    ${iso?`<div class="reveal fld"><label class="flbl">Describe their goal<span class="req">*</span></label><input class="inp${ans._et?' err':''}" id="f-trying-custom" placeholder="Describe what they were trying to accomplish..." value="${iso?ans.trying:''}"><span class="ferr${ans._et?' show':''}">Please describe their goal</span></div>`:''}
+    ${iso?`<div class="reveal fld"><label class="flbl">Describe their goal<span class="req">*</span></label><input class="inp${ans._et?' err':''}" id="f-trying-custom" placeholder="Describe what they were trying to accomplish..." value="${customVal}"><span class="ferr${ans._et?' show':''}">Please describe their goal</span></div>`:''}
     ${!ans.trying&&ans._et&&!iso?`<span class="ferr show">Please select a goal or choose Other</span>`:''}`;
 }
 
@@ -295,7 +296,8 @@ function r9() {
 
 function pickV(k, v) { ans[k] = v; renderStep(); }
 function pickServiceLine(k) { ans.serviceLine = k; ans._esl = false; ans.trying = ''; ans._goalIsCustom = false; renderStep(); }
-function pickGoal(g) { if (g === 'Other') { ans._goalIsCustom = true; } else { ans._goalIsCustom = false; ans.trying = g; } ans._et = false; renderStep(); }
+function pickGoalIdx(i) { const jobs = getJobs(); ans._goalIsCustom = false; ans.trying = jobs[i]; ans._et = false; renderStep(); }
+function pickGoal(g) { if (g === 'Other') { ans._goalIsCustom = true; ans.trying = ''; } else { ans._goalIsCustom = false; ans.trying = g; } ans._et = false; renderStep(); }
 function pickPattern(p) { ans._patternIsCustom = false; ans.painPattern = p; ans._ep = false; ans._epm = false; renderStep(); }
 function pickSev(k) { ans.severity = k; ans._esev = false; renderStep(); setTimeout(() => advance(), 250); }
 function pickFreq(k) { ans.frequency = k; ans._efreq = false; renderStep(); setTimeout(() => advance(), 250); }
@@ -331,8 +333,13 @@ function validate() {
   }
   if (cur === 3) { if (!ans.serviceLine) { ans._esl = true; renderStep(); return false; } return true; }
   if (cur === 4) {
-    if (ans._goalIsCustom) { const v = document.getElementById('f-trying-custom')?.value.trim(); if (!v) { ans._et = true; renderStep(); return false; } ans.trying = v; ans._et = false; }
-    else if (!ans.trying) { ans._et = true; renderStep(); return false; }
+    if (ans._goalIsCustom) {
+      const v = document.getElementById('f-trying-custom')?.value.trim();
+      if (!v) { ans._et = true; renderStep(); return false; }
+      ans.trying = v; ans._et = false;
+    } else if (!ans.trying) {
+      ans._et = true; renderStep(); return false;
+    }
     return true;
   }
   if (cur === 5) {
