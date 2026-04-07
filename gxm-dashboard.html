@@ -5,377 +5,334 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GXM Insight Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"><\/script>
 <style>
-:root { color-scheme: light only; --g:#1a9e6e; --g2:rgba(26,158,110,.1); --r:#dc2626; --a:#d97706; --b:#2563eb; --p:#7c3aed; --bd:#e2e8f0; --bg:#f1f5f9; --surf:#fff; --tx:#0f172a; --mu:#64748b; --di:#94a3b8; }
-html,body { background:var(--bg); color:var(--tx); font-family:'Inter',-apple-system,sans-serif; font-size:13px; margin:0; padding:0; color-scheme:light only; }
-*{ box-sizing:border-box; margin:0; padding:0; }
-
-/* Layout */
-.shell { display:flex; min-height:100vh; }
-.sidebar { width:220px; background:#0f172a; flex-shrink:0; display:flex; flex-direction:column; padding:0; position:sticky; top:0; height:100vh; overflow-y:auto; }
-.main { flex:1; min-width:0; display:flex; flex-direction:column; }
-
-/* Sidebar */
-.sb-logo { padding:18px 20px 14px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:10px; }
-.sb-mark { width:30px; height:30px; background:var(--g); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
-.sb-name { font-size:14px; font-weight:700; color:#fff; }
-.sb-sub { font-size:10px; color:rgba(255,255,255,.4); margin-top:1px; }
-.sb-section { padding:16px 14px 6px; font-size:9.5px; font-weight:700; color:rgba(255,255,255,.3); text-transform:uppercase; letter-spacing:.1em; }
-.sb-item { display:flex; align-items:center; gap:10px; padding:9px 16px; margin:2px 8px; border-radius:8px; cursor:pointer; color:rgba(255,255,255,.6); font-size:13px; font-weight:500; transition:all .15s; user-select:none; }
-.sb-item:hover { background:rgba(255,255,255,.07); color:#fff; }
-.sb-item.active { background:rgba(26,158,110,.25); color:#4ade80; }
-.sb-item svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; flex-shrink:0; }
-.sb-badge { margin-left:auto; background:var(--r); color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; }
-.sb-footer { margin-top:auto; padding:16px; border-top:1px solid rgba(255,255,255,.08); }
-.sb-add { display:flex; align-items:center; justify-content:center; gap:6px; background:var(--g); color:#fff; border:none; border-radius:8px; padding:10px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; width:100%; transition:background .15s; text-decoration:none; }
-.sb-add:hover { background:#158a5e; }
-
-/* Topbar */
-.topbar { background:var(--surf); border-bottom:1.5px solid var(--bd); padding:0 28px; height:52px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-shrink:0; }
-.topbar-title { font-size:15px; font-weight:700; color:var(--tx); }
-.topbar-right { display:flex; align-items:center; gap:10px; }
-.topbar-search { display:flex; align-items:center; gap:8px; background:#f8fafc; border:1.5px solid var(--bd); border-radius:8px; padding:7px 12px; width:220px; }
-.topbar-search input { background:transparent; border:none; outline:none; font-size:12.5px; color:var(--tx); font-family:inherit; width:100%; }
-.topbar-search input::placeholder { color:var(--di); }
-.topbar-search svg { width:14px; height:14px; stroke:var(--di); fill:none; stroke-width:2; flex-shrink:0; }
-.btn-sm { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:7px; font-size:12.5px; font-weight:500; cursor:pointer; font-family:inherit; border:1.5px solid var(--bd); background:var(--surf); color:var(--mu); transition:all .13s; }
-.btn-sm:hover { border-color:var(--g); color:var(--g); }
-.btn-sm svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; }
-.btn-green { background:var(--g); border-color:var(--g); color:#fff; }
-.btn-green:hover { background:#158a5e; border-color:#158a5e; color:#fff; }
-
-/* Page content */
-.page { padding:24px 28px; flex:1; }
-
-/* Tab nav */
-.tab-row { display:flex; gap:0; border-bottom:1.5px solid var(--bd); margin-bottom:24px; }
-.tab { padding:10px 18px; font-size:13px; font-weight:500; color:var(--mu); cursor:pointer; border-bottom:2.5px solid transparent; transition:all .14s; user-select:none; white-space:nowrap; }
-.tab.active { color:var(--g); border-bottom-color:var(--g); }
-.tab:hover:not(.active) { color:var(--tx); }
-
-/* Section */
-.section { display:none; }
-.section.active { display:block; }
-
-/* KPI cards */
-.kpi-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
-.kpi { background:var(--surf); border:1.5px solid var(--bd); border-radius:10px; padding:16px; position:relative; overflow:hidden; }
-.kpi-accent { position:absolute; top:0; left:0; width:3px; height:100%; border-radius:2px 0 0 2px; }
-.kpi-label { font-size:11px; color:var(--mu); font-weight:500; margin-bottom:10px; display:flex; align-items:center; gap:4px; }
-.kpi-label svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2; }
-.kpi-val { font-size:26px; font-weight:700; color:var(--tx); line-height:1; }
-.kpi-trend { font-size:11px; margin-top:6px; display:flex; align-items:center; gap:3px; }
-.up { color:var(--r); } .down { color:var(--g); } .flat { color:var(--mu); }
-
-/* Chart grid */
-.chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
-.chart-grid.g3 { grid-template-columns:1fr 1fr 1fr; }
-.card { background:var(--surf); border:1.5px solid var(--bd); border-radius:10px; padding:18px; }
-.card.full { grid-column:1/-1; }
-.card.span2 { grid-column:span 2; }
-.card-title { font-size:11px; font-weight:700; color:var(--mu); text-transform:uppercase; letter-spacing:.07em; margin-bottom:4px; }
-.card-sub { font-size:11.5px; color:var(--di); margin-bottom:14px; }
-
-/* Bar rows */
-.bar-row { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
-.bar-lbl { font-size:11.5px; color:var(--mu); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right; }
-.bar-track { flex:1; height:8px; background:#f1f5f9; border-radius:4px; overflow:hidden; }
-.bar-fill { height:100%; border-radius:4px; transition:width .6s cubic-bezier(.4,0,.2,1); }
-.bar-count { font-size:11.5px; color:var(--mu); width:22px; text-align:right; flex-shrink:0; font-weight:600; }
-
-/* Donut legend */
-.donut-wrap { display:flex; align-items:center; gap:18px; }
-.donut-leg { display:flex; flex-direction:column; gap:9px; flex:1; }
-.donut-row { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--mu); }
-.dl-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-
-/* Bubble matrix */
-.matrix-wrap { overflow-x:auto; }
-.matrix-grid { display:grid; gap:6px; }
-.matrix-cell { border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:#fff; cursor:pointer; transition:transform .15s; min-height:52px; }
-.matrix-cell:hover { transform:scale(1.06); }
-.matrix-label { font-size:10px; color:var(--mu); text-align:center; padding:4px 2px; }
-.matrix-corner { font-size:9px; color:var(--di); font-weight:600; }
-
-/* Source rings */
-.source-rings { display:flex; justify-content:space-around; align-items:center; padding:8px 0; }
-.ring-item { display:flex; flex-direction:column; align-items:center; gap:6px; }
-.ring-label { font-size:11px; color:var(--mu); font-weight:500; }
-.ring-val { font-size:16px; font-weight:700; color:var(--tx); }
-
-/* AI Panel */
-.ai-panel { background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); border-radius:10px; padding:20px; margin-bottom:14px; }
-.ai-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-.ai-badge { background:rgba(26,158,110,.3); color:#4ade80; font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; border:1px solid rgba(74,222,128,.3); }
-.ai-title { font-size:14px; font-weight:700; color:#fff; }
-.ai-sub { font-size:11.5px; color:rgba(255,255,255,.5); }
-.ai-recs { display:flex; flex-direction:column; gap:10px; }
-.ai-rec { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:14px 16px; cursor:pointer; transition:background .15s; }
-.ai-rec:hover { background:rgba(255,255,255,.1); }
-.ai-rec-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px; }
-.ai-rec-title { font-size:13px; font-weight:600; color:#fff; }
-.ai-rec-score { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-.ai-score-pill { font-size:10px; font-weight:700; padding:2px 8px; border-radius:12px; }
-.score-high { background:rgba(220,38,38,.3); color:#fca5a5; border:1px solid rgba(220,38,38,.4); }
-.score-med { background:rgba(217,119,6,.3); color:#fcd34d; border:1px solid rgba(217,119,6,.4); }
-.score-low { background:rgba(26,158,110,.3); color:#4ade80; border:1px solid rgba(74,222,128,.4); }
-.ai-rec-body { font-size:12px; color:rgba(255,255,255,.6); line-height:1.55; }
-.ai-rec-meta { display:flex; gap:12px; margin-top:8px; }
-.ai-meta-chip { font-size:10.5px; color:rgba(255,255,255,.4); display:flex; align-items:center; gap:4px; }
-.ai-meta-chip svg { width:11px; height:11px; stroke:currentColor; fill:none; stroke-width:2; }
-.ai-loading { color:rgba(255,255,255,.4); font-size:13px; padding:20px 0; text-align:center; }
-.ai-generate { display:flex; align-items:center; gap:8px; background:rgba(26,158,110,.2); border:1px solid rgba(26,158,110,.4); border-radius:8px; padding:12px 16px; cursor:pointer; font-family:inherit; color:#4ade80; font-size:13px; font-weight:500; width:100%; transition:background .15s; margin-top:4px; }
-.ai-generate:hover { background:rgba(26,158,110,.3); }
-.ai-generate svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; }
-
-/* Ingestion panel */
-.ingest-card { background:var(--surf); border:1.5px solid var(--bd); border-radius:10px; padding:20px; }
-.ingest-tabs { display:flex; gap:6px; margin-bottom:16px; }
-.itab { padding:6px 14px; border-radius:20px; border:1.5px solid var(--bd); font-size:12.5px; font-weight:500; color:var(--mu); cursor:pointer; transition:all .13s; background:var(--surf); user-select:none; }
-.itab.active { border-color:var(--g); color:var(--g); background:var(--g2); }
-.ingest-area { display:none; }
-.ingest-area.active { display:block; }
-.paste-box { width:100%; min-height:120px; padding:12px; border:1.5px solid var(--bd); border-radius:8px; font-size:13px; color:var(--tx); background:#f8fafc; outline:none; font-family:inherit; resize:vertical; line-height:1.6; transition:border-color .15s; }
-.paste-box:focus { border-color:var(--g); background:#fff; }
-.paste-box::placeholder { color:var(--di); }
-.ingest-hint { font-size:11.5px; color:var(--di); margin-top:6px; line-height:1.5; }
-.ingest-actions { display:flex; gap:8px; margin-top:12px; align-items:center; }
-.processing-dot { width:8px; height:8px; border-radius:50%; background:var(--g); animation:pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
-.result-preview { background:#f0fdf4; border:1.5px solid rgba(26,158,110,.3); border-radius:8px; padding:14px; margin-top:12px; display:none; }
-.result-preview.show { display:block; }
-.result-field { display:grid; grid-template-columns:130px 1fr; gap:6px; margin-bottom:8px; align-items:start; }
-.result-field:last-child { margin-bottom:0; }
-.rf-label { font-size:11px; font-weight:600; color:var(--mu); text-transform:uppercase; letter-spacing:.06em; padding-top:1px; }
-.rf-val { font-size:13px; color:var(--tx); }
-
-/* Explorer */
-.filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
-.filter-select { padding:6px 10px; border:1.5px solid var(--bd); border-radius:7px; font-size:12.5px; color:var(--tx); background:var(--surf); outline:none; font-family:inherit; cursor:pointer; }
-.filter-select:focus { border-color:var(--g); }
-.insight-count { font-size:12px; color:var(--mu); margin-left:auto; }
-
-/* Table */
-.tbl-wrap { overflow-x:auto; }
-.itbl { width:100%; border-collapse:collapse; }
-.itbl th { font-size:11px; font-weight:700; color:var(--mu); text-align:left; padding:10px 14px; border-bottom:1.5px solid var(--bd); white-space:nowrap; background:var(--surf); }
-.itbl td { padding:11px 14px; border-bottom:1px solid #f1f5f9; font-size:12.5px; color:var(--tx); vertical-align:top; }
-.itbl tr:last-child td { border-bottom:none; }
-.itbl tr:hover td { background:#f8fafc; cursor:pointer; }
-.itbl tr.active-row td { background:rgba(26,158,110,.05); }
-.badge { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:12px; font-size:11px; font-weight:600; white-space:nowrap; }
-.tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; background:#f1f5f9; color:var(--mu); }
-.sl-tag { background:rgba(26,158,110,.1); color:var(--g); }
-.dot9 { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.trunc { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-/* Detail drawer */
-.drawer-overlay { position:fixed; inset:0; background:rgba(15,23,42,.4); z-index:100; display:none; }
-.drawer-overlay.open { display:block; }
-.drawer { position:fixed; right:0; top:0; bottom:0; width:480px; background:var(--surf); border-left:1.5px solid var(--bd); z-index:101; transform:translateX(100%); transition:transform .28s cubic-bezier(.4,0,.2,1); overflow-y:auto; display:flex; flex-direction:column; }
-.drawer.open { transform:translateX(0); }
-.drawer-header { padding:20px 24px 16px; border-bottom:1.5px solid var(--bd); display:flex; align-items:flex-start; gap:12px; flex-shrink:0; position:sticky; top:0; background:var(--surf); z-index:1; }
-.drawer-close { background:none; border:none; cursor:pointer; color:var(--mu); padding:4px; border-radius:6px; transition:background .13s; margin-top:2px; flex-shrink:0; }
-.drawer-close:hover { background:#f1f5f9; color:var(--tx); }
-.drawer-close svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; display:block; }
-.drawer-body { padding:20px 24px; flex:1; }
-.d-section { margin-bottom:22px; }
-.d-section-title { font-size:10px; font-weight:700; color:var(--di); text-transform:uppercase; letter-spacing:.09em; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--bd); }
-.d-field { margin-bottom:12px; }
-.d-label { font-size:11px; font-weight:600; color:var(--mu); margin-bottom:3px; }
-.d-val { font-size:13.5px; color:var(--tx); line-height:1.55; }
-.d-quote { font-size:14px; color:var(--tx); font-style:italic; line-height:1.65; padding:14px 16px; background:#f8fafc; border-left:3px solid var(--g); border-radius:0 8px 8px 0; }
-.d-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.d-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-.drawer-similar { padding:16px 24px 24px; border-top:1.5px solid var(--bd); }
-.similar-title { font-size:11px; font-weight:700; color:var(--mu); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
-.similar-item { padding:10px 12px; border:1.5px solid var(--bd); border-radius:8px; margin-bottom:8px; cursor:pointer; transition:border-color .13s; }
-.similar-item:hover { border-color:var(--g); }
-.similar-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-.similar-name { font-size:12.5px; font-weight:600; color:var(--tx); }
-.similar-pain { font-size:12px; color:var(--mu); line-height:1.4; }
-
-/* Trend line placeholder */
-.trend-wrap { position:relative; height:160px; }
-
-/* Severity meter */
-.sev-meter { display:flex; height:12px; border-radius:6px; overflow:hidden; margin:10px 0 4px; }
-.sev-seg { transition:flex .5s ease; }
-
-/* Timeline feed */
-.feed { display:flex; flex-direction:column; gap:10px; }
-.feed-item { display:flex; gap:12px; padding:12px 14px; background:#f8fafc; border-radius:8px; border:1px solid var(--bd); }
-.feed-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:3px; }
-.feed-content { flex:1; min-width:0; }
-.feed-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
-.feed-source { font-size:11px; font-weight:600; color:var(--mu); }
-.feed-date { font-size:11px; color:var(--di); }
-.feed-text { font-size:12.5px; color:var(--tx); line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-/* Empty */
-.empty { text-align:center; padding:60px 20px; color:var(--mu); }
-.empty strong { display:block; font-size:15px; color:var(--tx); margin-bottom:8px; font-weight:700; }
+:root{color-scheme:light only;--g:#1a9e6e;--g2:rgba(26,158,110,.1);--r:#dc2626;--a:#d97706;--b:#2563eb;--p:#7c3aed;--bd:#e2e8f0;--bg:#f1f5f9;--surf:#fff;--tx:#0f172a;--mu:#64748b;--di:#94a3b8}
+html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,sans-serif;font-size:13px;margin:0;padding:0;color-scheme:light only}
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:228px;background:#0f172a;flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.sb-logo{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.sb-mark{width:30px;height:30px;background:var(--g);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-name{font-size:14px;font-weight:700;color:#fff}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-section{padding:16px 14px 6px;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:2px 8px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;transition:all .15s;user-select:none}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-item.active{background:rgba(26,158,110,.25);color:#4ade80}
+.sb-item svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.sb-badge{margin-left:auto;background:var(--r);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.sb-badge.green{background:var(--g)}
+.sb-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.08)}
+.sb-add{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--g);color:#fff;border:none;border-radius:8px;padding:10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;transition:background .15s;text-decoration:none}
+.sb-add:hover{background:#158a5e}
+.topbar{background:var(--surf);border-bottom:1.5px solid var(--bd);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:700;color:var(--tx)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--bd);border-radius:9px;padding:8px 14px;width:240px;transition:border-color .13s}
+.topbar-search:focus-within{border-color:var(--g);background:#fff}
+.topbar-search input{background:transparent;border:none;outline:none;font-size:12.5px;color:var(--tx);font-family:inherit;width:100%}
+.topbar-search input::placeholder{color:var(--di)}
+.topbar-search svg{width:14px;height:14px;stroke:var(--di);fill:none;stroke-width:2;flex-shrink:0}
+.btn-sm{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;border:1.5px solid var(--bd);background:var(--surf);color:var(--mu);transition:all .13s}
+.btn-sm:hover{border-color:var(--g);color:var(--g)}
+.btn-sm svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-green{background:var(--g);border-color:var(--g);color:#fff}
+.btn-green:hover{background:#158a5e;border-color:#158a5e;color:#fff}
+.btn-red{background:var(--r);border-color:var(--r);color:#fff}
+.btn-red:hover{background:#b91c1c;border-color:#b91c1c;color:#fff}
+.page{padding:28px 32px;flex:1;max-width:1400px}
+.section{display:none}
+.section.active{display:block;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:box-shadow .15s}
+.kpi:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.kpi-accent{position:absolute;top:0;left:0;width:4px;height:100%}
+.kpi-label{font-size:11.5px;color:var(--mu);font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:5px}
+.kpi-label svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;opacity:.7}
+.kpi-val{font-size:28px;font-weight:700;color:var(--tx);line-height:1;letter-spacing:-.5px}
+.kpi-trend{font-size:11.5px;margin-top:7px;display:flex;align-items:center;gap:3px}
+.up{color:var(--r)}.down{color:var(--g)}.flat{color:var(--di)}
+/* Cards */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:20px 22px}
+.card.full{grid-column:1/-1}
+/* Card header — clean label without uppercase shouting */
+.card-title{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.card-sub{font-size:12px;color:var(--di);margin-bottom:16px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.bar-lbl{font-size:12px;color:var(--mu);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.bar-track{flex:1;height:9px;background:#f1f5f9;border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bar-count{font-size:12px;color:var(--tx);width:24px;text-align:right;flex-shrink:0;font-weight:700}
+.donut-wrap{display:flex;align-items:center;gap:18px}
+.donut-leg{display:flex;flex-direction:column;gap:9px;flex:1}
+.donut-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mu)}
+.dl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.matrix-cell{border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:transform .15s;min-height:52px}
+.matrix-cell:hover{transform:scale(1.06)}
+.matrix-label{font-size:10px;color:var(--mu);text-align:center;padding:4px 2px}
+.trend-wrap{position:relative;height:170px}
+.feed{display:flex;flex-direction:column;gap:8px}
+.feed-item{display:flex;gap:12px;padding:11px 14px;background:var(--bg);border-radius:9px;border:1px solid var(--bd);cursor:pointer;transition:all .13s}
+.feed-item:hover{border-color:var(--g);background:#f0fdf4}
+.feed-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.feed-content{flex:1;min-width:0}
+.feed-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.feed-source{font-size:11.5px;font-weight:600;color:var(--mu)}
+.feed-date{font-size:11px;color:var(--di)}
+.feed-text{font-size:13px;color:var(--tx);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-panel{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:10px;padding:20px;margin-bottom:14px}
+.ai-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.ai-badge{background:rgba(26,158,110,.3);color:#4ade80;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid rgba(74,222,128,.3)}
+.ai-title{font-size:14px;font-weight:700;color:#fff}
+.ai-sub{font-size:11.5px;color:rgba(255,255,255,.5)}
+.ai-recs{display:flex;flex-direction:column;gap:10px}
+.ai-rec{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;cursor:pointer;transition:background .15s}
+.ai-rec:hover{background:rgba(255,255,255,.1)}
+.ai-rec-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
+.ai-rec-title{font-size:13px;font-weight:600;color:#fff}
+.ai-score-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px}
+.score-high{background:rgba(220,38,38,.3);color:#fca5a5;border:1px solid rgba(220,38,38,.4)}
+.score-med{background:rgba(217,119,6,.3);color:#fcd34d;border:1px solid rgba(217,119,6,.4)}
+.score-low{background:rgba(26,158,110,.3);color:#4ade80;border:1px solid rgba(74,222,128,.4)}
+.ai-rec-body{font-size:12px;color:rgba(255,255,255,.6);line-height:1.55}
+.ai-rec-meta{display:flex;gap:12px;margin-top:8px}
+.ai-meta-chip{font-size:10.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px}
+.ai-meta-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.ai-loading{color:rgba(255,255,255,.4);font-size:13px;padding:20px 0;text-align:center}
+.ai-generate{display:flex;align-items:center;gap:8px;background:rgba(26,158,110,.2);border:1px solid rgba(26,158,110,.4);border-radius:8px;padding:12px 16px;cursor:pointer;font-family:inherit;color:#4ade80;font-size:13px;font-weight:500;width:100%;transition:background .15s;margin-top:4px}
+.ai-generate:hover{background:rgba(26,158,110,.3)}
+.ai-generate svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.ingest-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:10px;padding:20px}
+.ingest-tabs{display:flex;gap:6px;margin-bottom:16px}
+.itab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--bd);font-size:12.5px;font-weight:500;color:var(--mu);cursor:pointer;transition:all .13s;background:var(--surf);user-select:none}
+.itab.active{border-color:var(--g);color:var(--g);background:var(--g2)}
+.ingest-area{display:none}
+.ingest-area.active{display:block}
+.paste-box{width:100%;min-height:120px;padding:12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--tx);background:#f8fafc;outline:none;font-family:inherit;resize:vertical;line-height:1.6;transition:border-color .15s}
+.paste-box:focus{border-color:var(--g);background:#fff}
+.paste-box::placeholder{color:var(--di)}
+.ingest-hint{font-size:11.5px;color:var(--di);margin-top:6px;line-height:1.5}
+.ingest-actions{display:flex;gap:8px;margin-top:12px;align-items:center}
+.processing-dot{width:8px;height:8px;border-radius:50%;background:var(--g);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.result-preview{background:#f0fdf4;border:1.5px solid rgba(26,158,110,.3);border-radius:8px;padding:14px;margin-top:12px;display:none}
+.result-preview.show{display:block}
+.result-field{display:grid;grid-template-columns:130px 1fr;gap:6px;margin-bottom:8px;align-items:start}
+.rf-label{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;padding-top:1px}
+.rf-val{font-size:13px;color:var(--tx)}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center;padding:14px 16px;background:var(--surf);border:1.5px solid var(--bd);border-radius:10px}
+.filter-select{padding:6px 11px;border:1.5px solid var(--bd);border-radius:7px;font-size:12.5px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer;transition:border-color .13s}
+.filter-select:focus{border-color:var(--g);box-shadow:0 0 0 2px rgba(26,158,110,.1)}
+.insight-count{font-size:12.5px;color:var(--mu);margin-left:auto;font-weight:500}
+.tbl-wrap{overflow-x:auto}
+.itbl{width:100%;border-collapse:collapse}
+.itbl th{font-size:11.5px;font-weight:600;color:var(--mu);text-align:left;padding:11px 14px;border-bottom:1.5px solid var(--bd);white-space:nowrap;background:var(--bg);letter-spacing:.01em}
+.itbl td{padding:12px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;color:var(--tx);vertical-align:middle}
+.itbl tr:last-child td{border-bottom:none}
+.itbl tr:hover td{background:#f8fafc;cursor:pointer}
+.itbl tr.active-row td{background:rgba(26,158,110,.04)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f1f5f9;color:var(--mu)}
+.sl-tag{background:rgba(26,158,110,.1);color:var(--g)}
+.dot9{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.trunc{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drawer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:100;display:none}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:500px;background:var(--surf);border-left:1.5px solid var(--bd);z-index:101;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.drawer-header{padding:20px 24px 16px;border-bottom:1.5px solid var(--bd);display:flex;align-items:flex-start;gap:12px;flex-shrink:0;position:sticky;top:0;background:var(--surf);z-index:1}
+.drawer-close{background:none;border:none;cursor:pointer;color:var(--mu);padding:4px;border-radius:6px;transition:background .13s;margin-top:2px;flex-shrink:0}
+.drawer-close:hover{background:#f1f5f9;color:var(--tx)}
+.drawer-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;display:block}
+.drawer-body{padding:22px 26px;flex:1}
+.d-section{margin-bottom:24px}
+.d-section-title{font-size:11px;font-weight:600;color:var(--mu);letter-spacing:.04em;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--bd)}
+.d-field{margin-bottom:14px}
+.d-label{font-size:11.5px;font-weight:600;color:var(--mu);margin-bottom:4px}
+.d-val{font-size:14px;color:var(--tx);line-height:1.55}
+.d-quote{font-size:14px;color:var(--tx);font-style:italic;line-height:1.7;padding:14px 18px;background:#f8fafc;border-left:3px solid var(--g);border-radius:0 10px 10px 0}
+.d-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.drawer-similar{padding:16px 24px 24px;border-top:1.5px solid var(--bd)}
+.similar-title{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.similar-item{padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:border-color .13s}
+.similar-item:hover{border-color:var(--g)}
+.similar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.similar-name{font-size:12.5px;font-weight:600;color:var(--tx)}
+.similar-pain{font-size:12px;color:var(--mu);line-height:1.4}
+.empty{text-align:center;padding:60px 20px;color:var(--mu)}
+.empty strong{display:block;font-size:15px;color:var(--tx);margin-bottom:8px;font-weight:700}
+/* NEW: Status badges */
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10.5px;font-weight:600}
+.status-new{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+.status-validated{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.status-review{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+.status-merged{background:#faf5ff;color:#7c3aed;border:1px solid #ddd6fe}
+.status-rejected{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.status-clustered{background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4}
+.status-actioned{background:#f8fafc;color:#475569;border:1px solid #cbd5e1}
+/* NEW: Inbox */
+.inbox-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.inbox-filters{display:flex;gap:6px}
+.inbox-filter{padding:5px 12px;border-radius:20px;border:1.5px solid var(--bd);font-size:12px;font-weight:500;color:var(--mu);cursor:pointer;background:var(--surf);transition:all .13s;user-select:none}
+.inbox-filter.active{border-color:var(--g);color:var(--g);background:var(--g2)}
+.inbox-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:18px 20px;margin-bottom:12px;transition:all .15s}
+.inbox-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.inbox-card.priority{border-left:4px solid var(--r);background:#fffcfc}
+.inbox-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px}
+.inbox-summary{font-size:14px;font-weight:600;color:var(--tx);line-height:1.45;flex:1}
+.inbox-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
+.inbox-pain{font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:12px;padding:10px 14px;background:var(--bg);border-radius:7px;border-left:3px solid var(--bd)}
+.inbox-actions{display:flex;gap:6px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--bd)}
+.action-btn{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--bd);background:var(--surf);color:var(--mu);font-family:inherit;transition:all .13s;white-space:nowrap}
+.action-btn:hover{border-color:var(--g);color:var(--g)}
+.action-btn.accept{border-color:#16a34a;color:#16a34a;background:#f0fdf4;font-weight:600}
+.action-btn.accept:hover{background:#dcfce7}
+.action-btn.reject{border-color:var(--r);color:var(--r);background:#fef2f2;font-weight:600}
+.action-btn.reject:hover{background:#fee2e2}
+.action-btn.merge-btn{border-color:var(--p);color:var(--p);background:#faf5ff}
+.possible-dupe{margin-top:10px;padding:9px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:7px;font-size:12px;color:#92400e}
+/* NEW: Themes */
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.theme-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:20px 22px;cursor:pointer;transition:all .18s}
+.theme-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
+.theme-card.critical-theme{border-left:4px solid var(--r);background:#fffcfc}
+.theme-card.recurring-theme{border-left:4px solid var(--a);background:#fffdf5}
+.theme-card.emerging-theme{border-left:4px solid var(--b);background:#f8fbff}
+.theme-card.resolved-theme{border-left:4px solid var(--g);background:#f8fdfb}
+.theme-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:12px}
+.theme-title{font-size:15px;font-weight:700;color:var(--tx);line-height:1.35;flex:1}
+.theme-status{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;flex-shrink:0;margin-top:1px}
+.ts-critical{background:#fef2f2;color:var(--r);border:1px solid #fecaca}
+.ts-recurring{background:#fffbeb;color:var(--a);border:1px solid #fde68a}
+.ts-emerging{background:#eff6ff;color:var(--b);border:1px solid #bfdbfe}
+.ts-resolved{background:#f0fdf4;color:var(--g);border:1px solid #bbf7d0}
+.theme-desc{font-size:12.5px;color:var(--mu);line-height:1.6;margin-bottom:14px}
+.theme-stats{display:flex;gap:24px;margin-bottom:14px;padding:12px 14px;background:var(--bg);border-radius:8px}
+.theme-stat{display:flex;flex-direction:column;gap:2px}
+.theme-stat-val{font-size:22px;font-weight:700;color:var(--tx);letter-spacing:-.5px}
+.theme-stat-lbl{font-size:11px;color:var(--mu);font-weight:500}
+.theme-sev-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px;margin-bottom:14px}
+.theme-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+.trend-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600}
+.trend-up{color:var(--r)}.trend-flat{color:var(--mu)}.trend-down{color:var(--g)}
+/* NEW: Initiatives */
+.initiative-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:20px 22px;margin-bottom:12px;transition:box-shadow .15s}
+.initiative-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.initiative-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:16px}
+.initiative-title{font-size:15px;font-weight:700;color:var(--tx);line-height:1.35}
+.init-status{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;flex-shrink:0}
+.is-planned{background:#eff6ff;color:var(--b);border:1px solid #bfdbfe}
+.is-progress{background:#fffbeb;color:var(--a);border:1px solid #fde68a}
+.is-shipped{background:#f0fdf4;color:var(--g);border:1px solid #bbf7d0}
+.initiative-meta{display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--di);flex-wrap:wrap}
+.initiative-hypothesis{font-size:13px;color:var(--mu);line-height:1.65;margin-bottom:14px;padding:12px 14px;background:var(--bg);border-left:3px solid var(--bd);border-radius:0 8px 8px 0}
+.initiative-footer{display:flex;gap:8px;align-items:center;padding-top:14px;border-top:1px solid var(--bd);flex-wrap:wrap}
+.impact-chip{font-size:11.5px;font-weight:600;padding:4px 12px;border-radius:20px;background:#f0fdf4;color:var(--g);border:1px solid #bbf7d0}
+.impact-chip.negative{background:#fef2f2;color:var(--r);border-color:#fecaca}
+/* NEW: Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surf);border-radius:12px;padding:24px;width:460px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-title{font-size:16px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.modal-sub{font-size:12.5px;color:var(--mu);margin-bottom:20px;line-height:1.5}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:5px;display:block}
+.modal-input{width:100%;padding:8px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:13px;color:var(--tx);background:#fff;outline:none;font-family:inherit;transition:border-color .15s}
+.modal-input:focus{border-color:var(--g)}
+.modal-textarea{width:100%;padding:8px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:13px;color:var(--tx);background:#fff;outline:none;font-family:inherit;resize:none;line-height:1.5;transition:border-color .15s}
+.modal-textarea:focus{border-color:var(--g)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.conf-bar{height:4px;background:#f1f5f9;border-radius:2px;margin-top:4px;overflow:hidden}
+.conf-fill{height:100%;border-radius:2px;background:var(--g)}
 </style>
 </head>
 <body>
 <div class="shell">
-
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-mark">GX</div>
-    <div><div class="sb-name">GXM</div><div class="sb-sub">Insight Platform</div></div>
-  </div>
-  <div class="sb-section">Navigation</div>
-  <div class="sb-item active" onclick="showTab('overview')">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Overview
-  </div>
-  <div class="sb-item" onclick="showTab('patterns')">
-    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Patterns
-  </div>
-  <div class="sb-item" onclick="showTab('ai')">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-    AI Priorities
-    <span class="sb-badge" id="rec-badge">3</span>
-  </div>
-  <div class="sb-item" onclick="showTab('explorer')">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    Explorer
-  </div>
+  <div class="sb-logo"><div class="sb-mark">GX</div><div><div class="sb-name">GXM</div><div class="sb-sub">Insight Platform</div></div></div>
+  <div class="sb-section">Workflow</div>
+  <div class="sb-item" id="sb-inbox" onclick="showTab('inbox')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Inbox<span class="sb-badge" id="inbox-badge">0</span></div>
+  <div class="sb-item" id="sb-themes" onclick="showTab('themes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Themes<span class="sb-badge green" id="themes-badge">0</span></div>
+  <div class="sb-item" id="sb-initiatives" onclick="showTab('initiatives')"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Initiatives</div>
+  <div class="sb-section">Analytics</div>
+  <div class="sb-item active" id="sb-overview" onclick="showTab('overview')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+  <div class="sb-item" id="sb-patterns" onclick="showTab('patterns')"><svg viewBox="0 0 24 24"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>Patterns</div>
+  <div class="sb-item" id="sb-explorer" onclick="showTab('explorer')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explorer</div>
   <div class="sb-section">Data</div>
-  <div class="sb-item" onclick="showTab('ingest')">
-    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Add Insights
-  </div>
-  <div class="sb-footer">
-    <a class="sb-add" href="gxm-insight-form.html">
-      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Log new insight
-    </a>
-  </div>
+  <div class="sb-item" id="sb-ingest" onclick="showTab('ingest')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Add Insights</div>
+  <div class="sb-footer"><a class="sb-add" href="gxm-insight-form.html"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log new insight</a></div>
 </div>
-
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="page-title">Overview</div>
     <div class="topbar-right">
-      <div class="topbar-search">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search insights..." id="global-search" oninput="onSearch(this.value)">
-      </div>
-      <button class="btn-sm" onclick="exportCSV()">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Export CSV
-      </button>
+      <div class="topbar-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search insights..." id="global-search" oninput="onSearch(this.value)"></div>
+      <button class="btn-sm" onclick="exportCSV()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export CSV</button>
       <button class="btn-sm" onclick="clearData()">Clear data</button>
     </div>
   </div>
-
   <div class="page">
+
+    <!-- NEW: INBOX -->
+    <div class="section" id="sec-inbox">
+      <div class="inbox-header">
+        <div><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:3px">Insight Inbox</div><div style="font-size:12px;color:var(--mu)">Triage new insights — accept, merge, reject, or assign to a theme.</div></div>
+        <div class="inbox-filters">
+          <div class="inbox-filter active" onclick="setInboxFilter('all',this)">All</div>
+          <div class="inbox-filter" onclick="setInboxFilter('new',this)">New</div>
+          <div class="inbox-filter" onclick="setInboxFilter('in_review',this)">In review</div>
+        </div>
+      </div>
+      <div id="inbox-list"></div>
+    </div>
+
+    <!-- NEW: THEMES -->
+    <div class="section" id="sec-themes">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+        <div><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:3px">Themes</div><div style="font-size:12px;color:var(--mu)">Clustered patterns. Each theme can drive an initiative.</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm btn-green" onclick="openThemeModal()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New theme</button>
+          <button class="btn-sm" onclick="generateThemes()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>AI suggest themes</button>
+        </div>
+      </div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+
+    <!-- NEW: INITIATIVES -->
+    <div class="section" id="sec-initiatives">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+        <div><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:3px">Initiatives</div><div style="font-size:12px;color:var(--mu)">Decisions traceable from insight → theme → outcome.</div></div>
+        <button class="btn-sm btn-green" onclick="openInitiativeModal()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New initiative</button>
+      </div>
+      <div id="initiatives-list"></div>
+    </div>
 
     <!-- OVERVIEW -->
     <div class="section active" id="sec-overview">
       <div class="kpi-row" id="kpi-row"></div>
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;">
-        <div class="card">
-          <div class="card-title">Insights over time</div>
-          <div class="card-sub">Rolling 30-day submission trend</div>
-          <div class="trend-wrap"><canvas id="trend-chart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">By source</div>
-          <div class="card-sub">Contribution per channel</div>
-          <div class="donut-wrap" style="margin-top:8px">
-            <canvas id="source-chart" width="110" height="110" style="flex-shrink:0"></canvas>
-            <div class="donut-leg" id="source-leg"></div>
-          </div>
-        </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-bottom:18px;">
+        <div class="card"><div class="card-title">Insights over time</div><div class="card-sub">Rolling 30-day submission trend</div><div class="trend-wrap"><canvas id="trend-chart"></canvas></div></div>
+        <div class="card"><div class="card-title">By source</div><div class="card-sub">Contribution per channel</div><div class="donut-wrap" style="margin-top:8px;flex-direction:column;gap:10px"><canvas id="source-chart" width="110" height="110"></canvas><div class="donut-leg" id="source-leg"></div></div></div>
+        <div class="card"><div class="card-title">Severity</div><div class="card-sub">Distribution across insights</div><div class="donut-wrap" style="margin-top:8px;flex-direction:column;gap:10px"><canvas id="sev-chart" width="110" height="110"></canvas><div class="donut-leg" id="sev-leg"></div></div></div>
       </div>
-      <div class="chart-grid">
-        <div class="card">
-          <div class="card-title">Severity distribution</div>
-          <div class="card-sub">Across all filtered insights</div>
-          <div class="donut-wrap" style="margin-top:8px">
-            <canvas id="sev-chart" width="110" height="110" style="flex-shrink:0"></canvas>
-            <div class="donut-leg" id="sev-leg"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Recent activity</div>
-          <div class="card-sub">Latest 5 submissions</div>
-          <div class="feed" id="feed"></div>
-        </div>
-      </div>
+      <div class="card"><div class="card-title">Recent activity</div><div class="card-sub">Latest submissions across all sources</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px" id="feed"></div></div>
     </div>
 
     <!-- PATTERNS -->
     <div class="section" id="sec-patterns">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-        <div class="card span2">
-          <div class="card-title">Severity × Frequency matrix</div>
-          <div class="card-sub">Bubble size = number of insights. Top-right = highest priority.</div>
-          <div style="margin-top:14px" id="matrix-container"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+        <div class="card"><div class="card-title">Severity × Frequency matrix</div><div class="card-sub">Bubble size = insight count. Top-right = highest priority.</div><div id="matrix-container"></div></div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card"><div class="card-title">By service line</div><div id="sl-bars" style="margin-top:8px"></div></div>
+          <div class="card"><div class="card-title">Friction categories</div><div id="cat-bars" style="margin-top:8px"></div></div>
         </div>
       </div>
-      <div class="chart-grid">
-        <div class="card">
-          <div class="card-title">By service line</div>
-          <div class="card-sub">Volume of feedback per service</div>
-          <div id="sl-bars" style="margin-top:6px"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Friction categories</div>
-          <div class="card-sub">Most common pain types</div>
-          <div id="cat-bars" style="margin-top:6px"></div>
-        </div>
-        <div class="card full">
-          <div class="card-title">GXM areas affected</div>
-          <div class="card-sub">Which parts of the platform generate the most feedback</div>
-          <div id="area-bars" style="margin-top:10px"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- AI PRIORITIES -->
-    <div class="section" id="sec-ai">
-      <div class="ai-panel">
-        <div class="ai-header">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <div class="ai-title">AI Recommendations</div>
-              <span class="ai-badge">Powered by Claude</span>
-            </div>
-            <div class="ai-sub">Based on <span id="ai-count">0</span> insights — ranked by impact × frequency score</div>
-          </div>
-        </div>
-        <div class="ai-recs" id="ai-recs">
-          <button class="ai-generate" onclick="generateRecs()">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-            Generate AI recommendations from current insights
-          </button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="card">
-          <div class="card-title">Impact scoring</div>
-          <div class="card-sub">How priorities are calculated</div>
-          <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--mu)">Severity weight</span><span style="font-size:12px;font-weight:600;color:var(--tx)">40%</span></div><div class="bar-track"><div class="bar-fill" style="width:40%;background:var(--r)"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--mu)">Frequency weight</span><span style="font-size:12px;font-weight:600;color:var(--tx)">35%</span></div><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--a)"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--mu)">Source diversity</span><span style="font-size:12px;font-weight:600;color:var(--tx)">15%</span></div><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--b)"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--mu)">Recency</span><span style="font-size:12px;font-weight:600;color:var(--tx)">10%</span></div><div class="bar-track"><div class="bar-fill" style="width:10%;background:var(--p)"></div></div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Top friction themes</div>
-          <div class="card-sub">Recurring patterns across all sources</div>
-          <div id="theme-bars" style="margin-top:10px"></div>
-        </div>
-      </div>
+      <div class="card"><div class="card-title">GXM areas affected</div><div class="card-sub">Which platform areas generate the most feedback</div><div id="area-bars" style="margin-top:12px"></div></div>
     </div>
 
     <!-- EXPLORER -->
@@ -383,28 +340,14 @@ html,body { background:var(--bg); color:var(--tx); font-family:'Inter',-apple-sy
       <div class="filter-row">
         <select class="filter-select" id="f-source" onchange="renderExplorer()"><option value="">All sources</option></select>
         <select class="filter-select" id="f-sl" onchange="renderExplorer()"><option value="">All service lines</option></select>
-        <select class="filter-select" id="f-sev" onchange="renderExplorer()">
-          <option value="">All severities</option>
-          <option>Critical</option><option>Significant</option><option>Minor</option>
-        </select>
-        <select class="filter-select" id="f-freq" onchange="renderExplorer()">
-          <option value="">All frequencies</option>
-          <option>Always</option><option>Sometimes</option><option>First time</option>
-        </select>
-        <select class="filter-select" id="f-area" onchange="renderExplorer()"><option value="">All GXM areas</option></select>
+        <select class="filter-select" id="f-sev" onchange="renderExplorer()"><option value="">All severities</option><option>Critical</option><option>Significant</option><option>Minor</option></select>
+        <select class="filter-select" id="f-freq" onchange="renderExplorer()"><option value="">All frequencies</option><option>Always</option><option>Sometimes</option><option>First time</option></select>
+        <select class="filter-select" id="f-status" onchange="renderExplorer()"><option value="">All statuses</option><option value="new">New</option><option value="validated">Validated</option><option value="in_review">In review</option><option value="merged">Merged</option><option value="rejected">Rejected</option></select>
         <span class="insight-count" id="explorer-count"></span>
-        <button class="btn-sm" onclick="resetFilters()">Reset filters</button>
+        <button class="btn-sm" onclick="resetFilters()">Reset</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
-        <div class="tbl-wrap">
-          <table class="itbl" id="explorer-table">
-            <thead><tr>
-              <th>Date</th><th>Source</th><th>Contact</th><th>Service line</th>
-              <th>Goal</th><th>Friction</th><th>Severity</th><th>Freq.</th><th>GXM area</th>
-            </tr></thead>
-            <tbody id="explorer-body"></tbody>
-          </table>
-        </div>
+        <div class="tbl-wrap"><table class="itbl"><thead><tr><th>Date</th><th>Status</th><th>Source</th><th>Contact</th><th>Service line</th><th>Goal</th><th>Friction</th><th>Severity</th><th>Freq.</th><th>Theme</th></tr></thead><tbody id="explorer-body"></tbody></table></div>
       </div>
     </div>
 
@@ -413,47 +356,24 @@ html,body { background:var(--bg); color:var(--tx); font-family:'Inter',-apple-sy
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div class="ingest-card">
           <div class="card-title" style="margin-bottom:4px">AI Intake Layer</div>
-          <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Paste raw text from any source — Claude will extract and format it as a structured insight.</div>
+          <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Paste raw text — Claude extracts and structures it automatically.</div>
           <div class="ingest-tabs">
             <div class="itab active" onclick="switchIngestTab('meeting')">Meeting summary</div>
             <div class="itab" onclick="switchIngestTab('email')">Email thread</div>
             <div class="itab" onclick="switchIngestTab('note')">Raw notes</div>
           </div>
-          <div class="ingest-area active" id="ia-meeting">
-            <textarea class="paste-box" id="paste-meeting" placeholder="Paste your Copilot meeting summary here...&#10;&#10;e.g. 'The customer mentioned that uploading payslips takes too long because there is no bulk option. Maria from Grupo Fiscal said: my clients pay for this to save time but I spend more time here than in Excel. This is a recurring issue they face every payroll cycle.'"></textarea>
-            <div class="ingest-hint">Accepts raw Copilot recap, transcript excerpts, or meeting notes. Claude will identify the insight, friction, severity, and relevant fields automatically.</div>
-          </div>
-          <div class="ingest-area" id="ia-email">
-            <textarea class="paste-box" id="paste-email" placeholder="Paste an email thread or forwarded message...&#10;&#10;Claude will extract the feedback, identify the contact, and structure it into an insight note."></textarea>
-            <div class="ingest-hint">Works with forwarded emails, reply chains, or single messages. Subject line and sender will be extracted if present.</div>
-          </div>
-          <div class="ingest-area" id="ia-note">
-            <textarea class="paste-box" id="paste-note" placeholder="Type or paste any raw observation...&#10;&#10;e.g. 'Spoke to the ops team today — they said the approval button on payroll is often greyed out with no explanation. Happens regularly and blocks their workflow.'"></textarea>
-            <div class="ingest-hint">For informal notes, Slack messages, or verbal feedback you've jotted down. Keep it natural — Claude handles the structure.</div>
-          </div>
+          <div class="ingest-area active" id="ia-meeting"><textarea class="paste-box" id="paste-meeting" placeholder="Paste your Copilot meeting summary here..."></textarea><div class="ingest-hint">Accepts raw Copilot recap, transcript excerpts, or meeting notes.</div></div>
+          <div class="ingest-area" id="ia-email"><textarea class="paste-box" id="paste-email" placeholder="Paste an email thread or forwarded message..."></textarea><div class="ingest-hint">Works with forwarded emails, reply chains, or single messages.</div></div>
+          <div class="ingest-area" id="ia-note"><textarea class="paste-box" id="paste-note" placeholder="Type or paste any raw observation..."></textarea><div class="ingest-hint">For informal notes, Slack messages, or verbal feedback.</div></div>
           <div class="ingest-actions">
-            <button class="btn-sm btn-green" onclick="processIngest()">
-              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>
-              Extract with Claude
-            </button>
+            <button class="btn-sm btn-green" onclick="processIngest()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Extract with Claude</button>
             <span id="ingest-status" style="font-size:12px;color:var(--mu)"></span>
           </div>
           <div class="result-preview" id="result-preview"></div>
         </div>
         <div>
-          <div class="card" style="margin-bottom:14px">
-            <div class="card-title" style="margin-bottom:4px">Ingestion channels</div>
-            <div style="font-size:12px;color:var(--mu);margin-bottom:14px">All sources that feed into this dashboard.</div>
-            <div style="display:flex;flex-direction:column;gap:8px" id="channel-list"></div>
-          </div>
-          <div class="card">
-            <div class="card-title" style="margin-bottom:4px">Productboard email</div>
-            <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Forward emails directly to Productboard and they'll appear here after processing.</div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="email" id="pb-email" placeholder="your-inbox@productboard.com" style="flex:1;padding:8px 11px;border:1.5px solid var(--bd);border-radius:7px;font-size:12.5px;color:var(--tx);background:#fff;outline:none;font-family:inherit">
-              <button class="btn-sm btn-green" onclick="savePBEmail()">Save</button>
-            </div>
-          </div>
+          <div class="card" style="margin-bottom:14px"><div class="card-title" style="margin-bottom:12px">Channel breakdown</div><div id="channel-list"></div></div>
+          <div class="card"><div class="card-title" style="margin-bottom:4px">Productboard email</div><div style="font-size:12px;color:var(--mu);margin-bottom:12px">Forward emails to your Productboard inbox.</div><div style="display:flex;gap:8px"><input type="email" id="pb-email" placeholder="your-inbox@productboard.com" style="flex:1;padding:8px 11px;border:1.5px solid var(--bd);border-radius:7px;font-size:12.5px;color:var(--tx);background:#fff;outline:none;font-family:inherit"><button class="btn-sm btn-green" onclick="savePBEmail()">Save</button></div></div>
         </div>
       </div>
     </div>
@@ -462,252 +382,553 @@ html,body { background:var(--bg); color:var(--tx); font-family:'Inter',-apple-sy
 </div>
 </div>
 
-<!-- DETAIL DRAWER -->
+<!-- INSIGHT DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <div style="flex:1">
-      <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px" id="d-title">Insight detail</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="d-badges"></div>
-    </div>
-    <button class="drawer-close" onclick="closeDrawer()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-  </div>
+  <div class="drawer-header"><div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px" id="d-title">Insight detail</div><div style="display:flex;gap:6px;flex-wrap:wrap" id="d-badges"></div></div><button class="drawer-close" onclick="closeDrawer()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="drawer-body" id="drawer-body"></div>
   <div class="drawer-similar" id="drawer-similar"></div>
 </div>
 
+<!-- THEME DRAWER -->
+<div class="drawer-overlay" id="theme-drawer-overlay" onclick="closeThemeDrawer()"></div>
+<div class="drawer" id="theme-drawer">
+  <div class="drawer-header"><div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px" id="td-title">Theme</div><div id="td-badges" style="display:flex;gap:6px;flex-wrap:wrap"></div></div><button class="drawer-close" onclick="closeThemeDrawer()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="drawer-body" id="td-body"></div>
+</div>
+
+<!-- THEME MODAL -->
+<div class="modal-overlay" id="theme-modal">
+  <div class="modal">
+    <div class="modal-title" id="theme-modal-title">New theme</div>
+    <div class="modal-sub">Group related insights into a named pattern.</div>
+    <div class="modal-field"><label class="modal-label">Title *</label><input class="modal-input" id="tm-title" placeholder="e.g. Bulk operations missing across service lines"></div>
+    <div class="modal-field"><label class="modal-label">Description</label><textarea class="modal-textarea" id="tm-desc" rows="3" placeholder="Describe the pattern and why it matters..."></textarea></div>
+    <div class="modal-field"><label class="modal-label">Pattern status</label><select class="modal-input" id="tm-status"><option value="emerging">Emerging</option><option value="recurring">Recurring</option><option value="critical">Critical</option><option value="resolved">Resolved</option></select></div>
+    <div class="modal-field"><label class="modal-label">Owner</label><input class="modal-input" id="tm-owner" placeholder="e.g. Steven Cooper"></div>
+    <div class="modal-field"><label class="modal-label">Recommended action</label><input class="modal-input" id="tm-action" placeholder="e.g. Design bulk upload component for all service lines"></div>
+    <div class="modal-actions"><button class="btn-sm" onclick="closeThemeModal()">Cancel</button><button class="btn-sm btn-green" onclick="saveTheme()">Save theme</button></div>
+  </div>
+</div>
+
+<!-- INITIATIVE MODAL -->
+<div class="modal-overlay" id="initiative-modal">
+  <div class="modal">
+    <div class="modal-title">New initiative</div>
+    <div class="modal-sub">Create a traceable decision linked to themes and insights.</div>
+    <div class="modal-field"><label class="modal-label">Title *</label><input class="modal-input" id="im-title" placeholder="e.g. Implement bulk payslip upload"></div>
+    <div class="modal-field"><label class="modal-label">Hypothesis</label><textarea class="modal-textarea" id="im-hyp" rows="2" placeholder="We believe that... will result in..."></textarea></div>
+    <div class="modal-field"><label class="modal-label">Expected outcome</label><input class="modal-input" id="im-outcome" placeholder="e.g. Reduce payroll upload time by 80%"></div>
+    <div class="modal-field"><label class="modal-label">Owner</label><input class="modal-input" id="im-owner" placeholder="e.g. Steven Cooper"></div>
+    <div class="modal-field"><label class="modal-label">Jira link</label><input class="modal-input" id="im-jira" placeholder="https://..."></div>
+    <div class="modal-field"><label class="modal-label">Status</label><select class="modal-input" id="im-status"><option value="planned">Planned</option><option value="in_progress">In progress</option><option value="shipped">Shipped</option></select></div>
+    <input type="hidden" id="im-theme-id">
+    <div class="modal-actions"><button class="btn-sm" onclick="closeInitiativeModal()">Cancel</button><button class="btn-sm btn-green" onclick="saveInitiative()">Save initiative</button></div>
+  </div>
+</div>
+
 <script>
-const STORAGE_KEY = 'gxm_insights_v1';
-const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
-const SEV_C = { Critical:'#dc2626', Significant:'#d97706', Minor:'#1a9e6e' };
-const SEV_BG = { Critical:'rgba(220,38,38,.1)', Significant:'rgba(217,119,6,.1)', Minor:'rgba(26,158,110,.1)' };
-const SRC_COLORS = ['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2'];
-const AC = ['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2','#0e7490','#7c3aed','#be185d','#065f46'];
+show');
+  const typeLabel=ingestTab==='meeting'?'Copilot meeting summary':ingestTab==='email'?'email thread':'raw notes';
+  const prompt=`Extract a GXM product insight from this ${typeLabel}. Return ONLY valid JSON:\n{"sourceLabel":"LSP|Customer|Sales|Ops|Internal","firstName":"","company":"","role":"","contactEmail":"","serviceLine":"Payroll|Entities|Entities Plus|HR|Books & Tax|Tax|EoR|Not service-specific","trying":"what they were trying to do","painPattern":"Navigation & Findability|System Feedback|Process Complexity|Data & Accuracy|Performance & Reliability|Access & Permissions|Other","pain":"specific friction","quote":"direct quote if any","severity":"Critical|Significant|Minor","frequency":"Always|Sometimes|First time","aiSummary":"one sentence summary of the insight","primaryTheme":"short theme name this likely belongs to","problemType":"normalized problem category","jobToBeDone":"user goal in job-to-be-done format","confidenceScore":0.8}\n\nText:\n${raw}`;
+  try {
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();const text=data.content?.[0]?.text||'';
+    const extracted=JSON.parse(text.replace(/```json|```/g,'').trim());
+    statusEl.textContent='✓ Insight extracted';
+    const all=loadAll();const dupes=findDuplicates({...extracted,id:'_preview'},all);
+    const preview=document.getElementById('result-preview');
+    const fields=[['Source',extracted.sourceLabel],['Contact',`${extracted.firstName||''} ${extracted.company?'· '+extracted.company:''}`],['Service line',extracted.serviceLine],['AI summary',extracted.aiSummary],['Suggested theme',extracted.primaryTheme],['Goal (JTBD)',extracted.jobToBeDone],['Problem type',extracted.problemType],['Friction',extracted.pain],['Quote',extracted.quote?`"${extracted.quote}"`:''],['Severity',extracted.severity],['Frequency',extracted.frequency]];
+    preview.innerHTML=`
+      <div style="font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Extracted insight</div>
+      ${fields.filter(([,v])=>v&&String(v).trim()).map(([l,v])=>`<div class="result-field"><div class="rf-label">${l}</div><div class="rf-val">${v}</div></div>`).join('')}
+      ${dupes.length?`<div style="margin:10px 0;padding:8px 10px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e"><strong>Possible duplicate:</strong> "${dupes[0].aiSummary||dupes[0].pain}" — ${dupes[0].firstName}, ${dupes[0].company}</div>`:''}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-sm" onclick="saveExtracted(${JSON.stringify(JSON.stringify({...extracted,status:'new'})).slice(1,-1)})">Save as draft</button>
+        <button class="btn-sm btn-green" onclick="saveExtracted(${JSON.stringify(JSON.stringify({...extracted,status:'validated'})).slice(1,-1)})">Save & validate</button>
+        <button class="btn-sm" onclick="document.getElementById('result-preview').classList.remove('show');document.getElementById('ingest-status').textContent=''">Discard</button>
+      </div>`;
+    preview.dataset.extracted=JSON.stringify(extracted);
+    preview.classList.add('show');
+  } catch(e){statusEl.textContent='Extraction failed.';console.error(e);}
+}
 
-let charts = {}, searchQ = '', ingestTab = 'meeting', activeRow = null;
+function saveExtracted(jsonStr) {
+  try {
+    const data=JSON.parse(jsonStr);
+    const rec={...data,id:'i'+Date.now().toString(36),date:new Date().toISOString().split('T')[0],ts:Date.now(),submitterName:'AI Intake',submitterEmail:'intake@gxm',sourceLabel:data.sourceLabel||'Other'};
+    saveInsight(rec);
+    document.getElementById('result-preview').classList.remove('show');
+    document.getElementById('ingest-status').textContent='✓ Saved';
+    document.getElementById('paste-'+ingestTab).value='';
+    refreshAll();
+    setTimeout(()=>showTab(data.status==='validated'?'explorer':'inbox'),600);
+  } catch(e){alert('Could not save.');}
+}
 
-const DEMO = [
-  {id:'d1',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'LSP',firstName:'Maria',lastName:'González',contactEmail:'maria@grupofiscal.com',company:'Grupo Fiscal BR',role:'Compliance Manager',serviceLine:'Payroll',trying:'Upload payslips',painPattern:'Process Complexity',pain:'Had to upload payslips one by one — no bulk upload option. With 120 employees this takes over 2 hours every payroll cycle.',quote:'"My clients pay for this to save time, but I spend more time here than in Excel."',severity:'Critical',frequency:'Always',relatedFeature:'Task Execution Layer',date:'2026-03-28',ts:1711584000000},
-  {id:'d2',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'Customer',firstName:'James',lastName:'Osei',contactEmail:'james@aligntech.com',company:'AlignTech Global',role:'Finance Director',serviceLine:'Entities',trying:'Navigate to active processes',painPattern:'Navigation & Findability',pain:'Cannot find the processes table from the entity profile page. Always has to go back to main menu and navigate manually.',quote:'"I know the process exists but I can never find it from here."',severity:'Significant',frequency:'Always',relatedFeature:'Entity Management',date:'2026-03-27',ts:1711497600000},
-  {id:'d3',submitterName:'Ana Pérez',submitterEmail:'ana@hspgroup.com',sourceLabel:'Ops',firstName:'Ops',lastName:'Team',contactEmail:'ops@hspgroup.com',company:'HSP Group',role:'Operations',serviceLine:'Payroll',trying:'Match payslips to employees',painPattern:'Data & Accuracy',pain:'AI matching fails when employee names have accents or special characters. About 30% of LATAM payslips need manual matching.',quote:'',severity:'Critical',frequency:'Sometimes',relatedFeature:'Data Layer & Matching',date:'2026-03-26',ts:1711411200000},
-  {id:'d4',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'LSP',firstName:'Yuki',lastName:'Tanaka',contactEmail:'yuki@hsp-japan.com',company:'HSP Japan',role:'LSP Manager',serviceLine:'Entities Plus',trying:'Track compliance deadlines',painPattern:'System Feedback',pain:'No reminder system for upcoming filing deadlines. LSPs manually track dates outside the platform.',quote:'"We pay for a compliance platform that doesn\'t remind us about compliance."',severity:'Significant',frequency:'Always',relatedFeature:'Notifications & Feedback',date:'2026-03-25',ts:1711324800000},
-  {id:'d5',submitterName:'Ana Pérez',submitterEmail:'ana@hspgroup.com',sourceLabel:'Sales',firstName:'Chris',lastName:'Hammond',contactEmail:'chris@hspgroup.com',company:'HSP Group',role:'Account Executive',serviceLine:'HR',trying:'Manage employee records',painPattern:'Navigation & Findability',pain:'Customers ask why employee list and payroll are on separate screens. Expected one unified employee view.',quote:'"Every demo I have to explain why HR and payroll are disconnected."',severity:'Significant',frequency:'Sometimes',relatedFeature:'Entity Management',date:'2026-03-24',ts:1711238400000},
-  {id:'d6',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'Customer',firstName:'Priya',lastName:'Sharma',contactEmail:'priya@wisa.in',company:'Wisa Technologies',role:'HR Manager',serviceLine:'Payroll',trying:'Track payroll status',painPattern:'System Feedback',pain:'Status labels like "In Progress" don\'t explain what stage payroll is at. No way to know if waiting for LSP or approval.',quote:'"I don\'t know if I should be doing something or waiting for someone else."',severity:'Significant',frequency:'Always',relatedFeature:'Process & Workflow Engine',date:'2026-03-23',ts:1711152000000},
-  {id:'d7',submitterName:'Ana Pérez',submitterEmail:'ana@hspgroup.com',sourceLabel:'Ops',firstName:'Ops',lastName:'Team',contactEmail:'ops@hspgroup.com',company:'HSP Group',role:'Operations',serviceLine:'Books & Tax',trying:'Manage tax filings',painPattern:'Process Complexity',pain:'Tax filing workflow requires switching between 4 different screens. No single view shows all pending filings across entities.',quote:'',severity:'Critical',frequency:'Always',relatedFeature:'Process & Workflow Engine',date:'2026-03-22',ts:1711065600000},
-  {id:'d8',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'LSP',firstName:'Carlos',lastName:'Méndez',contactEmail:'carlos@latampartners.com',company:'LATAM Partners',role:'Payroll Specialist',serviceLine:'Payroll',trying:'Submit payroll for approval',painPattern:'Access & Permissions',pain:'Approval button is greyed out with no explanation. Had to contact support to find out milestone was incomplete.',quote:'"The system blocks me but won\'t tell me why."',severity:'Critical',frequency:'Sometimes',relatedFeature:'Approval & Release Flow',date:'2026-03-21',ts:1710979200000},
-  {id:'d9',submitterName:'Ana Pérez',submitterEmail:'ana@hspgroup.com',sourceLabel:'Customer',firstName:'Sarah',lastName:'Mitchell',contactEmail:'sarah@techcorp.com',company:'TechCorp EU',role:'Operations Manager',serviceLine:'Entities',trying:'Access entity-related documents',painPattern:'Navigation & Findability',pain:'Document section is buried inside entity profile. Customers frequently ask where to find uploaded files from previous months.',quote:'"I know you uploaded it, I just can\'t find it."',severity:'Minor',frequency:'Sometimes',relatedFeature:'File Management',date:'2026-03-20',ts:1710892800000},
-  {id:'d10',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'LSP',firstName:'Amara',lastName:'Diallo',contactEmail:'amara@africahsp.com',company:'Africa HSP',role:'Entity Manager',serviceLine:'EoR',trying:'Manage employee contracts',painPattern:'Data & Accuracy',pain:'Contract templates don\'t auto-populate entity data. Manually re-enter company name, jurisdiction, and registered address for every contract.',quote:'"This is exactly the kind of manual work the platform should eliminate."',severity:'Significant',frequency:'Always',relatedFeature:'Task Execution Layer',date:'2026-03-19',ts:1710806400000},
-  {id:'d11',submitterName:'Ana Pérez',submitterEmail:'ana@hspgroup.com',sourceLabel:'Internal',firstName:'Product',lastName:'Team',contactEmail:'product@hspgroup.com',company:'HSP Group',role:'Product',serviceLine:'Not service-specific',trying:'Navigate the platform',painPattern:'Performance & Reliability',pain:'Dashboard takes 6-8 seconds to load on first visit. Several users reported thinking the page was broken.',quote:'',severity:'Significant',frequency:'Sometimes',relatedFeature:'Dashboard',date:'2026-03-18',ts:1710720000000},
-  {id:'d12',submitterName:'Steven Cooper',submitterEmail:'steven@hspgroup.com',sourceLabel:'Sales',firstName:'Emma',lastName:'Clarke',contactEmail:'emma@hspgroup.com',company:'HSP Group',role:'Account Executive',serviceLine:'Tax',trying:'Submit tax filings',painPattern:'Navigation & Findability',pain:'Prospects ask for a deadline calendar showing all upcoming tax obligations. Losing deals to competitors who have it.',quote:'"Your competitor showed me a calendar view in the first 5 minutes of the demo."',severity:'Critical',frequency:'Always',relatedFeature:'Calendar & Time Navigation',date:'2026-03-17',ts:1710633600000},
+function renderChannels(all) {
+  const srcs=countBy(all,'sourceLabel');const total=all.length;
+  const colors={'LSP':AC[0],'Customer':AC[1],'Sales':AC[2],'Ops':AC[3],'Internal':AC[4],'AI Intake':AC[7]};
+  document.getElementById('channel-list').innerHTML=srcs.map(([l,v])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)"><div style="width:10px;height:10px;border-radius:50%;background:${colors[l]||AC[5]};flex-shrink:0"></div><div style="flex:1;font-size:13px;color:var(--tx);font-weight:500">${l}</div><div style="font-size:12px;color:var(--mu)">${v} insight${v!==1?'s':''}</div><div style="font-size:12px;font-weight:600;color:var(--g)">${Math.round((v/total)*100)}%</div></div>`).join('');
+}
+
+// ── NAVIGATION ──
+const TAB_TITLES={inbox:'Insight Inbox',themes:'Themes',initiatives:'Initiatives',overview:'Overview',patterns:'Patterns & Trends',explorer:'Insight Explorer',ingest:'Add Insights'};
+const SB_MAP={inbox:0,themes:1,initiatives:2,overview:3,patterns:4,explorer:5,ingest:6};
+
+function showTab(tab) {
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.getElementById('sec-'+tab).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
+  const items=document.querySelectorAll('.sb-item');
+  if(items[SB_MAP[tab]!==undefined?SB_MAP[tab]:0]) items[SB_MAP[tab]].classList.add('active');
+  document.getElementById('page-title').textContent=TAB_TITLES[tab]||tab;
+  if(tab==='explorer'){populateFilters();renderExplorer();}
+}
+
+function onSearch(q){searchQ=q;refreshAll();populateFilters();renderExplorer();}
+
+function exportCSV() {
+  const all=loadAll();
+  const headers=['Date','Status','Submitter','Source','Contact','Company','Email','Service Line','Goal','Problem Type','Friction','Quote','Severity','Frequency','GXM Area','Theme','AI Summary'];
+  const rows=all.map(i=>[i.date,i.status,i.submitterName,i.sourceLabel,`${i.firstName||''} ${i.lastName||''}`.trim(),i.company||'',i.contactEmail||'',i.serviceLine,i.trying,i.problemType,`"${(i.pain||'').replace(/"/g,'""')}"`,`"${(i.quote||'').replace(/"/g,'""')}"`,i.severity,i.frequency,i.relatedFeature,i.primaryTheme||'',`"${(i.aiSummary||'').replace(/"/g,'""')}"`]);
+  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='gxm-insights-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+function savePBEmail(){const e=document.getElementById('pb-email')?.value.trim();if(e){localStorage.setItem('gxm_pb_email',e);alert('Saved!');}}
+
+// Init
+const savedPB=localStorage.getItem('gxm_pb_email');if(savedPB){const el=document.getElementById('pb-email');if(el)el.value=savedPB;}
+refreshAll();
+</script>
+</body>
+</html>
+
+// NEW: Insight lifecycle
+const SK='gxm_insights_v1';
+const SK_THEMES='gxm_themes_v1';
+const SK_INITIATIVES='gxm_initiatives_v1';
+const API='https://api.anthropic.com/v1/messages';
+const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
+const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
+const AC=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2','#0e7490','#7c3aed','#be185d','#065f46'];
+const SRC_COLORS=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
+const STATUS_LABELS={new:'New',in_review:'In review',validated:'Validated',merged:'Merged',rejected:'Rejected',clustered:'Clustered',actioned:'Actioned',resolved:'Resolved'};
+const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
+const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
+const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
+
+let charts={},searchQ='',ingestTab='meeting',activeRow=null,inboxFilter='all',editingThemeId=null;
+
+// NEW: Demo insights with lifecycle fields
+const DEMO=[
+  {id:'d1',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ef9c9b8a998a81af879c9f889d809a9fc18c8082">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Maria',lastName:'González',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="365b57445f57765144434659505f4555575a1855595b">[email&#160;protected]</a>',company:'Grupo Fiscal BR',role:'Compliance Manager',serviceLine:'Payroll',trying:'Upload payslips',painPattern:'Process Complexity',pain:'Had to upload payslips one by one — no bulk upload. With 120 employees this takes 2+ hours every cycle.',quote:'"My clients pay for this to save time, but I spend more time here than in Excel."',severity:'Critical',frequency:'Always',relatedFeature:'Task Execution Layer',date:'2026-03-28',ts:1711584000000,status:'validated',aiSummary:'LSP unable to bulk-upload payslips — forced into a 2-hour manual process each cycle.',problemType:'Missing bulk operation',jobToBeDone:'Efficiently upload payslips for 120+ employees',primaryTheme:'Bulk Operations Gap',confidenceScore:0.92,clusterId:'cl-bulk'},
+  {id:'d2',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="394a4d5c4f5c5779514a495e4b564c49175a5654">[email&#160;protected]</a>',sourceLabel:'Customer',firstName:'James',lastName:'Osei',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b515a565e487b5a57525c554f5e585315585456">[email&#160;protected]</a>',company:'AlignTech Global',role:'Finance Director',serviceLine:'Entities',trying:'Navigate to active processes',painPattern:'Navigation & Findability',pain:'Cannot find the processes table from the entity profile page. Always has to go back to main menu.',quote:'"I know the process exists but I can never find it from here."',severity:'Significant',frequency:'Always',relatedFeature:'Entity Management',date:'2026-03-27',ts:1711497600000,status:'validated',aiSummary:'Customer cannot navigate to active processes from entity profile — structural navigation gap.',problemType:'Navigation gap',jobToBeDone:'Access active processes from entity context',primaryTheme:'Navigation & Findability',confidenceScore:0.88,clusterId:'cl-nav'},
+  {id:'d3',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6d0c030c2d051e1d0a1f02181d430e0200">[email&#160;protected]</a>',sourceLabel:'Ops',firstName:'Ops',lastName:'Team',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e48b9497a48c979483968b9194ca878b89">[email&#160;protected]</a>',company:'HSP Group',role:'Operations',serviceLine:'Payroll',trying:'Match payslips to employees',painPattern:'Data & Accuracy',pain:'AI matching fails on accented characters. ~30% of LATAM payslips need manual matching.',quote:'',severity:'Critical',frequency:'Sometimes',relatedFeature:'Data Layer & Matching',date:'2026-03-26',ts:1711411200000,status:'new',aiSummary:'AI matching engine breaks on accented characters — 30% manual fallback in LATAM.',problemType:'AI accuracy failure',jobToBeDone:'Automatically match payslips to employee records',primaryTheme:'Data & Matching Quality',confidenceScore:0.85,clusterId:'cl-ai'},
+  {id:'d4',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3a494e5f4c5f547a52494a5d48554f4a14595557">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Yuki',lastName:'Tanaka',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="077e726c6e476f74772a6d667766692964686a">[email&#160;protected]</a>',company:'HSP Japan',role:'LSP Manager',serviceLine:'Entities Plus',trying:'Track compliance deadlines',painPattern:'System Feedback',pain:'No reminder system for filing deadlines. LSPs manually track dates outside the platform.',quote:'"We pay for a compliance platform that doesn\'t remind us about compliance."',severity:'Significant',frequency:'Always',relatedFeature:'Notifications & Feedback',date:'2026-03-25',ts:1711324800000,status:'new',aiSummary:'No deadline reminder system — LSPs track compliance dates externally in spreadsheets.',problemType:'Missing proactive notification',jobToBeDone:'Track and be reminded of upcoming compliance deadlines',primaryTheme:'Proactive Notifications',confidenceScore:0.90,clusterId:'cl-notif'},
+  {id:'d5',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="22434c43624a515245504d57520c414d4f">[email&#160;protected]</a>',sourceLabel:'Sales',firstName:'Chris',lastName:'Hammond',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b2d1dac0dbc1f2dac1c2d5c0ddc7c29cd1dddf">[email&#160;protected]</a>',company:'HSP Group',role:'Account Executive',serviceLine:'HR',trying:'Manage employee records',painPattern:'Navigation & Findability',pain:'HR and payroll are on separate screens. Expected one unified employee view.',quote:'"Every demo I have to explain why HR and payroll are disconnected."',severity:'Significant',frequency:'Sometimes',relatedFeature:'Entity Management',date:'2026-03-24',ts:1711238400000,status:'in_review',aiSummary:'HR and payroll data are siloed — losing deals as prospects compare unfavourably to competitors.',problemType:'Fragmented data model',jobToBeDone:'Access unified employee profile across HR and payroll',primaryTheme:'Data Fragmentation',confidenceScore:0.78,clusterId:'cl-frag'},
+  {id:'d6',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afdcdbcad9cac1efc7dcdfc8ddc0dadf81ccc0c2">[email&#160;protected]</a>',sourceLabel:'Customer',firstName:'Priya',lastName:'Sharma',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a3d3d1cadac2e3d4cad0c28dcacd">[email&#160;protected]</a>',company:'Wisa Technologies',role:'HR Manager',serviceLine:'Payroll',trying:'Track payroll status',painPattern:'System Feedback',pain:'Status labels like "In Progress" don\'t explain what stage payroll is at.',quote:'"I don\'t know if I should be doing something or waiting for someone else."',severity:'Significant',frequency:'Always',relatedFeature:'Process & Workflow Engine',date:'2026-03-23',ts:1711152000000,status:'validated',aiSummary:'Payroll status labels are ambiguous — users cannot tell if action is required.',problemType:'Unclear system feedback',jobToBeDone:'Understand current payroll stage and required actions',primaryTheme:'Proactive Notifications',confidenceScore:0.82,clusterId:'cl-notif'},
+  {id:'d7',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a1c0cfc0e1c9d2d1c6d3ced4d18fc2cecc">[email&#160;protected]</a>',sourceLabel:'Ops',firstName:'Ops',lastName:'Team',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="95fae5e6d5fde6e5f2e7fae0e5bbf6faf8">[email&#160;protected]</a>',company:'HSP Group',role:'Operations',serviceLine:'Books & Tax',trying:'Manage tax filings',painPattern:'Process Complexity',pain:'Tax filing requires switching between 4 screens. No consolidated workflow.',quote:'',severity:'Critical',frequency:'Always',relatedFeature:'Process & Workflow Engine',date:'2026-03-22',ts:1711065600000,status:'new',aiSummary:'Tax filing requires 4 screen switches — no consolidated workflow view.',problemType:'Fragmented workflow',jobToBeDone:'Complete tax filing process in one place',primaryTheme:'Navigation & Findability',confidenceScore:0.87,clusterId:'cl-nav'},
+  {id:'d8',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="06757263706368466e757661746973762865696b">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Carlos',lastName:'Méndez',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="99faf8ebf5f6ead9f5f8edf8f4e9f8ebedf7fcebeab7faf6f4">[email&#160;protected]</a>',company:'LATAM Partners',role:'Payroll Specialist',serviceLine:'Payroll',trying:'Submit payroll for approval',painPattern:'Access & Permissions',pain:'Approval button is greyed out with no explanation of what is blocking.',quote:'"The system blocks me but won\'t tell me why."',severity:'Critical',frequency:'Sometimes',relatedFeature:'Approval & Release Flow',date:'2026-03-21',ts:1710979200000,status:'new',aiSummary:'Approval button silently blocks users with no explanation of what is preventing submission.',problemType:'Silent system block',jobToBeDone:'Submit payroll for approval',primaryTheme:'Proactive Notifications',confidenceScore:0.91,clusterId:'cl-notif'},
+  {id:'d9',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="07666966476f747760756872772964686a">[email&#160;protected]</a>',sourceLabel:'Customer',firstName:'Sarah',lastName:'Mitchell',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="14677566757c546071777c777b66643a777b79">[email&#160;protected]</a>',company:'TechCorp EU',role:'Operations Manager',serviceLine:'Entities',trying:'Access entity-related documents',painPattern:'Navigation & Findability',pain:'Document section is buried inside entity profile.',quote:'"I know you uploaded it, I just can\'t find it."',severity:'Minor',frequency:'Sometimes',relatedFeature:'File Management',date:'2026-03-20',ts:1710892800000,status:'validated',aiSummary:'Documents are hard to locate inside entity profile — discovery friction.',problemType:'Navigation gap',jobToBeDone:'Find uploaded documents for an entity',primaryTheme:'Navigation & Findability',confidenceScore:0.75,clusterId:'cl-nav'},
+  {id:'d10',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1261667764777c527a616275607d67623c717d7f">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Amara',lastName:'Diallo',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="12737f736073527374607b71737a61623c717d7f">[email&#160;protected]</a>',company:'Africa HSP',role:'Entity Manager',serviceLine:'EoR',trying:'Manage employee contracts',painPattern:'Data & Accuracy',pain:'Contract templates don\'t auto-populate entity data. Re-enter company name, jurisdiction per contract.',quote:'"This is exactly the kind of manual work the platform should eliminate."',severity:'Significant',frequency:'Always',relatedFeature:'Task Execution Layer',date:'2026-03-19',ts:1710806400000,status:'new',aiSummary:'Contract templates require manual data re-entry — entity data not auto-populated.',problemType:'Missing automation',jobToBeDone:'Generate pre-filled employee contracts from entity data',primaryTheme:'Bulk Operations Gap',confidenceScore:0.83,clusterId:'cl-bulk'},
+  {id:'d11',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="80e1eee1c0e8f3f0e7f2eff5f0aee3efed">[email&#160;protected]</a>',sourceLabel:'Internal',firstName:'Product',lastName:'Team',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1363617c77667067537b606374617c66633d707c7e">[email&#160;protected]</a>',company:'HSP Group',role:'Product',serviceLine:'Not service-specific',trying:'Navigate the platform',painPattern:'Performance & Reliability',pain:'Dashboard takes 6-8 seconds to load on first visit.',quote:'',severity:'Significant',frequency:'Sometimes',relatedFeature:'Dashboard',date:'2026-03-18',ts:1710720000000,status:'in_review',aiSummary:'Dashboard load time of 6-8 seconds causing users to think the page is broken.',problemType:'Performance issue',jobToBeDone:'Access dashboard quickly',primaryTheme:'Performance',confidenceScore:0.70,clusterId:'cl-perf'},
+  {id:'d12',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1b686f7e6d7e755b73686b7c69746e6b35787476">[email&#160;protected]</a>',sourceLabel:'Sales',firstName:'Emma',lastName:'Clarke',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f7a72727e5f776c6f786d706a6f317c7072">[email&#160;protected]</a>',company:'HSP Group',role:'Account Executive',serviceLine:'Tax',trying:'Submit tax filings',painPattern:'Navigation & Findability',pain:'Prospects ask for a deadline calendar — losing deals to competitors who have it.',quote:'"Your competitor showed me a calendar view in the first 5 minutes of the demo."',severity:'Critical',frequency:'Always',relatedFeature:'Calendar & Time Navigation',date:'2026-03-17',ts:1710633600000,status:'validated',aiSummary:'Missing deadline calendar view causes lost deals — competitors have this feature.',problemType:'Missing feature',jobToBeDone:'View all upcoming tax deadlines in calendar format',primaryTheme:'Proactive Notifications',confidenceScore:0.94,clusterId:'cl-notif'},
 ];
 
-function loadAll() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const storedIds = new Set(stored.map(i => i.id));
-    return [...DEMO.filter(d => !storedIds.has(d.id)), ...stored].sort((a,b)=>(b.ts||0)-(a.ts||0));
-  } catch(e) { return DEMO; }
+// NEW: Demo themes
+const DEMO_THEMES=[
+  {id:'th1',title:'Bulk Operations Gap',description:'Users across Payroll, EoR, and Entities lack bulk action capabilities — forced into repetitive manual work.',primaryTag:'Process Complexity',insightIds:['d1','d10'],patternStatus:'critical',trend:'up',recommendedAction:'Design a universal bulk action component. Start with payslip upload.',owner:'Steven Cooper',createdAt:'2026-03-25'},
+  {id:'th2',title:'Proactive Notifications',description:'The platform is reactive — users must actively check for deadlines, status changes, and required actions.',primaryTag:'System Feedback',insightIds:['d4','d6','d8','d12'],patternStatus:'recurring',trend:'up',recommendedAction:'Build notification engine with configurable alerts for deadlines, status changes, and blocked steps.',owner:'Ana Pérez',createdAt:'2026-03-24'},
+  {id:'th3',title:'Navigation & Findability',description:'Users consistently cannot find what they need — processes from entity profiles, documents, tax workflows.',primaryTag:'Navigation & Findability',insightIds:['d2','d7','d9'],patternStatus:'recurring',trend:'flat',recommendedAction:'Navigation audit. Add contextual quick links and breadcrumbs to entity pages.',owner:'Steven Cooper',createdAt:'2026-03-23'},
+  {id:'th4',title:'Data & Matching Quality',description:'AI matching failures on non-ASCII characters causing high manual fallback rates in LATAM markets.',primaryTag:'Data & Accuracy',insightIds:['d3'],patternStatus:'emerging',trend:'up',recommendedAction:'Fix character normalization in matching engine. Add confidence score display.',owner:'Ana Pérez',createdAt:'2026-03-22'},
+];
+
+// NEW: Demo initiatives
+const DEMO_INITIATIVES=[
+  {id:'in1',title:'Bulk Payslip Upload',themeIds:['th1'],insightIds:['d1','d10'],hypothesis:'We believe adding bulk payslip upload will reduce LSP payroll processing time by 80%.',owner:'Steven Cooper',status:'in_progress',jiraLink:'https://jira.hspgroup.com/GXM-142',expectedOutcome:'2hr → 15min upload time. LSP satisfaction +20pts.',measuredOutcome:'',createdAt:'2026-03-26'},
+];
+
+// ── STORAGE ──
+function loadAll(){
+  try{
+    const stored=JSON.parse(localStorage.getItem(SK)||'[]');
+    const storedIds=new Set(stored.map(i=>i.id));
+    const merged=[...DEMO.filter(d=>!storedIds.has(d.id)),...stored];
+    return merged.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  }catch(e){return DEMO;}
 }
 
-function saveInsight(rec) {
-  const stored = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch(e) { return []; } })();
-  stored.push(rec);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+function saveInsight(rec){
+  const stored=(()=>{try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return [];}})();
+  const idx=stored.findIndex(i=>i.id===rec.id);
+  if(idx>=0)stored[idx]=rec;else stored.push(rec);
+  localStorage.setItem(SK,JSON.stringify(stored));
 }
 
-function clearData() {
-  if (!confirm('Clear all submitted insights? Demo data will remain.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  refreshAll();
+function updateInsight(id,changes){
+  const all=loadAll();const ins=all.find(i=>i.id===id);if(!ins)return;
+  Object.assign(ins,changes);saveInsight(ins);refreshAll();
 }
 
-function getFiltered(all) {
-  if (!searchQ) return all;
-  const q = searchQ.toLowerCase();
-  return all.filter(i => [i.pain,i.trying,i.quote,i.company,i.firstName,i.serviceLine,i.painPattern,i.relatedFeature].some(f => (f||'').toLowerCase().includes(q)));
+// NEW: Theme storage
+function loadThemes(){
+  try{const stored=JSON.parse(localStorage.getItem(SK_THEMES)||'[]');const storedIds=new Set(stored.map(t=>t.id));return[...DEMO_THEMES.filter(t=>!storedIds.has(t.id)),...stored];}catch(e){return DEMO_THEMES;}
+}
+function saveThemeObj(theme){
+  const stored=(()=>{try{return JSON.parse(localStorage.getItem(SK_THEMES)||'[]');}catch(e){return [];}})();
+  const idx=stored.findIndex(t=>t.id===theme.id);
+  if(idx>=0)stored[idx]=theme;else stored.push(theme);
+  localStorage.setItem(SK_THEMES,JSON.stringify(stored));
 }
 
-function countBy(arr, key) {
-  const c = {};
-  arr.forEach(i => { const v = i[key]||'Unknown'; c[v]=(c[v]||0)+1; });
-  return Object.entries(c).sort((a,b)=>b[1]-a[1]);
+// NEW: Initiative storage
+function loadInitiatives(){
+  try{const stored=JSON.parse(localStorage.getItem(SK_INITIATIVES)||'[]');const storedIds=new Set(stored.map(i=>i.id));return[...DEMO_INITIATIVES.filter(i=>!storedIds.has(i.id)),...stored];}catch(e){return DEMO_INITIATIVES;}
+}
+function saveInitiativeObj(init){
+  const stored=(()=>{try{return JSON.parse(localStorage.getItem(SK_INITIATIVES)||'[]');}catch(e){return [];}})();
+  const idx=stored.findIndex(i=>i.id===init.id);
+  if(idx>=0)stored[idx]=init;else stored.push(init);
+  localStorage.setItem(SK_INITIATIVES,JSON.stringify(stored));
 }
 
-function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function clearData(){if(!confirm('Clear submitted insights? Demo data will remain.'))return;localStorage.removeItem(SK);refreshAll();}
+function getFiltered(all){if(!searchQ)return all;const q=searchQ.toLowerCase();return all.filter(i=>[i.pain,i.trying,i.quote,i.company,i.firstName,i.serviceLine,i.painPattern,i.relatedFeature,i.aiSummary,i.primaryTheme].some(f=>(f||'').toLowerCase().includes(q)));}
+function countBy(arr,key){const c={};arr.forEach(i=>{const v=i[key]||'Unknown';c[v]=(c[v]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]);}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
-function refreshAll() {
-  const all = loadAll();
-  const f = getFiltered(all);
-  renderKPIs(all, f);
-  renderOverviewCharts(all, f);
-  renderPatterns(f);
-  renderExplorer();
-  renderChannels(all);
-  document.getElementById('ai-count').textContent = f.length;
-  renderThemeBars(f);
+// NEW: Improved similarity matching
+function findSimilar(ins,all){
+  return all.filter(i=>i.id!==ins.id&&(i.clusterId===ins.clusterId||i.primaryTheme===ins.primaryTheme||(i.serviceLine===ins.serviceLine&&i.painPattern===ins.painPattern)||(i.problemType===ins.problemType&&i.jobToBeDone===ins.jobToBeDone))).slice(0,4);
+}
+function findDuplicates(ins,all){
+  return all.filter(i=>i.id!==ins.id&&i.serviceLine===ins.serviceLine&&i.painPattern===ins.painPattern&&i.severity===ins.severity).slice(0,2);
+}
+
+function refreshAll(){
+  const all=loadAll();const f=getFiltered(all);
+  renderKPIs(all,f);renderOverviewCharts(all,f);renderPatterns(f);
+  renderInbox(all);renderThemes();renderInitiatives();
+  renderExplorer();renderChannels(all);updateBadges(all);
+}
+
+function updateBadges(all){
+  document.getElementById('inbox-badge').textContent=all.filter(i=>i.status==='new'||i.status==='in_review').length;
+  document.getElementById('themes-badge').textContent=loadThemes().length;
 }
 
 // ── KPIs ──
-function renderKPIs(all, f) {
-  const t=f.length, c=f.filter(i=>i.severity==='Critical').length;
+function renderKPIs(all,f){
+  const t=f.length,c=f.filter(i=>i.severity==='Critical').length;
+  const validated=f.filter(i=>i.status==='validated').length;
+  const newCount=f.filter(i=>i.status==='new').length;
   const always=f.filter(i=>i.frequency==='Always').length;
-  const cp=t>0?Math.round((c/t)*100):0;
-  const week=f.filter(i=>{try{return(new Date()-new Date(i.date))<7*864e5;}catch{return false;}}).length;
-  const srcs=[...new Set(f.map(i=>i.sourceLabel||i.sourceType).filter(Boolean))].length;
-  document.getElementById('kpi-row').innerHTML = `
-    <div class="kpi"><div class="kpi-accent" style="background:var(--g)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Total insights</div><div class="kpi-val">${t}</div><div class="kpi-trend tg">↑ ${week} this week</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--r)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Critical issues</div><div class="kpi-val" style="color:var(--r)">${c}</div><div class="kpi-trend ${c>0?'up':'flat'}">${cp}% of total</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--a)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Recurring (Always)</div><div class="kpi-val" style="color:var(--a)">${always}</div><div class="kpi-trend flat">${t>0?Math.round((always/t)*100):0}% of insights</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--b)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Source types</div><div class="kpi-val" style="color:var(--b)">${srcs}</div><div class="kpi-trend flat">channels active</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--p)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>GXM areas hit</div><div class="kpi-val" style="color:var(--p)">${[...new Set(f.map(i=>i.relatedFeature).filter(Boolean))].length}</div><div class="kpi-trend flat">of 12 areas</div></div>`;
+  const themes=loadThemes();
+  document.getElementById('kpi-row').innerHTML=`
+    <div class="kpi"><div class="kpi-accent" style="background:var(--g)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Total insights</div><div class="kpi-val">${t}</div><div class="kpi-trend flat">${newCount} awaiting triage</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--r)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Critical</div><div class="kpi-val" style="color:var(--r)">${c}</div><div class="kpi-trend up">${t>0?Math.round((c/t)*100):0}% of total</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--g)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Validated</div><div class="kpi-val" style="color:var(--g)">${validated}</div><div class="kpi-trend flat">${t>0?Math.round((validated/t)*100):0}% triage rate</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--a)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Recurring issues</div><div class="kpi-val" style="color:var(--a)">${always}</div><div class="kpi-trend flat">happening always</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--p)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Active themes</div><div class="kpi-val" style="color:var(--p)">${themes.filter(t=>t.patternStatus!=='resolved').length}</div><div class="kpi-trend flat">${themes.length} total</div></div>`;
 }
 
 // ── OVERVIEW CHARTS ──
-function renderOverviewCharts(all, f) {
-  // Trend chart
-  destroyChart('trend');
-  const last30 = [];
-  for (let d=29;d>=0;d--) {
-    const dt = new Date(); dt.setDate(dt.getDate()-d);
-    const ds = dt.toISOString().split('T')[0];
-    last30.push({ label: d===0?'Today':d===1?'Yesterday':dt.toLocaleDateString('en',{month:'short',day:'numeric'}), date:ds });
-  }
-  const trendData = last30.map(d => all.filter(i=>i.date===d.date).length);
-  const ctx = document.getElementById('trend-chart').getContext('2d');
-  charts.trend = new Chart(ctx,{type:'line',data:{labels:last30.map((_,i)=>i%5===0?last30[i].label:''),datasets:[{data:trendData,borderColor:'#1a9e6e',backgroundColor:'rgba(26,158,110,.08)',tension:.4,fill:true,pointRadius:2,pointHoverRadius:5,borderWidth:2}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10},maxRotation:0},grid:{display:false}}},animation:{duration:600}}});
-
-  // Source donut
-  destroyChart('source');
-  const bySrc = countBy(f,'sourceLabel').slice(0,6);
-  const sctx = document.getElementById('source-chart').getContext('2d');
-  charts.source = new Chart(sctx,{type:'doughnut',data:{labels:bySrc.map(([l])=>l),datasets:[{data:bySrc.map(([,v])=>v),backgroundColor:SRC_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
-  document.getElementById('source-leg').innerHTML = bySrc.map(([l,v],i)=>`<div class="donut-row"><div class="dl-dot" style="background:${SRC_COLORS[i%SRC_COLORS.length]}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${v}</span></div>`).join('');
-
-  // Severity donut
-  destroyChart('sev');
-  const bySev = countBy(f,'severity');
-  const sevctx = document.getElementById('sev-chart').getContext('2d');
-  charts.sev = new Chart(sevctx,{type:'doughnut',data:{labels:bySev.map(([l])=>l),datasets:[{data:bySev.map(([,v])=>v),backgroundColor:bySev.map(([l])=>SEV_C[l]||'#888'),borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
-  document.getElementById('sev-leg').innerHTML = bySev.map(([l,v])=>`<div class="donut-row"><div class="dl-dot" style="background:${SEV_C[l]||'#888'}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${v}</span></div>`).join('');
-
-  // Feed
-  const feed = [...f].slice(0,5);
-  document.getElementById('feed').innerHTML = feed.length ? feed.map(i=>`
-    <div class="feed-item" onclick="openDrawer(${JSON.stringify(i.id).replace(/"/g,'&quot;')})">
-      <div class="feed-dot" style="background:${SEV_C[i.severity]||'#888'}"></div>
-      <div class="feed-content">
-        <div class="feed-top"><span class="feed-source">${i.sourceLabel||i.sourceType} · ${i.serviceLine||''}</span><span class="feed-date">${i.date}</span></div>
-        <div class="feed-text">${i.pain||i.trying||'—'}</div>
-      </div>
-    </div>`).join('') : '<div style="color:var(--di);font-size:12px;padding:12px 0">No insights yet</div>';
+function renderOverviewCharts(all,f){
+  destroyChart('trend');destroyChart('source');destroyChart('sev');
+  const last30=[];for(let d=29;d>=0;d--){const dt=new Date();dt.setDate(dt.getDate()-d);last30.push({label:d===0?'Today':d===1?'Yesterday':dt.toLocaleDateString('en',{month:'short',day:'numeric'}),date:dt.toISOString().split('T')[0]});}
+  const trendData=last30.map(d=>all.filter(i=>i.date===d.date).length);
+  charts.trend=new Chart(document.getElementById('trend-chart').getContext('2d'),{type:'line',data:{labels:last30.map((_,i)=>i%5===0?last30[i].label:''),datasets:[{data:trendData,borderColor:'#1a9e6e',backgroundColor:'rgba(26,158,110,.08)',tension:.4,fill:true,pointRadius:2,pointHoverRadius:5,borderWidth:2}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10},maxRotation:0},grid:{display:false}}},animation:{duration:600}}});
+  const bySrc=countBy(f,'sourceLabel').slice(0,6);
+  charts.source=new Chart(document.getElementById('source-chart').getContext('2d'),{type:'doughnut',data:{labels:bySrc.map(([l])=>l),datasets:[{data:bySrc.map(([,v])=>v),backgroundColor:SRC_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
+  document.getElementById('source-leg').innerHTML=bySrc.map(([l,v],i)=>`<div class="donut-row"><div class="dl-dot" style="background:${SRC_COLORS[i%SRC_COLORS.length]}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${v}</span></div>`).join('');
+  const bySev=countBy(f,'severity');
+  charts.sev=new Chart(document.getElementById('sev-chart').getContext('2d'),{type:'doughnut',data:{labels:bySev.map(([l])=>l),datasets:[{data:bySev.map(([,v])=>v),backgroundColor:bySev.map(([l])=>SEV_C[l]||'#888'),borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
+  document.getElementById('sev-leg').innerHTML=bySev.map(([l,v])=>`<div class="donut-row"><div class="dl-dot" style="background:${SEV_C[l]||'#888'}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${v}</span></div>`).join('');
+  const feed=[...f].slice(0,5);
+  document.getElementById('feed').innerHTML=feed.length?feed.map(i=>`<div class="feed-item" onclick="openDrawer('${i.id}')"><div class="feed-dot" style="background:${SEV_C[i.severity]||'#888'}"></div><div class="feed-content"><div class="feed-top"><span class="feed-source">${i.sourceLabel||''} · ${i.serviceLine||''}</span><span class="feed-date">${i.date}</span></div><div class="feed-text">${i.aiSummary||i.pain||'—'}</div></div></div>`).join(''):'<div style="color:var(--di);font-size:12px;padding:12px 0">No insights yet</div>';
 }
 
 // ── PATTERNS ──
-function renderPatterns(f) {
-  // Severity × Frequency matrix
-  const sevs = ['Critical','Significant','Minor'];
-  const freqs = ['Always','Sometimes','First time'];
-  const matrix = {};
-  f.forEach(i => { const k=`${i.severity}|${i.frequency}`; matrix[k]=(matrix[k]||0)+1; });
-  const maxVal = Math.max(1,...Object.values(matrix));
-  const sevColors = {'Critical':'#dc2626','Significant':'#d97706','Minor':'#1a9e6e'};
-  let html = `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:6px">`;
-  html += `<div class="matrix-corner"></div>`;
-  freqs.forEach(freq => { html += `<div class="matrix-label" style="font-weight:600">${freq}</div>`; });
-  sevs.forEach(sev => {
-    html += `<div class="matrix-label" style="text-align:right;padding-right:8px;font-weight:600;color:${sevColors[sev]}">${sev}</div>`;
-    freqs.forEach(freq => {
-      const k=`${sev}|${freq}`, v=matrix[k]||0;
-      const alpha = v===0?0.08:0.15+(v/maxVal)*0.7;
-      const bg = v===0?'#f1f5f9':`rgba(${sev==='Critical'?'220,38,38':sev==='Significant'?'217,119,6':'26,158,110'},${alpha})`;
-      const textColor = v===0?'#94a3b8':(sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e');
-      html += `<div class="matrix-cell" style="background:${bg};color:${textColor};border:1.5px solid ${v>0?textColor+'40':'#e2e8f0'}" title="${v} insight${v!==1?'s':''}: ${sev} × ${freq}">${v>0?v:''}</div>`;
-    });
+function renderPatterns(f){
+  const sevs=['Critical','Significant','Minor'],freqs=['Always','Sometimes','First time'];
+  const matrix={};f.forEach(i=>{const k=`${i.severity}|${i.frequency}`;matrix[k]=(matrix[k]||0)+1;});
+  const maxVal=Math.max(1,...Object.values(matrix));
+  const sevColors={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
+  let html=`<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:6px"><div></div>`;
+  freqs.forEach(freq=>{html+=`<div class="matrix-label" style="font-weight:600">${freq}</div>`;});
+  sevs.forEach(sev=>{
+    html+=`<div class="matrix-label" style="text-align:right;padding-right:8px;font-weight:600;color:${sevColors[sev]}">${sev}</div>`;
+    freqs.forEach(freq=>{const k=`${sev}|${freq}`,v=matrix[k]||0;const alpha=v===0?0.08:0.15+(v/maxVal)*0.7;const bg=v===0?'#f1f5f9':`rgba(${sev==='Critical'?'220,38,38':sev==='Significant'?'217,119,6':'26,158,110'},${alpha})`;const textColor=v===0?'#94a3b8':(sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e');html+=`<div class="matrix-cell" style="background:${bg};color:${textColor};border:1.5px solid ${v>0?textColor+'40':'#e2e8f0'}">${v>0?v:''}</div>`;});
   });
-  html += '</div>';
-  html += `<div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--mu)"><span>← Lower priority</span><span style="margin-left:auto">Higher priority →</span></div>`;
-  document.getElementById('matrix-container').innerHTML = html;
-
-  // Service line bars
-  const bySL = countBy(f,'serviceLine').slice(0,8), mSL=bySL[0]?.[1]||1;
-  document.getElementById('sl-bars').innerHTML = bySL.map(([l,v],i)=>`<div class="bar-row"><div class="bar-lbl" style="width:110px">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mSL)*100)}%;background:${AC[i%AC.length]}"></div></div><div class="bar-count">${v}</div></div>`).join('');
-
-  // Category bars
-  const byCat = countBy(f,'painPattern').slice(0,7), mCat=byCat[0]?.[1]||1;
-  document.getElementById('cat-bars').innerHTML = byCat.map(([l,v])=>`<div class="bar-row"><div class="bar-lbl" style="width:140px">${l.length>20?l.slice(0,20)+'…':l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mCat)*100)}%;background:#7f77dd"></div></div><div class="bar-count">${v}</div></div>`).join('');
-
-  // Area bars
-  const byArea = countBy(f,'relatedFeature').filter(([l])=>l&&l!=='Unknown').slice(0,12), mArea=byArea[0]?.[1]||1;
-  document.getElementById('area-bars').innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px">${byArea.map(([l,v],i)=>`<div class="bar-row"><div class="bar-lbl" style="width:160px">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mArea)*100)}%;background:${AC[i%AC.length]}"></div></div><div class="bar-count">${v}</div></div>`).join('')}</div>`;
+  html+=`</div><div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--mu)"><span>← Lower priority</span><span style="margin-left:auto">Higher priority →</span></div>`;
+  document.getElementById('matrix-container').innerHTML=html;
+  const bySL=countBy(f,'serviceLine').slice(0,8),mSL=bySL[0]?.[1]||1;
+  document.getElementById('sl-bars').innerHTML=bySL.map(([l,v],i)=>`<div class="bar-row"><div class="bar-lbl" style="width:120px;font-size:12px">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mSL)*100)}%;background:${AC[i%AC.length]}"></div></div><div class="bar-count">${v}</div></div>`).join('');
+  const byCat=countBy(f,'painPattern').slice(0,7),mCat=byCat[0]?.[1]||1;
+  document.getElementById('cat-bars').innerHTML=byCat.map(([l,v])=>`<div class="bar-row"><div class="bar-lbl" style="width:150px;font-size:12px">${l.length>22?l.slice(0,22)+'…':l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mCat)*100)}%;background:#7f77dd"></div></div><div class="bar-count">${v}</div></div>`).join('');
+  const byArea=countBy(f,'relatedFeature').filter(([l])=>l&&l!=='Unknown').slice(0,12),mArea=byArea[0]?.[1]||1;
+  document.getElementById('area-bars').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 28px">${byArea.map(([l,v],i)=>`<div class="bar-row"><div class="bar-lbl" style="width:170px;font-size:12px">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mArea)*100)}%;background:${AC[i%AC.length]}"></div></div><div class="bar-count">${v}</div></div>`).join('')}</div>`;
 }
 
-// ── AI RECS ──
-function renderThemeBars(f) {
-  const byCat = countBy(f,'painPattern').slice(0,5), m=byCat[0]?.[1]||1;
-  document.getElementById('theme-bars').innerHTML = byCat.map(([l,v])=>`<div class="bar-row"><div class="bar-lbl" style="width:150px">${l.length>22?l.slice(0,22)+'…':l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/m)*100)}%;background:#7f77dd"></div></div><div class="bar-count">${v}</div></div>`).join('');
+// NEW: INBOX
+function setInboxFilter(filter,el){
+  inboxFilter=filter;
+  document.querySelectorAll('.inbox-filter').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');renderInbox(loadAll());
 }
 
-async function generateRecs() {
-  const f = getFiltered(loadAll());
-  if (!f.length) { document.getElementById('ai-recs').innerHTML = '<div class="ai-loading">No insights to analyze yet.</div>'; return; }
-  document.getElementById('ai-recs').innerHTML = '<div class="ai-loading"><span style="display:inline-flex;align-items:center;gap:8px"><span class="processing-dot"></span>Claude is analyzing ' + f.length + ' insights...</span></div>';
-  document.getElementById('rec-badge').textContent = '…';
-  const summary = f.map(i=>`[${i.severity}|${i.frequency}] ${i.serviceLine}: ${i.trying} — ${i.pain}`).join('\n');
-  const prompt = `You are a product strategist analyzing user feedback for GXM, a B2B platform for managing global entities. Here are ${f.length} product insights:\n\n${summary}\n\nIdentify the top 3 most important product opportunities. For each, respond ONLY with valid JSON in this exact format with no other text:\n{"recommendations":[{"title":"short opportunity title","reasoning":"2-3 sentence explanation of why this matters","impactScore":"High|Medium|Low","affectedUsers":"who is affected","suggestedAction":"one clear next step","insightCount":number}]}`;
-  try {
-    const res = await fetch(ANTHROPIC_API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] }) });
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-    const json = JSON.parse(text.replace(/```json|```/g,'').trim());
-    const recs = json.recommendations || [];
-    document.getElementById('rec-badge').textContent = recs.length;
-    document.getElementById('ai-recs').innerHTML = recs.map((r,i)=>`
-      <div class="ai-rec">
-        <div class="ai-rec-top">
-          <div class="ai-rec-title">${i+1}. ${r.title}</div>
-          <div class="ai-rec-score">
-            <span class="ai-score-pill ${r.impactScore==='High'?'score-high':r.impactScore==='Medium'?'score-med':'score-low'}">${r.impactScore} impact</span>
-          </div>
+function renderInbox(all){
+  let items=all.filter(i=>i.status==='new'||i.status==='in_review');
+  if(inboxFilter==='new')items=items.filter(i=>i.status==='new');
+  if(inboxFilter==='in_review')items=items.filter(i=>i.status==='in_review');
+  const themes=loadThemes();
+  if(!items.length){document.getElementById('inbox-list').innerHTML='<div class="empty"><strong>Inbox is clear</strong><p>All insights have been triaged. New submissions appear here.</p></div>';return;}
+  document.getElementById('inbox-list').innerHTML=items.map(ins=>{
+    const dupes=findDuplicates(ins,all);
+    const isPriority=ins.severity==='Critical'&&ins.frequency==='Always';
+    const suggestedTheme=themes.find(t=>t.title===ins.primaryTheme);
+    return `<div class="inbox-card${isPriority?' priority':''}">
+      <div class="inbox-top"><div class="inbox-summary">${ins.aiSummary||ins.pain||'—'}</div><span class="status-badge ${STATUS_CLASSES[ins.status]||'status-new'}">${STATUS_LABELS[ins.status]||'New'}</span></div>
+      <div class="inbox-meta">
+        <span class="tag sl-tag">${ins.serviceLine||'—'}</span>
+        <span class="badge" style="background:${SEV_BG[ins.severity]};color:${SEV_C[ins.severity]}"><span class="dot9" style="background:${SEV_C[ins.severity]}"></span>${ins.severity}</span>
+        <span class="tag">${ins.frequency||'—'}</span>
+        <span class="tag">${ins.sourceLabel||'—'} · ${ins.firstName||''}${ins.company?' ('+ins.company+')':''}</span>
+        ${ins.primaryTheme?`<span class="tag" style="background:#f5f3ff;color:#7c3aed">${ins.primaryTheme}</span>`:''}
+        <span style="font-size:11px;color:var(--di);margin-left:auto">Confidence: ${Math.round((ins.confidenceScore||0.7)*100)}%</span>
+      </div>
+      ${ins.pain&&ins.aiSummary&&ins.pain!==ins.aiSummary?`<div class="inbox-pain">${ins.pain}</div>`:''}
+      ${dupes.length?`<div class="possible-dupe"><strong>Possible duplicate:</strong> Similar to "${dupes[0].aiSummary||dupes[0].pain}" from ${dupes[0].firstName||''}, ${dupes[0].company||''}</div>`:''}
+      <div class="inbox-actions">
+        <button class="action-btn accept" onclick="triageInsight('${ins.id}','validated')">✓ Accept</button>
+        <button class="action-btn reject" onclick="triageInsight('${ins.id}','rejected')">✕ Reject</button>
+        ${dupes.length?`<button class="action-btn merge-btn" onclick="triageInsight('${ins.id}','merged','${dupes[0].id}')">⊕ Merge</button>`:''}
+        <button class="action-btn" onclick="triageInsight('${ins.id}','in_review')">◷ Needs context</button>
+        ${suggestedTheme?`<button class="action-btn" style="border-color:var(--p);color:var(--p)" onclick="assignTheme('${ins.id}','${suggestedTheme.id}')">⬡ Assign: "${suggestedTheme.title}"</button>`:`<button class="action-btn" onclick="openThemeAssign('${ins.id}')">+ Assign theme</button>`}
+        <button class="action-btn" style="margin-left:auto" onclick="openDrawer('${ins.id}')">View →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function triageInsight(id,status,mergeTargetId=null){
+  const changes={status};if(mergeTargetId)changes.duplicateOf=mergeTargetId;
+  updateInsight(id,changes);
+}
+
+function assignTheme(insightId,themeId){
+  const themes=loadThemes();const theme=themes.find(t=>t.id===themeId);if(!theme)return;
+  if(!theme.insightIds.includes(insightId))theme.insightIds.push(insightId);
+  theme.insightCount=theme.insightIds.length;theme.updatedAt=new Date().toISOString().split('T')[0];
+  saveThemeObj(theme);updateInsight(insightId,{status:'validated',primaryTheme:theme.title});
+}
+
+function openThemeAssign(insightId){
+  const themes=loadThemes();
+  const opts=themes.map(t=>`<option value="${t.id}">${t.title}</option>`).join('');
+  const div=document.createElement('div');
+  div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:1.5px solid var(--bd);border-radius:10px;padding:20px;z-index:300;box-shadow:0 20px 60px rgba(0,0,0,.15);min-width:320px';
+  div.innerHTML=`<div style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:12px">Assign to theme</div><select id="quick-theme-sel" style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:7px;font-family:inherit;font-size:13px;color:var(--tx);background:#fff;outline:none">${opts}<option value="new">+ Create new theme…</option></select><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn-sm" onclick="this.closest('div[style]').remove()">Cancel</button><button class="btn-sm btn-green" onclick="doAssignTheme('${insightId}',document.getElementById('quick-theme-sel').value,this)">Assign</button></div>`;
+  document.body.appendChild(div);
+}
+
+function doAssignTheme(insightId,themeId,btn){
+  if(themeId==='new'){btn.closest('div[style]').remove();openThemeModal(null,insightId);return;}
+  assignTheme(insightId,themeId);btn.closest('div[style]').remove();
+}
+
+// NEW: THEMES
+function renderThemes(){
+  const themes=loadThemes();const all=loadAll();const initiatives=loadInitiatives();
+  if(!themes.length){document.getElementById('theme-grid').innerHTML='<div class="empty" style="grid-column:1/-1"><strong>No themes yet</strong><p>Accept insights in the Inbox and group them, or click "AI suggest themes".</p></div>';return;}
+  document.getElementById('theme-grid').innerHTML=themes.map(theme=>{
+    const themeInsights=all.filter(i=>theme.insightIds.includes(i.id)||(i.primaryTheme===theme.title&&i.status==='validated'));
+    const critical=themeInsights.filter(i=>i.severity==='Critical').length;
+    const significant=themeInsights.filter(i=>i.severity==='Significant').length;
+    const minor=themeInsights.filter(i=>i.severity==='Minor').length;
+    const sources=[...new Set(themeInsights.map(i=>i.sourceLabel||i.sourceType).filter(Boolean))];
+    const linked=initiatives.find(i=>i.themeIds&&i.themeIds.includes(theme.id));
+    const trendIcon=theme.trend==='up'?'↑':theme.trend==='down'?'↓':'→';
+    const trendClass=theme.trend==='up'?'trend-up':theme.trend==='down'?'trend-down':'trend-flat';
+    return `<div class="theme-card ${THEME_BORDER[theme.patternStatus]||''}" onclick="openThemeDrawer('${theme.id}')">
+      <div class="theme-header"><div class="theme-title">${theme.title}</div><span class="theme-status ${PATTERN_STATUS_COLORS[theme.patternStatus]||''}">${theme.patternStatus}</span></div>
+      <div class="theme-desc">${theme.description}</div>
+      <div class="theme-stats">
+        <div class="theme-stat"><div class="theme-stat-val">${themeInsights.length}</div><div class="theme-stat-lbl">Insights</div></div>
+        <div class="theme-stat"><div class="theme-stat-val" style="color:var(--r)">${critical}</div><div class="theme-stat-lbl">Critical</div></div>
+        <div class="theme-stat"><div class="theme-stat-val">${sources.length}</div><div class="theme-stat-lbl">Sources</div></div>
+      </div>
+      <div class="theme-sev-bar">
+        <div style="flex:${critical};background:var(--r)"></div>
+        <div style="flex:${significant};background:var(--a)"></div>
+        <div style="flex:${minor};background:var(--g)"></div>
+        ${themeInsights.length===0?'<div style="flex:1;background:#f1f5f9"></div>':''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+        ${sources.slice(0,4).map(s=>`<span class="tag">${s}</span>`).join('')}
+        <span class="tag" style="background:#f5f3ff;color:var(--p)">${theme.primaryTag}</span>
+      </div>
+      <div class="theme-footer">
+        <span class="trend-chip ${trendClass}">${trendIcon} ${theme.trend==='up'?'Growing':theme.trend==='down'?'Declining':'Stable'}</span>
+        ${linked?`<span class="tag" style="background:#f0fdf4;color:var(--g)">→ ${linked.title}</span>`:`<button class="btn-sm" style="font-size:11px;padding:4px 10px" onclick="event.stopPropagation();openInitiativeModal('${theme.id}')">+ Initiative</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openThemeDrawer(themeId){
+  const theme=loadThemes().find(t=>t.id===themeId);if(!theme)return;
+  const all=loadAll();const initiatives=loadInitiatives();
+  const themeInsights=all.filter(i=>theme.insightIds.includes(i.id)||(i.primaryTheme===theme.title&&i.status==='validated'));
+  const linked=initiatives.filter(i=>i.themeIds&&i.themeIds.includes(themeId));
+  document.getElementById('td-title').textContent=theme.title;
+  document.getElementById('td-badges').innerHTML=`<span class="theme-status ${PATTERN_STATUS_COLORS[theme.patternStatus]||''}">${theme.patternStatus}</span>`;
+  document.getElementById('td-body').innerHTML=`
+    <div class="d-section"><div class="d-section-title">Summary</div>
+      <div class="d-field"><div class="d-label">Description</div><div class="d-val">${theme.description}</div></div>
+      <div class="d-field"><div class="d-label">Recommended action</div><div class="d-val" style="color:var(--g)">${theme.recommendedAction||'—'}</div></div>
+      <div class="d-field"><div class="d-label">Owner</div><div class="d-val">${theme.owner||'—'}</div></div>
+    </div>
+    <div class="d-section"><div class="d-section-title">Linked insights (${themeInsights.length})</div>
+      ${themeInsights.map(i=>`<div class="similar-item" onclick="openDrawer('${i.id}')"><div class="similar-top"><span class="similar-name">${i.firstName||''} · ${i.serviceLine||''}</span><span class="badge" style="background:${SEV_BG[i.severity]};color:${SEV_C[i.severity]}">${i.severity}</span></div><div class="similar-pain">${i.aiSummary||i.pain||'—'}</div></div>`).join('')||'<div style="color:var(--di);font-size:12px">No insights linked yet.</div>'}
+    </div>
+    <div class="d-section"><div class="d-section-title">Initiatives</div>
+      ${linked.map(init=>`<div style="padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-weight:600;font-size:13px">${init.title}</span><span class="init-status is-${init.status==='in_progress'?'progress':init.status}">${init.status==='in_progress'?'In progress':init.status}</span></div><div style="font-size:12px;color:var(--mu)">${init.hypothesis||'—'}</div></div>`).join('')||'<div style="color:var(--di);font-size:12px;margin-bottom:10px">No initiatives yet.</div>'}
+      <button class="btn-sm btn-green" style="width:100%;justify-content:center" onclick="openInitiativeModal('${themeId}')">+ Create initiative from this theme</button>
+    </div>
+    <div class="d-section"><div class="d-section-title">Actions</div>
+      <div style="display:flex;gap:8px"><button class="btn-sm" onclick="openThemeModal('${themeId}')">Edit theme</button><button class="btn-sm btn-red" onclick="deleteTheme('${themeId}')">Delete</button></div>
+    </div>`;
+  document.getElementById('theme-drawer-overlay').classList.add('open');
+  document.getElementById('theme-drawer').classList.add('open');
+}
+
+function closeThemeDrawer(){document.getElementById('theme-drawer-overlay').classList.remove('open');document.getElementById('theme-drawer').classList.remove('open');}
+
+function openThemeModal(themeId=null){
+  editingThemeId=themeId;
+  document.getElementById('theme-modal-title').textContent=themeId?'Edit theme':'New theme';
+  if(themeId){const t=loadThemes().find(t=>t.id===themeId)||{};document.getElementById('tm-title').value=t.title||'';document.getElementById('tm-desc').value=t.description||'';document.getElementById('tm-status').value=t.patternStatus||'emerging';document.getElementById('tm-owner').value=t.owner||'';document.getElementById('tm-action').value=t.recommendedAction||'';}
+  else{['tm-title','tm-desc','tm-owner','tm-action'].forEach(id=>document.getElementById(id).value='');document.getElementById('tm-status').value='emerging';}
+  document.getElementById('theme-modal').classList.add('open');
+}
+function closeThemeModal(){document.getElementById('theme-modal').classList.remove('open');editingThemeId=null;}
+function saveTheme(){
+  const title=document.getElementById('tm-title').value.trim();if(!title){alert('Please enter a theme title.');return;}
+  const existing=editingThemeId?loadThemes().find(t=>t.id===editingThemeId):{};
+  const theme={id:editingThemeId||('th'+Date.now().toString(36)),title,description:document.getElementById('tm-desc').value.trim(),primaryTag:'User feedback',insightIds:existing.insightIds||[],patternStatus:document.getElementById('tm-status').value,trend:existing.trend||'flat',recommendedAction:document.getElementById('tm-action').value.trim(),owner:document.getElementById('tm-owner').value.trim(),createdAt:existing.createdAt||new Date().toISOString().split('T')[0],updatedAt:new Date().toISOString().split('T')[0]};
+  saveThemeObj(theme);closeThemeModal();closeThemeDrawer();renderThemes();updateBadges(loadAll());
+}
+function deleteTheme(themeId){
+  if(!confirm('Delete this theme?'))return;
+  const stored=loadThemes().filter(t=>!DEMO_THEMES.find(d=>d.id===t.id)).filter(t=>t.id!==themeId);
+  localStorage.setItem(SK_THEMES,JSON.stringify(stored));
+  closeThemeDrawer();renderThemes();updateBadges(loadAll());
+}
+
+async function generateThemes(){
+  const all=loadAll().filter(i=>i.status==='validated');
+  if(all.length<2){alert('Validate some insights in the Inbox first.');return;}
+  const notice=document.createElement('div');notice.style.cssText='position:fixed;bottom:20px;right:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:400';notice.textContent='Claude is generating themes…';document.body.appendChild(notice);
+  const summary=all.map(i=>`[${i.severity}|${i.frequency}] ${i.serviceLine}: ${i.aiSummary||i.pain}`).join('\n');
+  const prompt=`Analyze these ${all.length} validated product insights for GXM (B2B global entity management platform) and identify 3-5 recurring themes. Respond ONLY with valid JSON:\n{"themes":[{"title":"short theme title","description":"2-3 sentence pattern description","primaryTag":"most common painPattern","patternStatus":"emerging|recurring|critical","trend":"up|flat|down","recommendedAction":"one clear next step"}]}\n\n${summary}`;
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();const text=data.content?.[0]?.text||'';
+    const json=JSON.parse(text.replace(/```json|```/g,'').trim());
+    json.themes.forEach(t=>{
+      const existing=loadThemes().find(th=>th.title.toLowerCase()===t.title.toLowerCase());
+      if(!existing){saveThemeObj({id:'th'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),insightIds:[],insightCount:0,...t,createdAt:new Date().toISOString().split('T')[0]});}
+    });
+    notice.remove();renderThemes();updateBadges(loadAll());
+  }catch(e){notice.textContent='Failed to generate themes.';setTimeout(()=>notice.remove(),3000);}
+}
+
+// NEW: INITIATIVES
+function renderInitiatives(){
+  const initiatives=loadInitiatives();const themes=loadThemes();const all=loadAll();
+  if(!initiatives.length){document.getElementById('initiatives-list').innerHTML='<div class="empty"><strong>No initiatives yet</strong><p>Create an initiative from a Theme to track decisions and outcomes.</p></div>';return;}
+  const statusClass={planned:'is-planned',in_progress:'is-progress',shipped:'is-shipped'};
+  document.getElementById('initiatives-list').innerHTML=initiatives.map(init=>{
+    const linkedThemes=themes.filter(t=>init.themeIds&&init.themeIds.includes(t.id));
+    const linkedInsights=all.filter(i=>init.insightIds&&init.insightIds.includes(i.id));
+    const allThemeInsights=all.filter(i=>linkedThemes.some(t=>t.insightIds.includes(i.id)));
+    const critical=allThemeInsights.filter(i=>i.severity==='Critical').length;
+    const before=allThemeInsights.filter(i=>i.frequency==='Always'&&new Date(i.date)<new Date(init.createdAt)).length;
+    const after=allThemeInsights.filter(i=>i.frequency==='Always'&&new Date(i.date)>=new Date(init.createdAt||'2099')).length;
+    return `<div class="initiative-card">
+      <div class="initiative-header"><div class="initiative-title">${init.title}</div><span class="init-status ${statusClass[init.status]||'is-planned'}">${init.status==='in_progress'?'In progress':init.status.charAt(0).toUpperCase()+init.status.slice(1)}</span></div>
+      <div class="initiative-meta">
+        <span>Owner: ${init.owner||'—'}</span><span>Created: ${init.createdAt||'—'}</span>
+        ${init.jiraLink?`<a href="${init.jiraLink}" target="_blank" style="color:var(--b);text-decoration:none">Jira →</a>`:''}
+        <span>${allThemeInsights.length} insights · ${critical} critical</span>
+      </div>
+      ${init.hypothesis?`<div class="initiative-hypothesis">${init.hypothesis}</div>`:''}
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">${linkedThemes.map(t=>`<span class="tag" style="background:#f5f3ff;color:var(--p)">${t.title}</span>`).join('')}</div>
+      <div class="initiative-footer">
+        ${init.expectedOutcome?`<div style="font-size:12px;color:var(--mu);flex:1"><strong>Expected:</strong> ${init.expectedOutcome}</div>`:'<span></span>'}
+        ${init.measuredOutcome?`<span class="impact-chip">${init.measuredOutcome}</span>`:''}
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm" onclick="cycleInitiativeStatus('${init.id}')">Update status</button>
+          ${init.status==='shipped'?`<button class="btn-sm" onclick="logOutcome('${init.id}')">Log outcome</button>`:''}
         </div>
-        <div class="ai-rec-body">${r.reasoning}</div>
-        <div class="ai-rec-meta">
-          <span class="ai-meta-chip"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${r.affectedUsers}</span>
-          <span class="ai-meta-chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${r.insightCount} insights</span>
-          <span class="ai-meta-chip" style="color:rgba(255,255,255,.6)">→ ${r.suggestedAction}</span>
-        </div>
-      </div>`).join('') + `<button class="ai-generate" onclick="generateRecs()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>Regenerate</button>`;
-  } catch(e) {
-    document.getElementById('ai-recs').innerHTML = `<div class="ai-loading">Could not connect to Claude. ${e.message}</div><button class="ai-generate" onclick="generateRecs()">Try again</button>`;
-    document.getElementById('rec-badge').textContent = '!';
-  }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openInitiativeModal(themeId=null){
+  ['im-title','im-hyp','im-outcome','im-owner','im-jira'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('im-status').value='planned';
+  document.getElementById('im-theme-id').value=themeId||'';
+  if(themeId){const theme=loadThemes().find(t=>t.id===themeId);if(theme)document.getElementById('im-title').value='Address: '+theme.title;}
+  document.getElementById('initiative-modal').classList.add('open');
+}
+function closeInitiativeModal(){document.getElementById('initiative-modal').classList.remove('open');}
+function saveInitiative(){
+  const title=document.getElementById('im-title').value.trim();if(!title){alert('Please enter a title.');return;}
+  const themeId=document.getElementById('im-theme-id').value;
+  const init={id:'in'+Date.now().toString(36),title,themeIds:themeId?[themeId]:[],insightIds:[],hypothesis:document.getElementById('im-hyp').value.trim(),owner:document.getElementById('im-owner').value.trim(),status:document.getElementById('im-status').value,jiraLink:document.getElementById('im-jira').value.trim(),expectedOutcome:document.getElementById('im-outcome').value.trim(),measuredOutcome:'',createdAt:new Date().toISOString().split('T')[0]};
+  saveInitiativeObj(init);closeInitiativeModal();closeThemeDrawer();renderInitiatives();
+}
+function cycleInitiativeStatus(id){
+  const inits=loadInitiatives();const init=inits.find(i=>i.id===id);if(!init)return;
+  const order=['planned','in_progress','shipped'];const idx=order.indexOf(init.status);init.status=order[(idx+1)%order.length];
+  if(init.status==='shipped')init.resolvedAt=new Date().toISOString().split('T')[0];
+  saveInitiativeObj(init);renderInitiatives();
+}
+function logOutcome(id){
+  const outcome=prompt('What was the measured outcome?');if(!outcome)return;
+  const inits=loadInitiatives();const init=inits.find(i=>i.id===id);if(!init)return;
+  init.measuredOutcome=outcome;saveInitiativeObj(init);renderInitiatives();
 }
 
 // ── EXPLORER ──
-function populateFilters() {
-  const all = loadAll();
+function populateFilters(){
+  const all=loadAll();
   const srcs=[...new Set(all.map(i=>i.sourceLabel||i.sourceType).filter(Boolean))];
   const sls=[...new Set(all.map(i=>i.serviceLine).filter(Boolean))];
-  const areas=[...new Set(all.map(i=>i.relatedFeature).filter(Boolean))];
-  const sEl=document.getElementById('f-source'), slEl=document.getElementById('f-sl'), aEl=document.getElementById('f-area');
-  const sel=(el,vals)=>{ const cur=el.value; el.innerHTML=el.firstElementChild.outerHTML+vals.map(v=>`<option${cur===v?' selected':''}>${v}</option>`).join(''); };
-  sel(sEl,srcs); sel(slEl,sls); sel(aEl,areas);
+  const sel=(el,vals)=>{const cur=el.value;el.innerHTML=el.firstElementChild.outerHTML+vals.map(v=>`<option${cur===v?' selected':''}>${v}</option>`).join('');};
+  sel(document.getElementById('f-source'),srcs);sel(document.getElementById('f-sl'),sls);
 }
-
-function renderExplorer() {
-  const all = loadAll();
-  let f = getFiltered(all);
-  const src=document.getElementById('f-source')?.value, sl=document.getElementById('f-sl')?.value;
-  const sev=document.getElementById('f-sev')?.value, freq=document.getElementById('f-freq')?.value, area=document.getElementById('f-area')?.value;
-  if(src) f=f.filter(i=>(i.sourceLabel||i.sourceType)===src);
-  if(sl) f=f.filter(i=>i.serviceLine===sl);
-  if(sev) f=f.filter(i=>i.severity===sev);
-  if(freq) f=f.filter(i=>i.frequency===freq);
-  if(area) f=f.filter(i=>i.relatedFeature===area);
-  document.getElementById('explorer-count').textContent = `${f.length} insight${f!==1?'s':''}`;
-  const freqColor = {'Always':'#dc2626','Sometimes':'#d97706','First time':'#64748b'};
-  document.getElementById('explorer-body').innerHTML = f.length ? f.map(i=>`
+function renderExplorer(){
+  const all=loadAll();let f=getFiltered(all);
+  const src=document.getElementById('f-source')?.value,sl=document.getElementById('f-sl')?.value;
+  const sev=document.getElementById('f-sev')?.value,freq=document.getElementById('f-freq')?.value;
+  const status=document.getElementById('f-status')?.value;
+  if(src)f=f.filter(i=>(i.sourceLabel||i.sourceType)===src);
+  if(sl)f=f.filter(i=>i.serviceLine===sl);
+  if(sev)f=f.filter(i=>i.severity===sev);
+  if(freq)f=f.filter(i=>i.frequency===freq);
+  if(status)f=f.filter(i=>i.status===status);
+  document.getElementById('explorer-count').textContent=`${f.length} insight${f.length!==1?'s':''}`;
+  const freqColor={Always:'#dc2626',Sometimes:'#d97706','First time':'#64748b'};
+  document.getElementById('explorer-body').innerHTML=f.length?f.map(i=>`
     <tr onclick="openDrawer('${i.id}')" class="${activeRow===i.id?'active-row':''}">
       <td style="color:var(--mu);font-size:12px;white-space:nowrap">${i.date}</td>
+      <td><span class="status-badge ${STATUS_CLASSES[i.status]||'status-new'}">${STATUS_LABELS[i.status]||'New'}</span></td>
       <td><span class="tag">${i.sourceLabel||i.sourceType||'—'}</span></td>
       <td style="white-space:nowrap">${i.firstName||'—'}${i.company?`<div style="font-size:11px;color:var(--di)">${i.company}</div>`:''}</td>
       <td><span class="tag sl-tag">${i.serviceLine||'—'}</span></td>
@@ -715,46 +936,42 @@ function renderExplorer() {
       <td class="trunc" title="${i.pain||''}">${i.pain||'—'}</td>
       <td><span class="badge" style="background:${SEV_BG[i.severity]||'#eee'};color:${SEV_C[i.severity]||'#888'}"><span class="dot9" style="background:${SEV_C[i.severity]||'#888'}"></span>${i.severity||'—'}</span></td>
       <td style="font-size:12px;font-weight:600;color:${freqColor[i.frequency]||'#64748b'}">${i.frequency||'—'}</td>
-      <td style="color:var(--mu);font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.relatedFeature||'—'}</td>
-    </tr>`).join('') : '<tr><td colspan="9" class="empty" style="padding:40px"><strong>No insights match your filters</strong></td></tr>';
+      <td>${i.primaryTheme?`<span class="tag" style="background:#f5f3ff;color:var(--p);font-size:10.5px">${i.primaryTheme}</span>`:'—'}</td>
+    </tr>`).join(''):'<tr><td colspan="10" class="empty" style="padding:40px"><strong>No insights match</strong></td></tr>';
 }
-
-function resetFilters() {
-  ['f-source','f-sl','f-sev','f-freq','f-area'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  renderExplorer();
-}
+function resetFilters(){['f-source','f-sl','f-sev','f-freq','f-status'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderExplorer();}
 
 // ── DRAWER ──
-function openDrawer(id) {
-  const all = loadAll();
-  const ins = all.find(i=>i.id===id); if (!ins) return;
-  activeRow = id; renderExplorer();
-  const sv = SEV_C[ins.severity]||'#888', sb = SEV_BG[ins.severity]||'#eee';
-  const freqColor = {'Always':'#dc2626','Sometimes':'#d97706','First time':'#64748b'};
-  document.getElementById('d-title').textContent = ins.serviceLine ? `${ins.serviceLine} · ${ins.trying||'Insight'}` : (ins.trying||'Insight detail');
-  document.getElementById('d-badges').innerHTML = `
-    <span class="badge" style="background:${sb};color:${sv}"><span class="dot9" style="background:${sv}"></span>${ins.severity}</span>
-    <span class="tag sl-tag">${ins.serviceLine||'—'}</span>
-    <span class="tag">${ins.sourceLabel||ins.sourceType||'—'}</span>
-    ${ins.frequency?`<span class="tag" style="color:${freqColor[ins.frequency]||'#64748b'}">${ins.frequency}</span>`:''}`;
-  document.getElementById('drawer-body').innerHTML = `
-    <div class="d-section">
-      <div class="d-section-title">What happened</div>
-      <div class="d-field"><div class="d-label">Goal</div><div class="d-val">${ins.trying||'—'}</div></div>
+function openDrawer(id){
+  const all=loadAll();const ins=all.find(i=>i.id===id);if(!ins)return;
+  activeRow=id;renderExplorer();
+  const sv=SEV_C[ins.severity]||'#888',sb=SEV_BG[ins.severity]||'#eee';
+  const freqColor={Always:'#dc2626',Sometimes:'#d97706','First time':'#64748b'};
+  const themes=loadThemes();const insTheme=themes.find(t=>t.title===ins.primaryTheme);
+  const initiatives=loadInitiatives();const insInit=initiatives.find(i=>insTheme&&i.themeIds&&i.themeIds.includes(insTheme.id));
+  document.getElementById('d-title').textContent=ins.serviceLine?`${ins.serviceLine} · ${ins.trying||'Insight'}`:(ins.trying||'Insight detail');
+  document.getElementById('d-badges').innerHTML=`<span class="status-badge ${STATUS_CLASSES[ins.status]||'status-new'}">${STATUS_LABELS[ins.status]||'New'}</span><span class="badge" style="background:${sb};color:${sv}"><span class="dot9" style="background:${sv}"></span>${ins.severity}</span><span class="tag sl-tag">${ins.serviceLine||'—'}</span><span class="tag">${ins.sourceLabel||ins.sourceType||'—'}</span>`;
+  document.getElementById('drawer-body').innerHTML=`
+    <div class="d-section"><div class="d-section-title">AI summary</div>
+      <div style="font-size:13.5px;color:var(--tx);line-height:1.55;padding:12px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid var(--g)">${ins.aiSummary||'No summary generated.'}</div>
+      ${ins.confidenceScore?`<div class="conf-bar" style="margin-top:8px"><div class="conf-fill" style="width:${Math.round(ins.confidenceScore*100)}%"></div></div><div style="font-size:11px;color:var(--di);margin-top:3px">Confidence: ${Math.round(ins.confidenceScore*100)}%</div>`:''}
+    </div>
+    <div class="d-section"><div class="d-section-title">What happened</div>
+      <div class="d-field"><div class="d-label">Goal (Job to be done)</div><div class="d-val">${ins.jobToBeDone||ins.trying||'—'}</div></div>
+      <div class="d-field"><div class="d-label">Problem type</div><div class="d-val">${ins.problemType||ins.painPattern||'—'}</div></div>
       <div class="d-field"><div class="d-label">Friction</div><div class="d-val">${ins.pain||'—'}</div></div>
       ${ins.quote?`<div class="d-field"><div class="d-label">Direct quote</div><div class="d-quote">${ins.quote}</div></div>`:''}
     </div>
-    <div class="d-section">
-      <div class="d-section-title">Classification</div>
+    <div class="d-section"><div class="d-section-title">Classification</div>
       <div class="d-grid2">
-        <div class="d-field"><div class="d-label">Pain category</div><div class="d-val">${ins.painPattern||'—'}</div></div>
-        <div class="d-field"><div class="d-label">GXM area</div><div class="d-val">${ins.relatedFeature||'—'}</div></div>
         <div class="d-field"><div class="d-label">Severity</div><div class="d-val" style="color:${sv};font-weight:600">${ins.severity||'—'}</div></div>
         <div class="d-field"><div class="d-label">Frequency</div><div class="d-val" style="color:${freqColor[ins.frequency]||'#64748b'};font-weight:600">${ins.frequency||'—'}</div></div>
+        <div class="d-field"><div class="d-label">GXM area</div><div class="d-val">${ins.relatedFeature||'—'}</div></div>
+        <div class="d-field"><div class="d-label">Theme</div><div class="d-val">${ins.primaryTheme?`<span class="tag" style="background:#f5f3ff;color:var(--p)">${ins.primaryTheme}</span>`:'—'}</div></div>
       </div>
     </div>
-    <div class="d-section">
-      <div class="d-section-title">Contact</div>
+    ${insInit?`<div class="d-section"><div class="d-section-title">Linked initiative</div><div style="padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px"><div style="font-weight:600;font-size:13px;margin-bottom:4px">${insInit.title}</div><div style="font-size:12px;color:var(--mu)">${insInit.status==='in_progress'?'In progress':insInit.status}</div></div></div>`:''}
+    <div class="d-section"><div class="d-section-title">Contact</div>
       <div class="d-grid2">
         <div class="d-field"><div class="d-label">Name</div><div class="d-val">${[ins.firstName,ins.lastName].filter(Boolean).join(' ')||'—'}</div></div>
         <div class="d-field"><div class="d-label">Role</div><div class="d-val">${ins.role||'—'}</div></div>
@@ -762,135 +979,58 @@ function openDrawer(id) {
         <div class="d-field"><div class="d-label">Email</div><div class="d-val" style="font-size:12px">${ins.contactEmail||'—'}</div></div>
       </div>
     </div>
-    <div class="d-section">
-      <div class="d-section-title">Metadata</div>
-      <div class="d-grid2">
-        <div class="d-field"><div class="d-label">Date</div><div class="d-val">${ins.date||'—'}</div></div>
-        <div class="d-field"><div class="d-label">Logged by</div><div class="d-val">${ins.submitterName||'—'}</div></div>
-        <div class="d-field"><div class="d-label">Source type</div><div class="d-val">${ins.sourceLabel||ins.sourceType||'—'}</div></div>
-        <div class="d-field"><div class="d-label">Service line</div><div class="d-val">${ins.serviceLine||'—'}</div></div>
+    <div class="d-section"><div class="d-section-title">Triage</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="action-btn accept" onclick="triageInsight('${ins.id}','validated')">✓ Validate</button>
+        <button class="action-btn reject" onclick="triageInsight('${ins.id}','rejected')">✕ Reject</button>
+        <button class="action-btn" onclick="triageInsight('${ins.id}','in_review')">◷ Flag for review</button>
       </div>
     </div>`;
-  // Similar insights
-  const similar = all.filter(i=>i.id!==id&&(i.serviceLine===ins.serviceLine||i.relatedFeature===ins.relatedFeature||i.painPattern===ins.painPattern)).slice(0,3);
-  document.getElementById('drawer-similar').innerHTML = similar.length ? `
-    <div class="similar-title">Similar insights</div>
-    ${similar.map(s=>`<div class="similar-item" onclick="openDrawer('${s.id}')">
-      <div class="similar-top"><span class="similar-name">${s.firstName||''} · ${s.serviceLine||''}</span><span class="badge" style="background:${SEV_BG[s.severity]};color:${SEV_C[s.severity]};font-size:10px">${s.severity}</span></div>
-      <div class="similar-pain">${s.pain||s.trying||'—'}</div>
-    </div>`).join('')}` : '';
+  const similar=findSimilar(ins,all);
+  document.getElementById('drawer-similar').innerHTML=similar.length?`<div class="similar-title">Similar insights</div>${similar.map(s=>`<div class="similar-item" onclick="openDrawer('${s.id}')"><div class="similar-top"><span class="similar-name">${s.firstName||''} · ${s.serviceLine||''}</span><span class="badge" style="background:${SEV_BG[s.severity]};color:${SEV_C[s.severity]};font-size:10px">${s.severity}</span></div><div class="similar-pain">${s.aiSummary||s.pain||'—'}</div></div>`).join('')}`:'';
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 }
-
-function closeDrawer() {
-  document.getElementById('drawer-overlay').classList.remove('open');
-  document.getElementById('drawer').classList.remove('open');
-  activeRow = null; renderExplorer();
-}
+function closeDrawer(){document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('drawer').classList.remove('open');activeRow=null;renderExplorer();}
 
 // ── INGEST ──
-function switchIngestTab(tab) {
-  ingestTab = tab;
+function switchIngestTab(tab){
+  ingestTab=tab;
   document.querySelectorAll('.itab').forEach((el,i)=>el.classList.toggle('active',['meeting','email','note'][i]===tab));
   document.querySelectorAll('.ingest-area').forEach((el,i)=>el.classList.toggle('active',['ia-meeting','ia-email','ia-note'][i]==='ia-'+tab));
   document.getElementById('result-preview').classList.remove('show');
 }
-
-async function processIngest() {
-  const ta = document.getElementById('paste-'+ingestTab);
-  const raw = ta?.value.trim(); if (!raw) { alert('Please paste some text first.'); return; }
-  const statusEl = document.getElementById('ingest-status');
-  statusEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px"><span class="processing-dot"></span>Extracting with Claude...</span>';
+async function processIngest(){
+  const ta=document.getElementById('paste-'+ingestTab);const raw=ta?.value.trim();if(!raw){alert('Please paste some text first.');return;}
+  const statusEl=document.getElementById('ingest-status');
+  statusEl.innerHTML='<span style="display:inline-flex;align-items:center;gap:6px"><span class="processing-dot"></span>Extracting with Claude...</span>';
   document.getElementById('result-preview').classList.remove('show');
-  const typeLabel = ingestTab==='meeting'?'Copilot meeting summary':ingestTab==='email'?'email thread':'raw notes';
-  const prompt = `Extract a GXM product insight from this ${typeLabel}. Return ONLY valid JSON with no other text:\n{"sourceLabel":"LSP|Customer|Sales|Ops|Internal","firstName":"first name if found","company":"company if found","role":"role if found","contactEmail":"email if found","serviceLine":"Payroll|Entities|Entities Plus|HR|Books & Tax|Tax|EoR|Not service-specific","trying":"what they were trying to do - one sentence","painPattern":"Navigation & Findability|System Feedback|Process Complexity|Data & Accuracy|Performance & Reliability|Access & Permissions|Other","pain":"specific friction description","quote":"direct quote if any","severity":"Critical|Significant|Minor","frequency":"Always|Sometimes|First time"}\n\nText:\n${raw}`;
-  try {
-    const res = await fetch(ANTHROPIC_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
-    const data = await res.json();
-    const text = data.content?.[0]?.text||'';
-    const extracted = JSON.parse(text.replace(/```json|```/g,'').trim());
-    statusEl.textContent = '✓ Insight extracted';
-    const preview = document.getElementById('result-preview');
-    const fields = [
-      ['Source',extracted.sourceLabel],['Contact',`${extracted.firstName||''} ${extracted.company?'· '+extracted.company:''}`],
-      ['Service line',extracted.serviceLine],['Goal',extracted.trying],
-      ['Friction',extracted.pain],['Quote',extracted.quote?`"${extracted.quote}"`:''],
-      ['Severity',extracted.severity],['Frequency',extracted.frequency],
-    ];
-    preview.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Extracted insight</div>
-      ${fields.filter(([,v])=>v&&v.trim()).map(([l,v])=>`<div class="result-field"><div class="rf-label">${l}</div><div class="rf-val">${v}</div></div>`).join('')}
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn-sm btn-green" onclick="saveExtracted(${JSON.stringify(JSON.stringify(extracted)).slice(1,-1)})">Save to dashboard</button>
-        <button class="btn-sm" onclick="document.getElementById('result-preview').classList.remove('show');document.getElementById('ingest-status').textContent=''">Discard</button>
-      </div>`;
+  const typeLabel=ingestTab==='meeting'?'Copilot meeting summary':ingestTab==='email'?'email thread':'raw notes';
+  const prompt=`Extract a GXM product insight from this ${typeLabel}. Return ONLY valid JSON:\n{"sourceLabel":"LSP|Customer|Sales|Ops|Internal","firstName":"","company":"","role":"","contactEmail":"","serviceLine":"Payroll|Entities|Entities Plus|HR|Books & Tax|Tax|EoR|Not service-specific","trying":"what they were trying to do","painPattern":"Navigation & Findability|System Feedback|Process Complexity|Data & Accuracy|Performance & Reliability|Access & Permissions|Other","pain":"specific friction","quote":"direct quote if any","severity":"Critical|Significant|Minor","frequency":"Always|Sometimes|First time","aiSummary":"one sentence summary","primaryTheme":"short theme name","problemType":"normalized problem category","jobToBeDone":"user goal in JTBD format","confidenceScore":0.8}\n\nText:\n${raw}`;
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();const text=data.content?.[0]?.text||'';
+    const extracted=JSON.parse(text.replace(/```json|```/g,'').trim());
+    statusEl.textContent='✓ Extracted';
+    const all=loadAll();const dupes=findDuplicates({...extracted,id:'_preview'},all);
+    const preview=document.getElementById('result-preview');
+    const fields=[['Source',extracted.sourceLabel],['Contact',`${extracted.firstName||''} ${extracted.company?'· '+extracted.company:''}`],['Service line',extracted.serviceLine],['AI summary',extracted.aiSummary],['Suggested theme',extracted.primaryTheme],['Goal (JTBD)',extracted.jobToBeDone],['Problem type',extracted.problemType],['Friction',extracted.pain],['Quote',extracted.quote?`"${extracted.quote}"`:''],['Severity',extracted.severity],['Frequency',extracted.frequency]];
+    preview.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Extracted insight</div>${fields.filter(([,v])=>v&&String(v).trim()).map(([l,v])=>`<div class="result-field"><div class="rf-label">${l}</div><div class="rf-val">${v}</div></div>`).join('')}${dupes.length?`<div style="margin:10px 0;padding:8px 10px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e"><strong>Possible duplicate:</strong> "${dupes[0].aiSummary||dupes[0].pain}"</div>`:''}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-sm" onclick="saveExtracted(${JSON.stringify(JSON.stringify({...extracted,status:'new'})).slice(1,-1)})">Save as draft</button>
+      <button class="btn-sm btn-green" onclick="saveExtracted(${JSON.stringify(JSON.stringify({...extracted,status:'validated'})).slice(1,-1)})">Save & validate</button>
+      <button class="btn-sm" onclick="document.getElementById('result-preview').classList.remove('show');document.getElementById('ingest-status').textContent=''">Discard</button>
+    </div>`;
     preview.classList.add('show');
-    preview.dataset.extracted = JSON.stringify(extracted);
-  } catch(e) {
-    statusEl.textContent = 'Extraction failed — check console';
-    console.error(e);
-  }
+  }catch(e){statusEl.textContent='Extraction failed.';console.error(e);}
 }
-
-function saveExtracted(jsonStr) {
-  try {
-    const data = JSON.parse(jsonStr);
-    const rec = {...data, id:'i'+Date.now().toString(36), date:new Date().toISOString().split('T')[0], ts:Date.now(), submitterName:'AI Intake', submitterEmail:'intake@gxm', sourceLabel:data.sourceLabel||'Other'};
-    saveInsight(rec);
-    document.getElementById('result-preview').classList.remove('show');
-    document.getElementById('ingest-status').textContent = '✓ Saved to dashboard';
-    document.getElementById('paste-'+ingestTab).value = '';
-    refreshAll();
-    setTimeout(()=>showTab('explorer'),800);
-  } catch(e) { alert('Could not save. Please try again.'); }
+function saveExtracted(jsonStr){
+  try{
+    const data=JSON.parse(jsonStr);
+    const rec={...data,id:'i'+Date.now().toString(36),date:new Date().toISOString().split('T')[0],ts:Date.now(),submitterName:'AI Intake',submitterEmail:'intake@gxm',sourceLabel:data.sourceLabel||'Other'};
+    saveInsight(rec);document.getElementById('result-preview').classList.remove('show');document.getElementById('ingest-status').textContent='✓ Saved';document.getElementById('paste-'+ingestTab).value='';
+    refreshAll();setTimeout(()=>showTab(data.status==='validated'?'explorer':'inbox'),600);
+  }catch(e){alert('Could not save.');}
 }
-
-function renderChannels(all) {
-  const srcs = countBy(all,'sourceLabel');
-  const total = all.length;
-  const colors = {'LSP':AC[0],'Customer':AC[1],'Sales':AC[2],'Ops':AC[3],'Internal':AC[4],'AI Intake':AC[7]};
-  document.getElementById('channel-list').innerHTML = srcs.map(([l,v])=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">
-      <div style="width:10px;height:10px;border-radius:50%;background:${colors[l]||AC[5]};flex-shrink:0"></div>
-      <div style="flex:1;font-size:13px;color:var(--tx);font-weight:500">${l}</div>
-      <div style="font-size:12px;color:var(--mu)">${v} insight${v!==1?'s':''}</div>
-      <div style="font-size:12px;font-weight:600;color:var(--g)">${Math.round((v/total)*100)}%</div>
-    </div>`).join('');
-}
-
-// ── NAV ──
-function showTab(tab) {
-  const titles = {overview:'Overview',patterns:'Patterns & Trends',ai:'AI Priorities',explorer:'Insight Explorer',ingest:'Add Insights'};
-  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
-  document.getElementById('sec-'+tab).classList.add('active');
-  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
-  const items = document.querySelectorAll('.sb-item');
-  const map = {overview:0,patterns:1,ai:2,explorer:3,ingest:4};
-  if(items[map[tab]]) items[map[tab]].classList.add('active');
-  document.getElementById('page-title').textContent = titles[tab]||tab;
-  if(tab==='explorer'){populateFilters();renderExplorer();}
-}
-
-function onSearch(q) { searchQ=q; refreshAll(); populateFilters(); renderExplorer(); }
-
-function exportCSV() {
-  const all = loadAll();
-  const headers = ['Date','Submitter','Source','Contact','Company','Email','Service Line','Goal','Pain Category','Friction Description','Quote','Severity','Frequency','GXM Area'];
-  const rows = all.map(i=>[i.date,i.submitterName,i.sourceLabel,`${i.firstName||''} ${i.lastName||''}`.trim(),i.company||'',i.contactEmail||'',i.serviceLine,i.trying,i.painPattern,`"${(i.pain||'').replace(/"/g,'""')}"`,`"${(i.quote||'').replace(/"/g,'""')}"`,i.severity,i.frequency,i.relatedFeature]);
-  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='gxm-insights-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
-}
-
-function savePBEmail() {
-  const e=document.getElementById('pb-email')?.value.trim();
-  if(e){localStorage.setItem('gxm_pb_email',e);alert('Saved! Forward emails to this address and they\'ll be processed into insights.');}
-}
-
-// Init
-const savedPB=localStorage.getItem('gxm_pb_email');
-if(savedPB){const el=document.getElementById('pb-email');if(el)el.value=savedPB;}
-refreshAll();
-</script>
-</body>
-</html>
+function renderChannels(all){
+  const srcs=countBy(all,'sourceLabel');const total=all.lengt
