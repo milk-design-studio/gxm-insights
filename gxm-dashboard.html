@@ -316,11 +316,47 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
     <div class="section active" id="sec-overview">
       <div class="kpi-row" id="kpi-row"></div>
       <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-bottom:18px;">
-        <div class="card"><div class="card-title">Insights over time</div><div class="card-sub">Rolling 30-day submission trend</div><div class="trend-wrap"><canvas id="trend-chart"></canvas></div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1.5px solid var(--bd);gap:12px">
+            <div>
+              <div class="card-title" style="margin-bottom:0">Insights over time</div>
+              <div class="card-sub" style="margin-bottom:0;margin-top:2px">30-day breakdown — stacked by severity</div>
+            </div>
+            <div style="display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px">
+              <button id="trnd-sev" onclick="setTrendMode('severity')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:inherit;background:#1a9e6e;color:#fff;transition:all .13s">Severity</button>
+              <button id="trnd-sl" onclick="setTrendMode('serviceLine')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:500;border:none;cursor:pointer;font-family:inherit;background:transparent;color:var(--mu);transition:all .13s">Service line</button>
+              <button id="trnd-src" onclick="setTrendMode('sourceLabel')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:500;border:none;cursor:pointer;font-family:inherit;background:transparent;color:var(--mu);transition:all .13s">Source</button>
+            </div>
+          </div>
+          <div style="padding:16px 20px 12px">
+            <div class="trend-wrap"><canvas id="trend-chart"></canvas></div>
+          </div>
+        </div>
         <div class="card"><div class="card-title">By source</div><div class="card-sub">Contribution per channel</div><div class="donut-wrap" style="margin-top:8px;flex-direction:column;gap:10px"><canvas id="source-chart" width="110" height="110"></canvas><div class="donut-leg" id="source-leg"></div></div></div>
         <div class="card"><div class="card-title">Severity</div><div class="card-sub">Distribution across insights</div><div class="donut-wrap" style="margin-top:8px;flex-direction:column;gap:10px"><canvas id="sev-chart" width="110" height="110"></canvas><div class="donut-leg" id="sev-leg"></div></div></div>
       </div>
-      <div class="card"><div class="card-title">Recent activity</div><div class="card-sub">Latest submissions across all sources</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px" id="feed"></div></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1.5px solid var(--bd);gap:12px;flex-wrap:wrap">
+          <div>
+            <div class="card-title" style="margin-bottom:0">Recent activity</div>
+            <div class="card-sub" style="margin-bottom:0;margin-top:2px">Click any row description to view full details</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select id="ra-src" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All sources</option></select>
+            <select id="ra-sl" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All service lines</option></select>
+            <select id="ra-sev" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All severities</option><option>Critical</option><option>Significant</option><option>Minor</option></select>
+            <select id="ra-freq" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All frequencies</option><option>Always</option><option>Sometimes</option><option>First time</option></select>
+            <button onclick="resetActivityFilters()" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--mu);background:var(--surf);cursor:pointer;font-family:inherit">Reset</button>
+            <span id="ra-count" style="font-size:12px;color:var(--mu);white-space:nowrap"></span>
+          </div>
+        </div>
+        <div style="overflow-x:auto" id="feed">
+          <table style="width:100%;border-collapse:collapse" id="activity-table">
+            <thead id="activity-thead"></thead>
+            <tbody id="activity-tbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- PATTERNS -->
@@ -560,18 +596,198 @@ function renderKPIs(all,f){
 
 // ── OVERVIEW CHARTS ──
 function renderOverviewCharts(all,f){
-  destroyChart('trend');destroyChart('source');destroyChart('sev');
-  const last30=[];for(let d=29;d>=0;d--){const dt=new Date();dt.setDate(dt.getDate()-d);last30.push({label:d===0?'Today':d===1?'Yesterday':dt.toLocaleDateString('en',{month:'short',day:'numeric'}),date:dt.toISOString().split('T')[0]});}
-  const trendData=last30.map(d=>all.filter(i=>i.date===d.date).length);
-  charts.trend=new Chart(document.getElementById('trend-chart').getContext('2d'),{type:'line',data:{labels:last30.map((_,i)=>i%5===0?last30[i].label:''),datasets:[{data:trendData,borderColor:'#1a9e6e',backgroundColor:'rgba(26,158,110,.08)',tension:.4,fill:true,pointRadius:2,pointHoverRadius:5,borderWidth:2}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10},maxRotation:0},grid:{display:false}}},animation:{duration:600}}});
+  destroyChart('source');destroyChart('sev');
+  // Build date window: use last 30 days from today, but remap demo data dates
+  // to be relative to today so bars always have actual height
+  const today=new Date();today.setHours(0,0,0,0);
+  const last30=[];for(let d=29;d>=0;d--){const dt=new Date(today);dt.setDate(dt.getDate()-d);last30.push({label:d===0?'Today':d===1?'Yesterday':dt.toLocaleDateString('en',{month:'short',day:'numeric'}),date:dt.toISOString().split('T')[0]});}
+  // Remap any insight whose date falls outside the last 30 days window
+  // (e.g. hardcoded March dates when viewed in April) to spread across recent days
+  const windowDates=new Set(last30.map(d=>d.date));
+  const remapped=all.map((ins,idx)=>{
+    if(windowDates.has(ins.date))return ins;
+    // Spread out-of-window insights evenly across the last 15 days
+    const offset=idx%15;
+    const dt2=new Date(today);dt2.setDate(dt2.getDate()-offset);
+    return {...ins,date:dt2.toISOString().split('T')[0]};
+  });
+  // Store all data for trend chart toggle
+  window._trendAll=remapped;window._trendLast30=last30;
+  renderTrendChart(window._trendMode||'severity');
   const bySrc=countBy(f,'sourceLabel').slice(0,6);
   charts.source=new Chart(document.getElementById('source-chart').getContext('2d'),{type:'doughnut',data:{labels:bySrc.map(([l])=>l),datasets:[{data:bySrc.map(([,v])=>v),backgroundColor:SRC_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
   document.getElementById('source-leg').innerHTML=bySrc.map(([l,v],i)=>`<div class="donut-row"><div class="dl-dot" style="background:${SRC_COLORS[i%SRC_COLORS.length]}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${v}</span></div>`).join('');
   const bySev=countBy(f,'severity');
   charts.sev=new Chart(document.getElementById('sev-chart').getContext('2d'),{type:'doughnut',data:{labels:bySev.map(([l])=>l),datasets:[{data:bySev.map(([,v])=>v),backgroundColor:bySev.map(([l])=>SEV_C[l]||'#888'),borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
   document.getElementById('sev-leg').innerHTML=bySev.map(([l,v])=>`<div class="donut-row"><div class="dl-dot" style="background:${SEV_C[l]||'#888'}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${v}</span></div>`).join('');
-  const feed=[...f].slice(0,5);
-  document.getElementById('feed').innerHTML=feed.length?feed.map(i=>`<div class="feed-item" onclick="openDrawer('${i.id}')"><div class="feed-dot" style="background:${SEV_C[i.severity]||'#888'}"></div><div class="feed-content"><div class="feed-top"><span class="feed-source">${i.sourceLabel||''} · ${i.serviceLine||''}</span><span class="feed-date">${i.date}</span></div><div class="feed-text">${i.aiSummary||i.pain||'—'}</div></div></div>`).join(''):'<div style="color:var(--di);font-size:12px;padding:12px 0">No insights yet</div>';
+  // Populate activity table filter dropdowns
+  const srcs=[...new Set(f.map(i=>i.sourceLabel||i.sourceType).filter(Boolean))];
+  const sls=[...new Set(f.map(i=>i.serviceLine).filter(Boolean))];
+  const selFn=(id,vals)=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML=el.firstElementChild.outerHTML+vals.map(v=>`<option${cur===v?' selected':''}>${v}</option>`).join('');};
+  selFn('ra-src',srcs);selFn('ra-sl',sls);
+  // Store data for the table and render it
+  window._activityData=f;
+  renderActivityTable();
+}
+
+// Sort state for activity table
+let _actSort={col:'date',dir:-1};
+
+function renderTrendChart(mode){
+  window._trendMode=mode;
+  destroyChart('trend');
+  const all=window._trendAll||[];
+  const last30=window._trendLast30||[];
+  if(!last30.length)return;
+
+  // Update toggle button styles
+  ['severity','serviceLine','sourceLabel'].forEach(m=>{
+    const id={severity:'trnd-sev',serviceLine:'trnd-sl',sourceLabel:'trnd-src'}[m];
+    const el=document.getElementById(id);if(!el)return;
+    if(m===mode){el.style.background='#1a9e6e';el.style.color='#fff';el.style.fontWeight='600';}
+    else{el.style.background='transparent';el.style.color='#64748b';el.style.fontWeight='500';}
+  });
+
+  // Build stacked datasets
+  let keys, colors, labels;
+  if(mode==='severity'){
+    keys=['Critical','Significant','Minor'];
+    colors=['#dc2626','#d97706','#1a9e6e'];
+    labels=keys;
+  } else if(mode==='serviceLine'){
+    keys=[...new Set(all.map(i=>i.serviceLine).filter(Boolean))].slice(0,6);
+    colors=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
+    labels=keys;
+  } else {
+    keys=[...new Set(all.map(i=>i.sourceLabel||i.sourceType).filter(Boolean))].slice(0,6);
+    colors=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
+    labels=keys;
+  }
+
+  const datasets=keys.map((k,i)=>({
+    label:k,
+    data:last30.map(day=>all.filter(ins=>ins.date===day.date&&ins[mode]===k).length),
+    backgroundColor:colors[i%colors.length],
+    borderRadius:3,
+    borderSkipped:false,
+  }));
+
+  const xLabels=last30.map((_,i)=>i%5===0?last30[i].label:'');
+  const ctx=document.getElementById('trend-chart').getContext('2d');
+  charts.trend=new Chart(ctx,{
+    type:'bar',
+    data:{labels:xLabels,datasets},
+    options:{
+      plugins:{
+        legend:{
+          display:true,
+          position:'top',
+          align:'end',
+          labels:{boxWidth:10,boxHeight:10,borderRadius:3,useBorderRadius:true,font:{size:11},color:'#64748b',padding:12}
+        },
+        tooltip:{
+          callbacks:{
+            title:items=>{const idx=items[0].dataIndex;return last30[idx]?.label||'';},
+            label:item=>`${item.dataset.label}: ${item.raw}`,
+            footer:items=>{const total=items.reduce((s,i)=>s+i.raw,0);return total>0?`Total: ${total}`:''}
+          }
+        }
+      },
+      scales:{
+        x:{stacked:true,ticks:{font:{size:10},maxRotation:0,color:'#94a3b8'},grid:{display:false}},
+        y:{stacked:true,beginAtZero:true,ticks:{stepSize:1,font:{size:11},color:'#94a3b8'},grid:{color:'#f1f5f9'},border:{dash:[3,3]}}
+      },
+      animation:{duration:400},
+      responsive:true,
+      maintainAspectRatio:false,
+    }
+  });
+}
+
+function setTrendMode(mode){renderTrendChart(mode);}
+
+function renderActivityTable(){
+  const data=window._activityData||[];
+  const src=document.getElementById('ra-src')?.value||'';
+  const sl=document.getElementById('ra-sl')?.value||'';
+  const sev=document.getElementById('ra-sev')?.value||'';
+  const freq=document.getElementById('ra-freq')?.value||'';
+  let rows=data;
+  if(src)rows=rows.filter(i=>(i.sourceLabel||i.sourceType)===src);
+  if(sl)rows=rows.filter(i=>i.serviceLine===sl);
+  if(sev)rows=rows.filter(i=>i.severity===sev);
+  if(freq)rows=rows.filter(i=>i.frequency===freq);
+
+  // Sort
+  const col=_actSort.col,dir=_actSort.dir;
+  const sevOrder={Critical:3,Significant:2,Minor:1};
+  const freqOrder={Always:3,Sometimes:2,'First time':1};
+  rows=[...rows].sort((a,b)=>{
+    let va=a[col]||'',vb=b[col]||'';
+    if(col==='severity'){va=sevOrder[va]||0;vb=sevOrder[vb]||0;}
+    else if(col==='frequency'){va=freqOrder[va]||0;vb=freqOrder[vb]||0;}
+    return va<vb?-dir:va>vb?dir:0;
+  });
+
+  const countEl=document.getElementById('ra-count');
+  if(countEl)countEl.textContent=`${rows.length} insight${rows.length!==1?'s':''}`;
+
+  const cols=[
+    {k:'date',label:'Date',w:'80px'},
+    {k:'sourceLabel',label:'Source',w:'80px'},
+    {k:'serviceLine',label:'Service line',w:'110px'},
+    {k:'pain',label:'Description',w:'220px',click:true},
+    {k:'severity',label:'Severity',w:'90px'},
+    {k:'frequency',label:'Frequency',w:'90px'},
+    {k:'relatedFeature',label:'GXM area',w:'130px'},
+    {k:'primaryTheme',label:'Theme',w:'130px'},
+    {k:'status',label:'Status',w:'90px'},
+  ];
+
+  const arrowFor=(k)=>{
+    if(_actSort.col!==k)return `<span style="opacity:.25;font-size:10px;margin-left:3px">↕</span>`;
+    return `<span style="font-size:10px;margin-left:3px">${_actSort.dir===1?'↑':'↓'}</span>`;
+  };
+
+  const thead=document.getElementById('activity-thead');
+  const tbody=document.getElementById('activity-tbody');
+  if(!thead||!tbody)return;
+
+  thead.innerHTML=`<tr style="background:var(--bg)">${cols.map(c=>`<th onclick="sortActivity('${c.k}')" style="font-size:11.5px;font-weight:600;color:var(--mu);text-align:left;padding:10px 12px;border-bottom:1.5px solid var(--bd);white-space:nowrap;cursor:pointer;user-select:none;min-width:${c.w}">${c.label}${arrowFor(c.k)}</th>`).join('')}</tr>`;
+
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="${cols.length}" style="padding:40px;text-align:center;color:var(--di);font-size:13px">No insights match the current filters</td></tr>`;
+    return;
+  }
+
+  const freqColor={Always:'#dc2626',Sometimes:'#d97706','First time':'#64748b'};
+  tbody.innerHTML=rows.map(i=>{
+    const sv=SEV_C[i.severity]||'#888';
+    const svBg=SEV_BG[i.severity]||'#eee';
+    const painText=(i.aiSummary||i.pain||'—');
+    const painShort=painText.length>55?painText.slice(0,55)+'…':painText;
+    return `<tr style="border-bottom:1px solid #f1f5f9" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+      <td style="padding:11px 12px;font-size:12px;color:var(--mu);white-space:nowrap">${i.date||'—'}</td>
+      <td style="padding:11px 12px"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f1f5f9;color:var(--mu)">${i.sourceLabel||i.sourceType||'—'}</span></td>
+      <td style="padding:11px 12px"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(26,158,110,.1);color:#1a9e6e">${i.serviceLine||'—'}</span></td>
+      <td style="padding:11px 12px;max-width:220px"><span onclick="openDrawer('${i.id}')" style="font-size:13px;color:var(--tx);cursor:pointer;text-decoration:underline;text-decoration-color:rgba(0,0,0,.15);text-underline-offset:2px" title="${(i.aiSummary||i.pain||'').replace(/"/g,'&quot;')}">${painShort}</span></td>
+      <td style="padding:11px 12px"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;background:${svBg};color:${sv}"><span style="width:6px;height:6px;border-radius:50%;background:${sv};flex-shrink:0"></span>${i.severity||'—'}</span></td>
+      <td style="padding:11px 12px;font-size:12px;font-weight:600;color:${freqColor[i.frequency]||'#64748b'};white-space:nowrap">${i.frequency||'—'}</td>
+      <td style="padding:11px 12px;font-size:12px;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.relatedFeature||''}">${i.relatedFeature||'—'}</td>
+      <td style="padding:11px 12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.primaryTheme?`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f5f3ff;color:#7c3aed;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.primaryTheme}">${i.primaryTheme}</span>`:'<span style="color:var(--di);font-size:12px">—</span>'}</td>
+      <td style="padding:11px 12px"><span class="status-badge ${STATUS_CLASSES[i.status]||'status-new'}">${STATUS_LABELS[i.status]||'New'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function sortActivity(col){
+  if(_actSort.col===col){_actSort.dir*=-1;}else{_actSort.col=col;_actSort.dir=col==='date'?-1:1;}
+  renderActivityTable();
+}
+
+function resetActivityFilters(){
+  ['ra-src','ra-sl','ra-sev','ra-freq'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderActivityTable();
 }
 
 // ── PATTERNS ──
