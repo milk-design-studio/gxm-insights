@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GXM Insight Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root{color-scheme:light only;--g:#1a9e6e;--g2:rgba(26,158,110,.1);--r:#dc2626;--a:#d97706;--b:#2563eb;--p:#7c3aed;--bd:#e2e8f0;--bg:#f1f5f9;--surf:#fff;--tx:#0f172a;--mu:#64748b;--di:#94a3b8}
 html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,sans-serif;font-size:13px;margin:0;padding:0;color-scheme:light only}
@@ -1033,4 +1033,61 @@ function saveExtracted(jsonStr){
   }catch(e){alert('Could not save.');}
 }
 function renderChannels(all){
-  const srcs=countBy(all,'sourceLabel');const total=all.lengt
+  const srcs=countBy(all,'sourceLabel');const total=all.length;
+  const colors={LSP:AC[0],Customer:AC[1],Sales:AC[2],Ops:AC[3],Internal:AC[4],'AI Intake':AC[7]};
+  const el=document.getElementById('channel-list');
+  if(!el)return;
+  el.innerHTML=srcs.map(([l,v])=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)"><div style="width:10px;height:10px;border-radius:50%;background:${colors[l]||AC[5]};flex-shrink:0"></div><div style="flex:1;font-size:13px;color:var(--tx);font-weight:500">${l}</div><div style="font-size:12px;color:var(--mu)">${v} insight${v!==1?'s':''}</div><div style="font-size:12px;font-weight:600;color:var(--g);min-width:30px;text-align:right">${Math.round((v/total)*100)}%</div></div>`).join('');
+}
+
+// Navigation
+const TAB_TITLES={inbox:'Insight Inbox',themes:'Themes',initiatives:'Initiatives',overview:'Overview',patterns:'Patterns & Trends',explorer:'Insight Explorer',ingest:'Add Insights'};
+const SB_IDS=['sb-inbox','sb-themes','sb-initiatives','sb-overview','sb-patterns','sb-explorer','sb-ingest'];
+const SB_TABS=['inbox','themes','initiatives','overview','patterns','explorer','ingest'];
+
+function showTab(tab){
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  const sec=document.getElementById('sec-'+tab);
+  if(sec)sec.classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
+  const idx=SB_TABS.indexOf(tab);
+  if(idx>=0){const el=document.getElementById(SB_IDS[idx]);if(el)el.classList.add('active');}
+  const titleEl=document.getElementById('page-title');
+  if(titleEl)titleEl.textContent=TAB_TITLES[tab]||tab;
+  if(tab==='explorer'){populateFilters();renderExplorer();}
+}
+
+function onSearch(q){searchQ=q;refreshAll();populateFilters();renderExplorer();}
+
+function exportCSV(){
+  const all=loadAll();
+  const headers=['Date','Status','Submitter','Source','Contact','Company','Email','Service Line','Goal','Problem Type','Friction','Quote','Severity','Frequency','GXM Area','Theme','AI Summary','Confidence'];
+  const rows=all.map(i=>[
+    i.date,i.status,i.submitterName,i.sourceLabel,
+    `${i.firstName||''} ${i.lastName||''}`.trim(),
+    i.company||'',i.contactEmail||'',i.serviceLine,i.trying,i.problemType,
+    `"${(i.pain||'').replace(/"/g,'""')}"`,
+    `"${(i.quote||'').replace(/"/g,'""')}"`,
+    i.severity,i.frequency,i.relatedFeature,i.primaryTheme||'',
+    `"${(i.aiSummary||'').replace(/"/g,'""')}"`,
+    Math.round((i.confidenceScore||0)*100)+'%'
+  ]);
+  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='gxm-insights-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+function savePBEmail(){
+  const e=document.getElementById('pb-email')?.value.trim();
+  if(e){localStorage.setItem('gxm_pb_email',e);alert('Saved! Forward emails to this address.');}
+}
+
+// Init
+const savedPB=localStorage.getItem('gxm_pb_email');
+if(savedPB){const el=document.getElementById('pb-email');if(el)el.value=savedPB;}
+refreshAll();
+</script>
+</body>
+</html>
