@@ -72,9 +72,9 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .donut-leg{display:flex;flex-direction:column;gap:9px;flex:1}
 .donut-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mu)}
 .dl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.matrix-cell{border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:transform .15s;min-height:52px}
-.matrix-cell:hover{transform:scale(1.06)}
-.matrix-label{font-size:10px;color:var(--mu);text-align:center;padding:4px 2px}
+.matrix-cell{border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer;transition:all .15s;min-height:90px}
+.matrix-cell:hover{transform:scale(1.03);box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.matrix-label{font-size:13px;font-weight:600;color:var(--mu);text-align:center;padding:6px 4px}
 .trend-wrap{position:relative;height:170px}
 .feed{display:flex;flex-direction:column;gap:8px}
 .feed-item{display:flex;gap:12px;padding:11px 14px;background:var(--bg);border-radius:9px;border:1px solid var(--bd);cursor:pointer;transition:all .13s}
@@ -166,6 +166,15 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .similar-pain{font-size:12px;color:var(--mu);line-height:1.4}
 .empty{text-align:center;padding:60px 20px;color:var(--mu)}
 .empty strong{display:block;font-size:15px;color:var(--tx);margin-bottom:8px;font-weight:700}
+/* Page tabs — matches HSP design */
+.page-tabs{display:flex;gap:0;border-bottom:2px solid var(--bd);margin-bottom:24px}
+.page-tab{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;font-size:13.5px;font-weight:500;color:var(--mu);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:all .15s;user-select:none;white-space:nowrap}
+.page-tab:hover{color:var(--tx)}
+.page-tab.active{color:var(--tx);font-weight:700;border-bottom-color:var(--g)}
+.page-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:11px;font-size:11px;font-weight:700;padding:0 6px;background:#e2e8f0;color:#475569;transition:all .15s}
+.page-tab.active .page-tab-badge{background:#1e293b;color:#fff}
+.page-tab-badge.red{background:rgba(220,38,38,.15);color:#dc2626}
+.page-tab.active .page-tab-badge.red{background:#dc2626;color:#fff}
 /* NEW: Status badges */
 .status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10.5px;font-weight:600}
 .status-new{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
@@ -175,51 +184,90 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .status-rejected{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
 .status-clustered{background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4}
 .status-actioned{background:#f8fafc;color:#475569;border:1px solid #cbd5e1}
-/* NEW: Inbox */
-.inbox-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.inbox-filters{display:flex;gap:6px}
-.inbox-filter{padding:5px 12px;border-radius:20px;border:1.5px solid var(--bd);font-size:12px;font-weight:500;color:var(--mu);cursor:pointer;background:var(--surf);transition:all .13s;user-select:none}
+/* Review queue */
+.inbox-filter{padding:5px 14px;border-radius:20px;border:1.5px solid var(--bd);font-size:12px;font-weight:500;color:var(--mu);cursor:pointer;background:var(--surf);transition:all .13s;user-select:none}
 .inbox-filter.active{border-color:var(--g);color:var(--g);background:var(--g2)}
-.inbox-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:18px 20px;margin-bottom:12px;transition:all .15s}
-.inbox-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.inbox-card.priority{border-left:4px solid var(--r);background:#fffcfc}
-.inbox-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px}
-.inbox-summary{font-size:14px;font-weight:600;color:var(--tx);line-height:1.45;flex:1}
-.inbox-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
-.inbox-pain{font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:12px;padding:10px 14px;background:var(--bg);border-radius:7px;border-left:3px solid var(--bd)}
-.inbox-actions{display:flex;gap:6px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--bd)}
+/* GXM-style inbox list rows */
+.iq-group-label{padding:10px 16px 6px;font-size:11px;font-weight:700;color:var(--di);text-transform:uppercase;letter-spacing:.07em;background:var(--bg)}
+.iq-row{padding:14px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .12s}
+.iq-row:last-child{border-bottom:none}
+.iq-row:hover{background:#f8fafc}
+.iq-row.iq-selected{background:#f0fdf4}
+.iq-row.iq-priority{border-left:3px solid var(--r)}
+.iq-row-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:2px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iq-row-company{font-size:12px;color:var(--mu);margin-bottom:5px;font-weight:500}
+.iq-row-excerpt{font-size:12px;color:var(--mu);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px}
+.iq-row-foot{display:flex;align-items:center;gap:6px}
+.iq-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.iq-date{font-size:11px;color:var(--di)}
+/* GXM-style detail panel */
+.iqd-title{font-size:18px;font-weight:700;color:var(--tx);line-height:1.4;margin-bottom:14px}
+.iqd-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px;padding-bottom:18px;border-bottom:1.5px solid var(--bd)}
+.iqd-pill{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;background:#f1f5f9;color:var(--mu);border:1px solid var(--bd)}
+.iqd-pill.sev-c{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+.iqd-pill.sev-s{background:#fffbeb;color:#d97706;border-color:#fde68a}
+.iqd-pill.sev-m{background:#f0fdf4;color:#16a34a;border-color:#bbf7d0}
+.iqd-pill.freq-a{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+.iqd-pill.freq-s{background:#fffbeb;color:#d97706;border-color:#fde68a}
+.iqd-section-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:10px;margin-top:18px}
+.iqd-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.iqd-field{display:flex;flex-direction:column;gap:4px}
+.iqd-field.full{grid-column:1/-1}
+.iqd-label{font-size:11.5px;font-weight:600;color:var(--mu)}
+.iqd-val{padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--tx);background:#fff;line-height:1.5;min-height:38px}
+.iqd-val.quote-val{font-style:italic;border-left:3px solid var(--g);background:#f8fafc}
+.iqd-comment{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--tx);background:#f8fafc;outline:none;font-family:inherit;resize:none;line-height:1.5;transition:border-color .15s;margin-bottom:12px;min-height:60px}
+.iqd-comment:focus{border-color:var(--g);background:#fff}
+.iqd-actions-bar{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
+.iqd-left-actions{display:flex;gap:6px;flex-wrap:wrap;margin-right:auto}
+.iqd-btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bd);background:#fff;color:var(--mu);font-family:inherit;transition:all .13s;white-space:nowrap}
+.iqd-btn:hover{border-color:var(--g);color:var(--g)}
+.iqd-btn.validate{border-color:#16a34a;color:#16a34a;background:#f0fdf4}
+.iqd-btn.validate:hover{background:#dcfce7}
+.iqd-btn.reject{border-color:var(--r);color:var(--r);background:#fef2f2}
+.iqd-btn.reject:hover{background:#fee2e2}
+.iqd-btn.primary{background:var(--g);border-color:var(--g);color:#fff;padding:9px 22px}
+.iqd-btn.primary:hover{background:#158a5e}
+/* Legacy */
 .action-btn{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--bd);background:var(--surf);color:var(--mu);font-family:inherit;transition:all .13s;white-space:nowrap}
 .action-btn:hover{border-color:var(--g);color:var(--g)}
 .action-btn.accept{border-color:#16a34a;color:#16a34a;background:#f0fdf4;font-weight:600}
-.action-btn.accept:hover{background:#dcfce7}
 .action-btn.reject{border-color:var(--r);color:var(--r);background:#fef2f2;font-weight:600}
-.action-btn.reject:hover{background:#fee2e2}
 .action-btn.merge-btn{border-color:var(--p);color:var(--p);background:#faf5ff}
 .possible-dupe{margin-top:10px;padding:9px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:7px;font-size:12px;color:#92400e}
-/* NEW: Themes */
-.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
-.theme-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:20px 22px;cursor:pointer;transition:all .18s}
-.theme-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
-.theme-card.critical-theme{border-left:4px solid var(--r);background:#fffcfc}
-.theme-card.recurring-theme{border-left:4px solid var(--a);background:#fffdf5}
-.theme-card.emerging-theme{border-left:4px solid var(--b);background:#f8fbff}
-.theme-card.resolved-theme{border-left:4px solid var(--g);background:#f8fdfb}
-.theme-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:12px}
-.theme-title{font-size:15px;font-weight:700;color:var(--tx);line-height:1.35;flex:1}
-.theme-status{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;flex-shrink:0;margin-top:1px}
+/* Themes */
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.theme-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:0;cursor:pointer;transition:all .18s;overflow:hidden}
+.theme-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.09);transform:translateY(-1px)}
+.theme-card.critical-theme{border-top:3px solid var(--r)}
+.theme-card.recurring-theme{border-top:3px solid var(--a)}
+.theme-card.emerging-theme{border-top:3px solid var(--b)}
+.theme-card.resolved-theme{border-top:3px solid var(--g)}
+.theme-card-inner{padding:18px 20px}
+/* Top row: title + status pill */
+.theme-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:10px}
+.theme-title{font-size:14px;font-weight:700;color:var(--tx);line-height:1.35;flex:1}
+.theme-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;margin-top:1px;text-transform:capitalize}
 .ts-critical{background:#fef2f2;color:var(--r);border:1px solid #fecaca}
 .ts-recurring{background:#fffbeb;color:var(--a);border:1px solid #fde68a}
 .ts-emerging{background:#eff6ff;color:var(--b);border:1px solid #bfdbfe}
 .ts-resolved{background:#f0fdf4;color:var(--g);border:1px solid #bbf7d0}
-.theme-desc{font-size:12.5px;color:var(--mu);line-height:1.6;margin-bottom:14px}
-.theme-stats{display:flex;gap:24px;margin-bottom:14px;padding:12px 14px;background:var(--bg);border-radius:8px}
-.theme-stat{display:flex;flex-direction:column;gap:2px}
-.theme-stat-val{font-size:22px;font-weight:700;color:var(--tx);letter-spacing:-.5px}
-.theme-stat-lbl{font-size:11px;color:var(--mu);font-weight:500}
-.theme-sev-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px;margin-bottom:14px}
-.theme-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+.theme-desc{font-size:12px;color:var(--mu);line-height:1.55;margin-bottom:14px}
+/* Stat row: three numbers side by side */
+.theme-stats{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.theme-stat{display:flex;flex-direction:column;align-items:center;padding:10px 0;flex:1;border-right:1px solid var(--bd)}
+.theme-stat:last-child{border-right:none}
+.theme-stat-val{font-size:20px;font-weight:700;color:var(--tx);letter-spacing:-.5px;line-height:1}
+.theme-stat-lbl{font-size:10.5px;color:var(--di);font-weight:500;margin-top:3px}
+/* Severity bar */
+.theme-sev-bar{display:flex;height:5px;overflow:hidden;margin-bottom:14px}
+.theme-footer{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--bd)}
 .trend-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600}
 .trend-up{color:var(--r)}.trend-flat{color:var(--mu)}.trend-down{color:var(--g)}
+/* Theme summary bar */
+.theme-summary-pill{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surf);border:1.5px solid var(--bd);border-radius:10px;font-size:12.5px}
+.tsp-num{font-size:18px;font-weight:700;color:var(--tx);letter-spacing:-.3px}
+.tsp-lbl{color:var(--mu);font-weight:500}
 /* NEW: Initiatives */
 .initiative-card{background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;padding:20px 22px;margin-bottom:12px;transition:box-shadow .15s}
 .initiative-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
@@ -255,14 +303,14 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 <div class="shell">
 <div class="sidebar">
   <div class="sb-logo"><div class="sb-mark">GX</div><div><div class="sb-name">GXM</div><div class="sb-sub">Insight Platform</div></div></div>
-  <div class="sb-section">Workflow</div>
-  <div class="sb-item" id="sb-inbox" onclick="showTab('inbox')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Inbox<span class="sb-badge" id="inbox-badge">0</span></div>
-  <div class="sb-item" id="sb-themes" onclick="showTab('themes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Themes<span class="sb-badge green" id="themes-badge">0</span></div>
-  <div class="sb-item" id="sb-initiatives" onclick="showTab('initiatives')"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Initiatives</div>
   <div class="sb-section">Analytics</div>
   <div class="sb-item active" id="sb-overview" onclick="showTab('overview')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
   <div class="sb-item" id="sb-patterns" onclick="showTab('patterns')"><svg viewBox="0 0 24 24"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>Patterns</div>
   <div class="sb-item" id="sb-explorer" onclick="showTab('explorer')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explorer</div>
+  <div class="sb-section">Workflow</div>
+  <div class="sb-item" id="sb-inbox" onclick="showTab('inbox')"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Insights Inbox<span class="sb-badge" id="inbox-badge">0</span></div>
+  <div class="sb-item" id="sb-themes" onclick="showTab('themes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Themes<span class="sb-badge green" id="themes-badge">0</span></div>
+  <div class="sb-item" id="sb-initiatives" onclick="showTab('initiatives')"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Initiatives</div>
   <div class="sb-section">Data</div>
   <div class="sb-item" id="sb-ingest" onclick="showTab('ingest')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Add Insights</div>
   <div class="sb-footer"><a class="sb-add" href="gxm-insight-form.html"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log new insight</a></div>
@@ -278,28 +326,53 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
   </div>
   <div class="page">
 
-    <!-- NEW: INBOX -->
+    <!-- REVIEW QUEUE -->
     <div class="section" id="sec-inbox">
-      <div class="inbox-header">
-        <div><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:3px">Insight Inbox</div><div style="font-size:12px;color:var(--mu)">Triage new insights — accept, merge, reject, or assign to a theme.</div></div>
-        <div class="inbox-filters">
-          <div class="inbox-filter active" onclick="setInboxFilter('all',this)">All</div>
-          <div class="inbox-filter" onclick="setInboxFilter('new',this)">New</div>
-          <div class="inbox-filter" onclick="setInboxFilter('in_review',this)">In review</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:16px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:2px">Insights Inbox</div>
+          <div style="font-size:12px;color:var(--mu)">Select any insight to review details and take action.</div>
         </div>
       </div>
-      <div id="inbox-list"></div>
+      <div class="page-tabs" id="inbox-tabs">
+        <div class="page-tab active" onclick="setInboxTab('all',this)">All insights<span class="page-tab-badge" id="itab-all">0</span></div>
+        <div class="page-tab" onclick="setInboxTab('new',this)">New<span class="page-tab-badge" id="itab-new">0</span></div>
+        <div class="page-tab" onclick="setInboxTab('in_review',this)">Pending<span class="page-tab-badge" id="itab-pending">0</span></div>
+        <div class="page-tab" onclick="setInboxTab('validated',this)">Validated<span class="page-tab-badge" id="itab-validated">0</span></div>
+        <div class="page-tab" onclick="setInboxTab('rejected',this)">Rejected<span class="page-tab-badge red" id="itab-rejected">0</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:360px 1fr;gap:0;background:var(--surf);border:1.5px solid var(--bd);border-radius:12px;overflow:hidden;min-height:580px">
+        <div style="border-right:1.5px solid var(--bd);overflow-y:auto;max-height:640px" id="inbox-list"></div>
+        <div id="inbox-detail" style="display:flex;align-items:center;justify-content:center;padding:32px">
+          <div style="text-align:center">
+            <svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 14px;display:block"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div style="font-size:13px;font-weight:600;color:var(--mu)">Select an insight to review</div>
+            <div style="font-size:12px;color:var(--di);margin-top:5px">Details, full description and actions appear here</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- NEW: THEMES -->
+    <!-- THEMES -->
     <div class="section" id="sec-themes">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
-        <div><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:3px">Themes</div><div style="font-size:12px;color:var(--mu)">Clustered patterns. Each theme can drive an initiative.</div></div>
-        <div style="display:flex;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:16px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:2px">Themes</div>
+          <div style="font-size:12px;color:var(--mu)">Recurring patterns in your feedback. Each theme can drive a decision.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
           <button class="btn-sm btn-green" onclick="openThemeModal()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New theme</button>
           <button class="btn-sm" onclick="generateThemes()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>AI suggest themes</button>
         </div>
       </div>
+      <div class="page-tabs" id="theme-tabs">
+        <div class="page-tab active" onclick="setThemeTab('all',this)">All themes<span class="page-tab-badge" id="ttab-all">0</span></div>
+        <div class="page-tab" onclick="setThemeTab('critical',this)">Critical<span class="page-tab-badge red" id="ttab-critical">0</span></div>
+        <div class="page-tab" onclick="setThemeTab('recurring',this)">Recurring<span class="page-tab-badge" id="ttab-recurring">0</span></div>
+        <div class="page-tab" onclick="setThemeTab('emerging',this)">Emerging<span class="page-tab-badge" id="ttab-emerging">0</span></div>
+        <div class="page-tab" onclick="setThemeTab('resolved',this)">Resolved<span class="page-tab-badge" id="ttab-resolved">0</span></div>
+      </div>
+      <div id="theme-summary-bar" style="display:none"></div>
       <div class="theme-grid" id="theme-grid"></div>
     </div>
 
@@ -474,7 +547,7 @@ const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
 const AC=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2','#0e7490','#7c3aed','#be185d','#065f46'];
 const SRC_COLORS=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
-const STATUS_LABELS={new:'New',in_review:'In review',validated:'Validated',merged:'Merged',rejected:'Rejected',clustered:'Clustered',actioned:'Actioned',resolved:'Resolved'};
+const STATUS_LABELS={new:'New',in_review:'Pending',validated:'Validated',merged:'Merged',rejected:'Rejected',clustered:'Clustered',actioned:'Actioned',resolved:'Resolved'};
 const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
 const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
 const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
@@ -765,17 +838,20 @@ function renderActivityTable(){
     const sv=SEV_C[i.severity]||'#888';
     const svBg=SEV_BG[i.severity]||'#eee';
     const painText=(i.aiSummary||i.pain||'—');
-    const painShort=painText.length>55?painText.slice(0,55)+'…':painText;
-    return `<tr style="border-bottom:1px solid #f1f5f9" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-      <td style="padding:11px 12px;font-size:12px;color:var(--mu);white-space:nowrap">${i.date||'—'}</td>
-      <td style="padding:11px 12px"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f1f5f9;color:var(--mu)">${i.sourceLabel||i.sourceType||'—'}</span></td>
-      <td style="padding:11px 12px"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(26,158,110,.1);color:#1a9e6e">${i.serviceLine||'—'}</span></td>
-      <td style="padding:11px 12px;max-width:220px"><span onclick="openDrawer('${i.id}')" style="font-size:13px;color:var(--tx);cursor:pointer;text-decoration:underline;text-decoration-color:rgba(0,0,0,.15);text-underline-offset:2px" title="${(i.aiSummary||i.pain||'').replace(/"/g,'&quot;')}">${painShort}</span></td>
-      <td style="padding:11px 12px"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;background:${svBg};color:${sv}"><span style="width:6px;height:6px;border-radius:50%;background:${sv};flex-shrink:0"></span>${i.severity||'—'}</span></td>
-      <td style="padding:11px 12px;font-size:12px;font-weight:600;color:${freqColor[i.frequency]||'#64748b'};white-space:nowrap">${i.frequency||'—'}</td>
-      <td style="padding:11px 12px;font-size:12px;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.relatedFeature||''}">${i.relatedFeature||'—'}</td>
-      <td style="padding:11px 12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.primaryTheme?`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f5f3ff;color:#7c3aed;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.primaryTheme}">${i.primaryTheme}</span>`:'<span style="color:var(--di);font-size:12px">—</span>'}</td>
-      <td style="padding:11px 12px"><span class="status-badge ${STATUS_CLASSES[i.status]||'status-new'}">${STATUS_LABELS[i.status]||'New'}</span></td>
+    const painShort=painText.length>58?painText.slice(0,58)+'…':painText;
+    const isPriority=i.severity==='Critical'&&i.frequency==='Always';
+    const rowBg=isPriority?'background:#fffcfc':'';
+    const rowBorderLeft=isPriority?'border-left:3px solid #dc2626':'border-left:3px solid transparent';
+    return `<tr style="border-bottom:1px solid #f1f5f9;${rowBg};${rowBorderLeft};transition:background .12s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${isPriority?'#fffcfc':''}'">
+      <td style="padding:12px 12px;font-size:12px;color:var(--mu);white-space:nowrap">${i.date||'—'}</td>
+      <td style="padding:12px 12px"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f1f5f9;color:var(--mu)">${i.sourceLabel||i.sourceType||'—'}</span></td>
+      <td style="padding:12px 12px"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(26,158,110,.1);color:#1a9e6e">${i.serviceLine||'—'}</span></td>
+      <td style="padding:12px 12px;max-width:220px"><span onclick="openDrawer('${i.id}')" style="font-size:13px;color:var(--tx);cursor:pointer;font-weight:${isPriority?'600':'400'}" title="${(i.aiSummary||i.pain||'').replace(/"/g,'&quot;')}">${painShort}</span></td>
+      <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${svBg};color:${sv}"><span style="width:7px;height:7px;border-radius:50%;background:${sv};flex-shrink:0"></span>${i.severity||'—'}</span></td>
+      <td style="padding:12px 12px;font-size:12px;font-weight:600;color:${freqColor[i.frequency]||'#64748b'};white-space:nowrap">${i.frequency||'—'}</td>
+      <td style="padding:12px 12px;font-size:12px;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.relatedFeature||''}">${i.relatedFeature||'—'}</td>
+      <td style="padding:12px 12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.primaryTheme?`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#f5f3ff;color:#7c3aed;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.primaryTheme}">${i.primaryTheme}</span>`:'<span style="color:var(--di);font-size:12px">—</span>'}</td>
+      <td style="padding:12px 12px"><span class="status-badge ${STATUS_CLASSES[i.status]||'status-new'}">${STATUS_LABELS[i.status]||'New'}</span></td>
     </tr>`;
   }).join('');
 }
@@ -796,13 +872,21 @@ function renderPatterns(f){
   const matrix={};f.forEach(i=>{const k=`${i.severity}|${i.frequency}`;matrix[k]=(matrix[k]||0)+1;});
   const maxVal=Math.max(1,...Object.values(matrix));
   const sevColors={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
-  let html=`<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:6px"><div></div>`;
-  freqs.forEach(freq=>{html+=`<div class="matrix-label" style="font-weight:600">${freq}</div>`;});
+  // Wider row label column, bigger gap, full-width grid
+  let html=`<div style="display:grid;grid-template-columns:110px repeat(3,1fr);gap:10px;align-items:center"><div></div>`;
+  freqs.forEach(freq=>{html+=`<div class="matrix-label" style="color:var(--mu)">${freq}</div>`;});
   sevs.forEach(sev=>{
-    html+=`<div class="matrix-label" style="text-align:right;padding-right:8px;font-weight:600;color:${sevColors[sev]}">${sev}</div>`;
-    freqs.forEach(freq=>{const k=`${sev}|${freq}`,v=matrix[k]||0;const alpha=v===0?0.08:0.15+(v/maxVal)*0.7;const bg=v===0?'#f1f5f9':`rgba(${sev==='Critical'?'220,38,38':sev==='Significant'?'217,119,6':'26,158,110'},${alpha})`;const textColor=v===0?'#94a3b8':(sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e');html+=`<div class="matrix-cell" style="background:${bg};color:${textColor};border:1.5px solid ${v>0?textColor+'40':'#e2e8f0'}">${v>0?v:''}</div>`;});
+    html+=`<div class="matrix-label" style="text-align:right;padding-right:12px;font-size:14px;font-weight:700;color:${sevColors[sev]}">${sev}</div>`;
+    freqs.forEach(freq=>{
+      const k=`${sev}|${freq}`,v=matrix[k]||0;
+      // Empty cells: flat neutral grey. Filled: scale from 40% to 85% opacity so contrast is obvious
+      const alpha=v===0?0:0.4+(v/maxVal)*0.45;
+      const bg=v===0?'#eef2f7':`rgba(${sev==='Critical'?'220,38,38':sev==='Significant'?'217,119,6':'26,158,110'},${alpha})`;
+      const textColor=sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e';
+      html+=`<div class="matrix-cell" style="background:${bg};color:${v===0?'transparent':textColor};border:none">${v>0?v:''}</div>`;
+    });
   });
-  html+=`</div><div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--mu)"><span>← Lower priority</span><span style="margin-left:auto">Higher priority →</span></div>`;
+  html+=`</div><div style="display:flex;justify-content:space-between;margin-top:16px;font-size:12px;color:var(--mu);padding:0 2px"><span>← Lower priority</span><span>Higher priority →</span></div>`;
   document.getElementById('matrix-container').innerHTML=html;
   const bySL=countBy(f,'serviceLine').slice(0,8),mSL=bySL[0]?.[1]||1;
   document.getElementById('sl-bars').innerHTML=bySL.map(([l,v],i)=>`<div class="bar-row"><div class="bar-lbl" style="width:120px;font-size:12px">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mSL)*100)}%;background:${AC[i%AC.length]}"></div></div><div class="bar-count">${v}</div></div>`).join('');
@@ -812,45 +896,165 @@ function renderPatterns(f){
   document.getElementById('area-bars').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 28px">${byArea.map(([l,v],i)=>`<div class="bar-row"><div class="bar-lbl" style="width:170px;font-size:12px">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v/mArea)*100)}%;background:${AC[i%AC.length]}"></div></div><div class="bar-count">${v}</div></div>`).join('')}</div>`;
 }
 
-// NEW: INBOX
-function setInboxFilter(filter,el){
+// Review queue tabs
+let _inboxTab='all';
+function setInboxTab(filter,el){
+  _inboxTab=filter;
   inboxFilter=filter;
-  document.querySelectorAll('.inbox-filter').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');renderInbox(loadAll());
+  document.querySelectorAll('#inbox-tabs .page-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  _selectedInboxId=null;
+  renderInbox(loadAll());
+}
+// Keep old name as alias for any remaining references
+function setInboxFilter(filter,el){setInboxTab(filter,el);}
+
+function updateInboxBadges(all){
+  const counts={
+    all:all.filter(i=>['new','in_review','validated','rejected','merged'].includes(i.status)).length,
+    new:all.filter(i=>i.status==='new').length,
+    in_review:all.filter(i=>i.status==='in_review').length,
+    validated:all.filter(i=>i.status==='validated').length,
+    rejected:all.filter(i=>i.status==='rejected').length,
+  };
+  const map={all:'itab-all',new:'itab-new',in_review:'itab-pending',validated:'itab-validated',rejected:'itab-rejected'};
+  Object.entries(map).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.textContent=counts[k]||0;});
 }
 
+let _selectedInboxId=null;
+
 function renderInbox(all){
-  let items=all.filter(i=>i.status==='new'||i.status==='in_review');
-  if(inboxFilter==='new')items=items.filter(i=>i.status==='new');
-  if(inboxFilter==='in_review')items=items.filter(i=>i.status==='in_review');
-  const themes=loadThemes();
-  if(!items.length){document.getElementById('inbox-list').innerHTML='<div class="empty"><strong>Inbox is clear</strong><p>All insights have been triaged. New submissions appear here.</p></div>';return;}
-  document.getElementById('inbox-list').innerHTML=items.map(ins=>{
-    const dupes=findDuplicates(ins,all);
+  updateInboxBadges(all);
+  let items;
+  if(_inboxTab==='all'){
+    items=all.filter(i=>['new','in_review','validated','rejected','merged'].includes(i.status));
+  } else {
+    items=all.filter(i=>i.status===_inboxTab);
+  }
+  // Sort: Critical+Always first, then newest
+  items.sort((a,b)=>{
+    const pa=(a.severity==='Critical'&&a.frequency==='Always')?1:0;
+    const pb=(b.severity==='Critical'&&b.frequency==='Always')?1:0;
+    if(pb!==pa)return pb-pa;
+    return (b.ts||0)-(a.ts||0);
+  });
+  const listEl=document.getElementById('inbox-list');
+  if(!items.length){
+    listEl.innerHTML='<div style="padding:48px 24px;text-align:center"><svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:13px;font-weight:600;color:var(--mu);margin-bottom:4px">All caught up</div><div style="font-size:12px;color:var(--di)">No insights in this category</div></div>';
+    document.getElementById('inbox-detail').innerHTML='<div style="text-align:center"><svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div style="font-size:13px;font-weight:500;color:var(--mu)">Nothing to show here</div></div>';
+    return;
+  }
+  const sevDotColor=sev=>sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e';
+  // Group: priority items first with "Insights" label, then rest
+  const priority=items.filter(i=>i.severity==='Critical'&&i.frequency==='Always');
+  const rest=items.filter(i=>!(i.severity==='Critical'&&i.frequency==='Always'));
+  const renderRow=ins=>{
+    const isSelected=_selectedInboxId===ins.id;
     const isPriority=ins.severity==='Critical'&&ins.frequency==='Always';
-    const suggestedTheme=themes.find(t=>t.title===ins.primaryTheme);
-    return `<div class="inbox-card${isPriority?' priority':''}">
-      <div class="inbox-top"><div class="inbox-summary">${ins.aiSummary||ins.pain||'—'}</div><span class="status-badge ${STATUS_CLASSES[ins.status]||'status-new'}">${STATUS_LABELS[ins.status]||'New'}</span></div>
-      <div class="inbox-meta">
-        <span class="tag sl-tag">${ins.serviceLine||'—'}</span>
-        <span class="badge" style="background:${SEV_BG[ins.severity]};color:${SEV_C[ins.severity]}"><span class="dot9" style="background:${SEV_C[ins.severity]}"></span>${ins.severity}</span>
-        <span class="tag">${ins.frequency||'—'}</span>
-        <span class="tag">${ins.sourceLabel||'—'} · ${ins.firstName||''}${ins.company?' ('+ins.company+')':''}</span>
-        ${ins.primaryTheme?`<span class="tag" style="background:#f5f3ff;color:#7c3aed">${ins.primaryTheme}</span>`:''}
-        <span style="font-size:11px;color:var(--di);margin-left:auto">Confidence: ${Math.round((ins.confidenceScore||0.7)*100)}%</span>
-      </div>
-      ${ins.pain&&ins.aiSummary&&ins.pain!==ins.aiSummary?`<div class="inbox-pain">${ins.pain}</div>`:''}
-      ${dupes.length?`<div class="possible-dupe"><strong>Possible duplicate:</strong> Similar to "${dupes[0].aiSummary||dupes[0].pain}" from ${dupes[0].firstName||''}, ${dupes[0].company||''}</div>`:''}
-      <div class="inbox-actions">
-        <button class="action-btn accept" onclick="triageInsight('${ins.id}','validated')">✓ Accept</button>
-        <button class="action-btn reject" onclick="triageInsight('${ins.id}','rejected')">✕ Reject</button>
-        ${dupes.length?`<button class="action-btn merge-btn" onclick="triageInsight('${ins.id}','merged','${dupes[0].id}')">⊕ Merge</button>`:''}
-        <button class="action-btn" onclick="triageInsight('${ins.id}','in_review')">◷ Needs context</button>
-        ${suggestedTheme?`<button class="action-btn" style="border-color:var(--p);color:var(--p)" onclick="assignTheme('${ins.id}','${suggestedTheme.id}')">⬡ Assign: "${suggestedTheme.title}"</button>`:`<button class="action-btn" onclick="openThemeAssign('${ins.id}')">+ Assign theme</button>`}
-        <button class="action-btn" style="margin-left:auto" onclick="openDrawer('${ins.id}')">View →</button>
+    const title=ins.aiSummary||ins.pain||'—';
+    const company=[ins.company,ins.firstName?ins.firstName+(ins.lastName?' '+ins.lastName:''):''].filter(Boolean).join(' · ');
+    const excerpt=ins.pain&&ins.aiSummary&&ins.pain!==ins.aiSummary?ins.pain:(ins.trying||'');
+    return `<div class="iq-row${isPriority?' iq-priority':''}${isSelected?' iq-selected':''}" onclick="selectInboxItem('${ins.id}')">
+      <div class="iq-row-title">${title}</div>
+      ${company?`<div class="iq-row-company">${company}</div>`:''}
+      ${excerpt?`<div class="iq-row-excerpt">${excerpt}</div>`:''}
+      <div class="iq-row-foot">
+        <span class="iq-dot" style="background:${sevDotColor(ins.severity)}"></span>
+        <span class="iq-date">${ins.date?new Date(ins.date).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):''}</span>
       </div>
     </div>`;
-  }).join('');
+  };
+  let html='';
+  if(priority.length){html+=`<div class="iq-group-label">Insights</div>${priority.map(renderRow).join('')}`;}
+  if(rest.length){html+=`<div class="iq-group-label">${priority.length?'Other':'Insights'}</div>${rest.map(renderRow).join('')}`;}
+  listEl.innerHTML=html;
+  // Auto-select first or restore selection
+  if(!_selectedInboxId||!items.find(i=>i.id===_selectedInboxId)){
+    selectInboxItem(items[0].id,all);
+  } else {
+    selectInboxItem(_selectedInboxId,all);
+  }
+}
+
+function selectInboxItem(id,allData){
+  _selectedInboxId=id;
+  document.querySelectorAll('.iq-row').forEach(el=>el.classList.remove('iq-selected'));
+  const row=document.querySelector(`.iq-row[onclick*="'${id}'"]`);
+  if(row)row.classList.add('iq-selected');
+  const all=allData||loadAll();
+  const ins=all.find(i=>i.id===id);if(!ins)return;
+  const themes=loadThemes();
+  const dupes=findDuplicates(ins,all);
+  const suggestedTheme=themes.find(t=>t.title===ins.primaryTheme);
+  const initiatives=loadInitiatives();
+  const linkedInit=initiatives.find(i=>i.insightIds&&i.insightIds.includes(id));
+  // Severity pill class
+  const sevCls=ins.severity==='Critical'?'sev-c':ins.severity==='Significant'?'sev-s':'sev-m';
+  const freqCls=ins.frequency==='Always'?'freq-a':ins.frequency==='Sometimes'?'freq-s':'';
+  document.getElementById('inbox-detail').innerHTML=`
+    <div style="width:100%;height:100%;display:flex;flex-direction:column">
+      <div style="flex:1;overflow-y:auto;padding:28px 32px">
+        <div class="iqd-title">${ins.aiSummary||ins.pain||'—'}</div>
+        <div class="iqd-pills">
+          <span class="iqd-pill">Details</span>
+          ${ins.severity?`<span class="iqd-pill ${sevCls}">${ins.severity}</span>`:''}
+          ${ins.frequency?`<span class="iqd-pill ${freqCls}">${ins.frequency}</span>`:''}
+          ${ins.serviceLine?`<span class="iqd-pill">${ins.serviceLine}</span>`:''}
+          ${ins.sourceLabel?`<span class="iqd-pill">${ins.sourceLabel}</span>`:''}
+          ${ins.primaryTheme?`<span class="iqd-pill" style="background:#f5f3ff;color:#7c3aed;border-color:#ddd6fe">${ins.primaryTheme}</span>`:''}
+        </div>
+        ${ins.pain&&ins.aiSummary&&ins.pain!==ins.aiSummary?`
+        <div class="iqd-section-title">What happened</div>
+        <div class="iqd-field-grid" style="margin-bottom:16px">
+          <div class="iqd-field full">
+            <div class="iqd-val">${ins.pain}</div>
+          </div>
+        </div>`:``}
+        ${ins.quote?`
+        <div class="iqd-section-title">Direct quote</div>
+        <div class="iqd-field-grid" style="margin-bottom:16px">
+          <div class="iqd-field full">
+            <div class="iqd-val quote-val">${ins.quote}</div>
+          </div>
+        </div>`:``}
+        <div class="iqd-section-title">Details</div>
+        <div class="iqd-field-grid">
+          <div class="iqd-field">
+            <div class="iqd-label">Contact</div>
+            <div class="iqd-val">${[ins.firstName,ins.lastName].filter(Boolean).join(' ')||'—'}</div>
+          </div>
+          <div class="iqd-field">
+            <div class="iqd-label">GXM area</div>
+            <div class="iqd-val">${ins.relatedFeature||'—'}</div>
+          </div>
+          <div class="iqd-field">
+            <div class="iqd-label">Logged by</div>
+            <div class="iqd-val">${ins.submitterName||'—'}</div>
+          </div>
+          <div class="iqd-field">
+            <div class="iqd-label">Confidence</div>
+            <div class="iqd-val">${Math.round((ins.confidenceScore||0.7)*100)}%</div>
+          </div>
+          ${ins.company?`<div class="iqd-field"><div class="iqd-label">Company</div><div class="iqd-val">${ins.company}${ins.role?' · '+ins.role:''}</div></div>`:''}
+          ${ins.jobToBeDone?`<div class="iqd-field full"><div class="iqd-label">Goal (JTBD)</div><div class="iqd-val">${ins.jobToBeDone}</div></div>`:''}
+        </div>
+        ${dupes.length?`<div style="margin-top:16px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#92400e"><strong>Possible duplicate</strong> — similar to "${(dupes[0].aiSummary||dupes[0].pain||'').slice(0,60)}…" from ${dupes[0].company||''}</div>`:''}
+        ${linkedInit?`<div style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#166534">Linked to initiative: <strong>${linkedInit.title}</strong></div>`:''}
+        <div style="margin-top:20px">
+          <textarea class="iqd-comment" placeholder="Add your comment here..."></textarea>
+        </div>
+      </div>
+      <div style="padding:16px 32px;border-top:1.5px solid var(--bd);background:var(--surf);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0">
+        <div class="iqd-left-actions">
+          <button class="iqd-btn validate" onclick="triageInsight('${ins.id}','validated')">✓ Validate</button>
+          <button class="iqd-btn reject" onclick="triageInsight('${ins.id}','rejected')">✕ Reject</button>
+          <button class="iqd-btn" onclick="triageInsight('${ins.id}','in_review')" style="border-color:var(--a);color:var(--a)">◷ Needs context</button>
+          ${dupes.length?`<button class="iqd-btn" style="border-color:var(--p);color:var(--p)" onclick="triageInsight('${ins.id}','merged','${dupes[0].id}')">⊕ Merge</button>`:''}
+          ${suggestedTheme?`<button class="iqd-btn" style="border-color:var(--p);color:var(--p);background:#faf5ff" onclick="assignTheme('${ins.id}','${suggestedTheme.id}')">⬡ ${suggestedTheme.title}</button>`:`<button class="iqd-btn" style="border-color:var(--p);color:var(--p);background:#faf5ff" onclick="openThemeAssign('${ins.id}')">+ Assign theme</button>`}
+        </div>
+        <button class="iqd-btn primary" onclick="openDrawer('${ins.id}')">Full view →</button>
+      </div>
+    </div>`;
 }
 
 function triageInsight(id,status,mergeTargetId=null){
@@ -879,11 +1083,35 @@ function doAssignTheme(insightId,themeId,btn){
   assignTheme(insightId,themeId);btn.closest('div[style]').remove();
 }
 
+// Theme tabs
+let _themeTab='all';
+function setThemeTab(filter,el){
+  _themeTab=filter;
+  document.querySelectorAll('#theme-tabs .page-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderThemes();
+}
+
+function updateThemeBadges(themes){
+  const map={all:'ttab-all',critical:'ttab-critical',recurring:'ttab-recurring',emerging:'ttab-emerging',resolved:'ttab-resolved'};
+  Object.entries(map).forEach(([k,id])=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.textContent=k==='all'?themes.length:themes.filter(t=>t.patternStatus===k).length;
+  });
+}
+
 // NEW: THEMES
 function renderThemes(){
   const themes=loadThemes();const all=loadAll();const initiatives=loadInitiatives();
-  if(!themes.length){document.getElementById('theme-grid').innerHTML='<div class="empty" style="grid-column:1/-1"><strong>No themes yet</strong><p>Accept insights in the Inbox and group them, or click "AI suggest themes".</p></div>';return;}
-  document.getElementById('theme-grid').innerHTML=themes.map(theme=>{
+  updateThemeBadges(themes);
+  const filtered=_themeTab==='all'?themes:themes.filter(t=>t.patternStatus===_themeTab);
+  if(!filtered.length){
+    const label=_themeTab==='all'?'No themes yet':'No '+_themeTab+' themes';
+    const sub=_themeTab==='all'?'Accept insights in the Review queue and group them, or click "AI suggest themes".':'No themes with this classification yet.';
+    document.getElementById('theme-grid').innerHTML=`<div class="empty" style="grid-column:1/-1"><strong>${label}</strong><p>${sub}</p></div>`;
+    return;
+  }
+  document.getElementById('theme-grid').innerHTML=filtered.map(theme=>{
     const themeInsights=all.filter(i=>theme.insightIds.includes(i.id)||(i.primaryTheme===theme.title&&i.status==='validated'));
     const critical=themeInsights.filter(i=>i.severity==='Critical').length;
     const significant=themeInsights.filter(i=>i.severity==='Significant').length;
@@ -892,27 +1120,37 @@ function renderThemes(){
     const linked=initiatives.find(i=>i.themeIds&&i.themeIds.includes(theme.id));
     const trendIcon=theme.trend==='up'?'↑':theme.trend==='down'?'↓':'→';
     const trendClass=theme.trend==='up'?'trend-up':theme.trend==='down'?'trend-down':'trend-flat';
+    const trendLabel=theme.trend==='up'?'Growing':theme.trend==='down'?'Declining':'Stable';
     return `<div class="theme-card ${THEME_BORDER[theme.patternStatus]||''}" onclick="openThemeDrawer('${theme.id}')">
-      <div class="theme-header"><div class="theme-title">${theme.title}</div><span class="theme-status ${PATTERN_STATUS_COLORS[theme.patternStatus]||''}">${theme.patternStatus}</span></div>
-      <div class="theme-desc">${theme.description}</div>
-      <div class="theme-stats">
-        <div class="theme-stat"><div class="theme-stat-val">${themeInsights.length}</div><div class="theme-stat-lbl">Insights</div></div>
-        <div class="theme-stat"><div class="theme-stat-val" style="color:var(--r)">${critical}</div><div class="theme-stat-lbl">Critical</div></div>
-        <div class="theme-stat"><div class="theme-stat-val">${sources.length}</div><div class="theme-stat-lbl">Sources</div></div>
-      </div>
-      <div class="theme-sev-bar">
-        <div style="flex:${critical};background:var(--r)"></div>
-        <div style="flex:${significant};background:var(--a)"></div>
-        <div style="flex:${minor};background:var(--g)"></div>
-        ${themeInsights.length===0?'<div style="flex:1;background:#f1f5f9"></div>':''}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
-        ${sources.slice(0,4).map(s=>`<span class="tag">${s}</span>`).join('')}
-        <span class="tag" style="background:#f5f3ff;color:var(--p)">${theme.primaryTag}</span>
-      </div>
-      <div class="theme-footer">
-        <span class="trend-chip ${trendClass}">${trendIcon} ${theme.trend==='up'?'Growing':theme.trend==='down'?'Declining':'Stable'}</span>
-        ${linked?`<span class="tag" style="background:#f0fdf4;color:var(--g)">→ ${linked.title}</span>`:`<button class="btn-sm" style="font-size:11px;padding:4px 10px" onclick="event.stopPropagation();openInitiativeModal('${theme.id}')">+ Initiative</button>`}
+      <div class="theme-card-inner">
+        <div class="theme-header">
+          <div class="theme-title">${theme.title}</div>
+          <span class="theme-status ${PATTERN_STATUS_COLORS[theme.patternStatus]||''}">${theme.patternStatus}</span>
+        </div>
+        <div class="theme-desc">${theme.description}</div>
+        <div class="theme-stats">
+          <div class="theme-stat"><div class="theme-stat-val">${themeInsights.length}</div><div class="theme-stat-lbl">Insights</div></div>
+          <div class="theme-stat"><div class="theme-stat-val" style="color:var(--r)">${critical}</div><div class="theme-stat-lbl">Critical</div></div>
+          <div class="theme-stat"><div class="theme-stat-val">${sources.length}</div><div class="theme-stat-lbl">Sources</div></div>
+        </div>
+        <div class="theme-sev-bar">
+          <div style="flex:${critical};background:var(--r)"></div>
+          <div style="flex:${significant};background:var(--a)"></div>
+          <div style="flex:${minor};background:var(--g)"></div>
+          ${themeInsights.length===0?'<div style="flex:1;background:#f1f5f9"></div>':''}
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">
+          ${sources.slice(0,3).map(s=>`<span style="padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:500;background:#f1f5f9;color:var(--mu)">${s}</span>`).join('')}
+          ${sources.length>3?`<span style="padding:2px 8px;border-radius:10px;font-size:10.5px;color:var(--di)">+${sources.length-3}</span>`:''}
+          <span style="padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:500;background:#f5f3ff;color:var(--p)">${theme.primaryTag}</span>
+        </div>
+        <div class="theme-footer">
+          <span class="trend-chip ${trendClass}">${trendIcon} ${trendLabel}</span>
+          ${linked
+            ?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--g);background:#f0fdf4;padding:3px 10px;border-radius:20px;border:1px solid #bbf7d0">→ ${linked.title.length>20?linked.title.slice(0,20)+'…':linked.title}</span>`
+            :`<button style="padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:500;border:1.5px solid var(--bd);background:var(--surf);color:var(--mu);cursor:pointer;font-family:inherit;transition:all .13s" onmouseover="this.style.borderColor='var(--g)';this.style.color='var(--g)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--mu)'" onclick="event.stopPropagation();openInitiativeModal('${theme.id}')">+ Decision</button>`
+          }
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1181,9 +1419,9 @@ function renderChannels(all){
 }
 
 // Navigation
-const TAB_TITLES={inbox:'Insight Inbox',themes:'Themes',initiatives:'Initiatives',overview:'Overview',patterns:'Patterns & Trends',explorer:'Insight Explorer',ingest:'Add Insights'};
-const SB_IDS=['sb-inbox','sb-themes','sb-initiatives','sb-overview','sb-patterns','sb-explorer','sb-ingest'];
-const SB_TABS=['inbox','themes','initiatives','overview','patterns','explorer','ingest'];
+const TAB_TITLES={inbox:'Insights Inbox',themes:'Themes',initiatives:'Initiatives',overview:'Overview',patterns:'Patterns & Trends',explorer:'Insight Explorer',ingest:'Add Insights'};
+const SB_IDS=['sb-overview','sb-patterns','sb-explorer','sb-inbox','sb-themes','sb-initiatives','sb-ingest'];
+const SB_TABS=['overview','patterns','explorer','inbox','themes','initiatives','ingest'];
 
 function showTab(tab){
   document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
