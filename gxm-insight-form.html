@@ -118,9 +118,9 @@ const STORAGE_KEY = 'gxm_insights_v1';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzicj7OL5vCQ8tB6KfwxpifX7uZB4niEQva58olsrA68DVCmJdeVkpHwNrZ0NY5bfcPWA/exec';
 
 // ── Data ──
-const TIMES = ['About 1 min','About 55s','About 48s','About 40s','About 32s','About 24s','About 16s','About 10s','About 5s','Almost done'];
-const STEP_LABELS = ['Before you begin','Step 1 of 9','Step 2 of 9','Step 3 of 9','Step 4 of 9','Step 5 of 9','Step 6 of 9','Step 7 of 9','Step 8 of 9','Step 9 of 9'];
-const TOTAL = 10;
+const TIMES = ['About 1 min','About 50s','About 42s','About 34s','About 26s','About 18s','About 12s','About 6s','Almost done'];
+const STEP_LABELS = ['Before you begin','Step 1 of 8','Step 2 of 8','Step 3 of 8','Step 4 of 8','Step 5 of 8','Step 6 of 8','Step 7 of 8','Step 8 of 8'];
+const TOTAL = 9;
 
 const SOURCES = [
   {k:'LSP',d:'Local Service Partner'},
@@ -143,21 +143,6 @@ const SERVICE_LINES = [
 ];
 
 const FRICTION_CATS = ['Navigation & Findability','System Feedback','Process Complexity','Data & Accuracy','Performance & Reliability','Access & Permissions','Other'];
-
-const AREAS = [
-  {k:'Access & Entry Points',d:'Login, SSO, OTP, email triggers, first-time experience'},
-  {k:'Dashboard',d:'Overview, alerts, pending actions, role-based summaries'},
-  {k:'Entity Management',d:'Entity profiles, employee registry, files, conversations'},
-  {k:'Process & Workflow Engine',d:'Payroll, CoSec, Books — milestones, tasks, status'},
-  {k:'Task Execution Layer',d:'Uploads, matching, approvals, submissions'},
-  {k:'Communication Layer',d:'Conversations, file sharing, notifications'},
-  {k:'Calendar & Time Navigation',d:'Global/entity calendar, deadlines, payroll cycles'},
-  {k:'File Management',d:'Uploads, categorization, processing states, metadata'},
-  {k:'Notifications & Feedback',d:'Email/in-app notifications, status indicators, alerts'},
-  {k:'Approval & Release Flow',d:'LSP submission, GXM review, final release to ESS'},
-  {k:'Employee Self-Service',d:'Payslip access, employee notifications, OTP auth'},
-  {k:'Data Layer & Matching',d:'AI matching, employee registry linkage, data validation'},
-];
 
 // ── State ──
 let cur = 0;
@@ -360,20 +345,8 @@ function r8() {
     ${errMsg('Please select a frequency', ans._efreq)}`;
 }
 
-function r9() {
-  return `
-    <div class="sey">Step 9 of 9</div>
-    <div class="stit">Which GXM area does this relate to?</div>
-    <div class="shin">Select the area most affected — or skip if unsure.</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${AREAS.map(a => radio(a.k, a.d, ans.relatedFeature===a.k, `pickArea('${a.k.replace(/'/g,"\\'")}')`)).join('')}
-      ${radio('Skip — identify later', 'Can be matched during synthesis', ans.relatedFeature==='', "pickArea('')")}
-    </div>
-    ${errMsg('Please select an area or skip', ans._earea)}`;
-}
-
 // ── Render ──
-const STEPS = [r0,r1,r2,r3,r4,r5,r6,r7,r8,r9];
+const STEPS = [r0,r1,r2,r3,r4,r5,r6,r7,r8];
 
 function renderStep() {
   document.getElementById('fbody').innerHTML = STEPS[cur]();
@@ -437,11 +410,6 @@ function pickFreq(k) {
   ans.frequency = k; ans._efreq = false;
   renderStep();
   setTimeout(() => advance(), 300);
-}
-
-function pickArea(k) {
-  ans.relatedFeature = k; ans._earea = false;
-  renderStep();
 }
 
 // ── Validation ──
@@ -555,12 +523,6 @@ function validate() {
     return true;
   }
 
-  // Step 9: GXM area
-  if (cur === 9) {
-    if (ans.relatedFeature === undefined) { ans._earea = true; renderStep(); return false; }
-    return true;
-  }
-
   return true;
 }
 
@@ -586,6 +548,9 @@ function confirmCancel() {
 }
 
 // ── Submit ──
+const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+const GXM_AREAS = ['Access & Entry Points','Dashboard','Entity Management','Process & Workflow Engine','Task Execution Layer','Communication Layer','Calendar & Time Navigation','File Management','Notifications & Feedback','Approval & Release Flow','Employee Self-Service','Data Layer & Matching'];
+
 async function doSubmit() {
   const sourceLabel = ans.sourceType === 'Other' ? (ans.otherSource || 'Other') : ans.sourceType;
   const rec = {
@@ -597,29 +562,80 @@ async function doSubmit() {
     id: Date.now().toString(36),
     status: 'new',
     aiSummary: '',
+    relatedFeature: '',
+    problemType: '',
+    jobToBeDone: '',
     confidenceScore: 0.7,
   };
 
-  // Remove internal state flags before saving
+  // Strip internal state flags
   Object.keys(rec).filter(k => k.startsWith('_')).forEach(k => delete rec[k]);
 
-  // Save to localStorage immediately
+  // Hide form chrome
+  document.getElementById('ftop').style.display = 'none';
+  document.getElementById('navrow').style.display = 'none';
+
+  // Phase 1: analysing
+  showLoading('Claude is analysing your insight…', 'Classifying the GXM area and generating a structured summary.');
+
+  // Call Claude to enrich the insight
+  try {
+    const prompt = `You are a product analyst for GXM, a global entity and payroll management platform. Analyse this product insight and return ONLY valid JSON with no other text.
+
+Insight data:
+- Service line: ${rec.serviceLine}
+- What they were trying to do: ${rec.trying}
+- Friction category: ${rec.painPattern}
+- What happened: ${rec.pain}
+- Direct quote: ${rec.quote || 'none'}
+- Severity: ${rec.severity}
+- Frequency: ${rec.frequency}
+- Source: ${rec.sourceLabel}
+
+GXM platform areas (pick the single best match):
+${GXM_AREAS.join(', ')}
+
+Return this exact JSON structure:
+{
+  "relatedFeature": "one of the GXM areas listed above",
+  "aiSummary": "one crisp sentence summarising the core problem (max 120 chars)",
+  "problemType": "normalised problem category (e.g. Missing bulk operation, Navigation gap, Silent system block)",
+  "jobToBeDone": "user goal in JTBD format: verb + object + context (max 80 chars)",
+  "confidenceScore": 0.85
+}`;
+
+    const res = await fetch(CLAUDE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const enriched = JSON.parse(text.replace(/```json|```/g, '').trim());
+
+    rec.relatedFeature  = enriched.relatedFeature  || '';
+    rec.aiSummary       = enriched.aiSummary        || '';
+    rec.problemType     = enriched.problemType      || '';
+    rec.jobToBeDone     = enriched.jobToBeDone      || '';
+    rec.confidenceScore = enriched.confidenceScore  || 0.7;
+
+  } catch (err) {
+    console.warn('Claude enrichment failed, using defaults:', err);
+    rec.aiSummary = rec.pain ? rec.pain.slice(0, 120) : '';
+  }
+
+  // Phase 2: saving
+  showLoading('Saving insight…', 'Almost done.');
+
+  // Save to localStorage
   const all = loadAll();
   all.push(rec);
   saveAll(all);
-
-  // Show loading
-  document.getElementById('ftop').style.display = 'none';
-  document.getElementById('navrow').style.display = 'none';
-  document.getElementById('fbody').innerHTML = `
-    <div class="succ">
-      <div class="sico" style="animation:spin 1s linear infinite">
-        <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#1a9e6e;fill:none;stroke-width:2">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-        </svg>
-      </div>
-      <div style="font-size:14px;color:#64748b;margin-top:8px">Saving insight...</div>
-    </div>`;
 
   // Try to save to Sheets
   let sheetsSaved = false;
@@ -636,19 +652,38 @@ async function doSubmit() {
   }
 
   const msg = sheetsSaved
-    ? 'Saved to the shared dashboard. Your team can see this now.'
-    : 'Saved locally — connect Google Sheets to share with your team.';
+    ? 'Saved and shared with your team.'
+    : 'Saved locally — will sync when Sheets is reachable.';
+
+  const areaTag = rec.relatedFeature
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:4px 10px;font-size:12px;color:#166534;margin-bottom:14px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#1a9e6e;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Classified as: <strong>${rec.relatedFeature}</strong></div>`
+    : '';
 
   document.getElementById('fbody').innerHTML = `
     <div class="succ">
       <div class="sico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
       <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:5px">Insight captured</div>
+      ${rec.aiSummary ? `<div style="font-size:13px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:10px;line-height:1.5;text-align:left">"${rec.aiSummary}"</div>` : ''}
+      ${areaTag}
       <div style="font-size:13px;color:#64748b;margin-bottom:10px">${msg}</div>
       <div class="sstat">Insight <strong>#${all.length}</strong> in the GXM repository</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="bnxt" onclick="resetForm()">Log another</button>
         <button class="bbk" onclick="window.location.href='gxm-dashboard.html'">View dashboard</button>
       </div>
+    </div>`;
+}
+
+function showLoading(title, sub) {
+  document.getElementById('fbody').innerHTML = `
+    <div class="succ">
+      <div class="sico" style="animation:spin 1s linear infinite">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#1a9e6e;fill:none;stroke-width:2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:12px">${title}</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:4px">${sub}</div>
     </div>`;
 }
 
