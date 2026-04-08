@@ -557,7 +557,7 @@ const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'stat
 const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
 const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
 
-let charts={},searchQ='',ingestTab='meeting',activeRow=null,inboxFilter='all',editingThemeId=null;
+let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
 
 // NEW: Demo insights with lifecycle fields
 const DEMO=[
@@ -667,7 +667,7 @@ function saveInitiativeObj(init){
   localStorage.setItem(SK_INITIATIVES,JSON.stringify(stored));
 }
 
-function clearData(){if(!confirm('Clear submitted insights? Demo data will remain.'))return;localStorage.removeItem(SK);refreshAll();}
+function clearData(){if(!confirm('Clear submitted insights? Demo data will remain.'))return;localStorage.removeItem(SK);refreshWithSheets();}
 function getFiltered(all){if(!searchQ)return all;const q=searchQ.toLowerCase();return all.filter(i=>[i.pain,i.trying,i.quote,i.company,i.firstName,i.serviceLine,i.painPattern,i.relatedFeature,i.aiSummary,i.primaryTheme].some(f=>(f||'').toLowerCase().includes(q)));}
 function countBy(arr,key){const c={};arr.forEach(i=>{const v=i[key]||'Unknown';c[v]=(c[v]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]);}
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
@@ -961,7 +961,6 @@ function renderPatterns(f){
 let _inboxTab='all';
 function setInboxTab(filter,el){
   _inboxTab=filter;
-  inboxFilter=filter;
   document.querySelectorAll('#inbox-tabs .page-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   _selectedInboxId=null;
@@ -1468,7 +1467,7 @@ function saveExtracted(jsonStr){
     const data=JSON.parse(jsonStr);
     const rec={...data,id:'i'+Date.now().toString(36),date:new Date().toISOString().split('T')[0],ts:Date.now(),submitterName:'AI Intake',submitterEmail:'intake@gxm',sourceLabel:data.sourceLabel||'Other'};
     saveInsight(rec);document.getElementById('result-preview').classList.remove('show');document.getElementById('ingest-status').textContent='✓ Saved';document.getElementById('paste-'+ingestTab).value='';
-    refreshAll();setTimeout(()=>showTab(data.status==='validated'?'explorer':'inbox'),600);
+    refreshWithSheets();setTimeout(()=>showTab(data.status==='validated'?'explorer':'inbox'),600);
   }catch(e){alert('Could not save.');}
 }
 function renderChannels(all){
@@ -1496,7 +1495,7 @@ function showTab(tab){
   if(tab==='explorer'){populateFilters();renderExplorer();}
 }
 
-function onSearch(q){searchQ=q;refreshAll();populateFilters();renderExplorer();}
+function onSearch(q){searchQ=q;refreshWithSheets();populateFilters();renderExplorer();}
 
 function exportCSV(){
   const all=loadAll();
