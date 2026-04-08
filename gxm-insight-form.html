@@ -240,18 +240,18 @@ function r4() {
 }
 
 function r5() {
-  const ipo = ans._patternIsCustom;
   return `<div class="sey">Step 5 of 9</div>
     <div class="stit">What was the friction?</div>
     <div class="shin">First pick the <strong>category</strong>, then describe what specifically happened.</div>
     <div class="sdiv">1 — Friction category<span style="color:#dc2626;margin-left:4px">*</span></div>
     <div class="chips">
-      ${GLOBAL_CATS.map(c=>`<div class="chip${ans.painPattern===c&&!ipo?' sel':''}" onclick="pickPattern(${JSON.stringify(c)})">${c}</div>`).join('')}
+      ${GLOBAL_CATS.filter(c=>c!=='Other').map(c=>`<div class="chip${ans.painPattern===c?' sel':''}" onclick="pickPattern(${JSON.stringify(c)})">${c}</div>`).join('')}
+      <div class="chip${ans.painPattern==='Other'?' sel':''}" onclick="pickPattern('Other')">Other</div>
     </div>
-    ${ipo?`<div class="reveal fld" style="margin-bottom:8px"><label class="flbl">Describe the category<span class="req">*</span></label><input class="inp${ans._ep?' err':''}" id="f-pattern-custom" placeholder="e.g. Integration issue..." value="${ipo?ans.painPattern:''}"><span class="ferr${ans._ep?' show':''}">Please describe the category</span></div>`:''}
-    ${ans._epm?`<span class="ferr show" style="display:block;margin-bottom:6px">Please select a category</span>`:''}
+    ${ans.painPattern==='Other'?`<div class="reveal fld" style="margin-bottom:8px"><label class="flbl">Describe the category<span class="req">*</span></label><input class="inp${ans._ep?' err':''}" id="f-pattern-custom" placeholder="e.g. Integration issue..." value="${ans._customPattern||''}"><span class="ferr${ans._ep?' show':''}">Please describe the category</span></div>`:''}
+    ${ans._epm?`<span class="ferr show" style="display:block;margin-bottom:6px">Please select a friction category</span>`:''}
     <div class="sdiv">2 — Describe what happened<span style="color:#dc2626;margin-left:4px">*</span></div>
-    <div class="fld"><textarea class="inp${ans._epain?' err':''}" id="f-pain" rows="3" placeholder='Be specific — e.g. "Couldn\'t match payslips — employee name format didn\'t match the registry"'>${ans.pain||''}</textarea><span class="ferr${ans._epain?' show':''}">Please describe what happened</span></div>`;
+    <div class="fld"><textarea class="inp${ans._epain?' err':''}" id="f-pain" rows="4" placeholder='Be specific — e.g. "Couldn\'t match payslips — employee name format didn\'t match the registry"'>${ans.pain||''}</textarea><span class="ferr${ans._epain?' show':''}">Please describe what happened</span></div>`;
 }
 
 function r6() {
@@ -302,7 +302,7 @@ function pickV(k, v) { ans[k] = v; renderStep(); }
 function pickServiceLine(k) { ans.serviceLine = k; ans._esl = false; ans.trying = ''; ans._goalIsCustom = false; renderStep(); }
 function pickGoalIdx(i) { const jobs = getJobs(); ans._goalIsCustom = false; ans.trying = jobs[i]; ans._et = false; renderStep(); }
 function pickGoal(g) { if (g === 'Other') { ans._goalIsCustom = true; ans.trying = ''; } else { ans._goalIsCustom = false; ans.trying = g; } ans._et = false; renderStep(); }
-function pickPattern(p) { ans._patternIsCustom = false; ans.painPattern = p; ans._ep = false; ans._epm = false; renderStep(); }
+function pickPattern(p) { ans.painPattern = p; ans._ep = false; ans._epm = false; if(p!=='Other') ans._customPattern=''; renderStep(); setTimeout(()=>{if(p==='Other'){const el=document.getElementById('f-pattern-custom');if(el)el.focus();}},50); }
 function pickSev(k) { ans.severity = k; ans._esev = false; renderStep(); setTimeout(() => advance(), 250); }
 function pickFreq(k) { ans.frequency = k; ans._efreq = false; renderStep(); setTimeout(() => advance(), 250); }
 function pickArea(k) { ans.relatedFeature = k; ans._earea = false; renderStep(); }
@@ -348,10 +348,22 @@ function validate() {
   }
   if (cur === 5) {
     let ok = true;
-    if (!ans.painPattern) { ans._epm = true; ok = false; }
+    // Validate category
+    if (!ans.painPattern) {
+      ans._epm = true; ok = false;
+    } else {
+      ans._epm = false;
+      // If Other, validate the custom description
+      if (ans.painPattern === 'Other') {
+        const cv = document.getElementById('f-pattern-custom')?.value.trim();
+        if (!cv) { ans._ep = true; ok = false; } else { ans._ep = false; ans._customPattern = cv; }
+      }
+    }
+    // Validate description
     const pv = document.getElementById('f-pain')?.value.trim();
     if (!pv) { ans._epain = true; ok = false; } else { ans.pain = pv; ans._epain = false; }
-    if (!ok) { renderStep(); return false; } ans._epm = false; return true;
+    if (!ok) { renderStep(); return false; }
+    return true;
   }
   if (cur === 6) { ans.quote = document.getElementById('f-quote')?.value.trim() || ''; return true; }
   if (cur === 7) { if (!ans.severity) { ans._esev = true; renderStep(); return false; } return true; }
