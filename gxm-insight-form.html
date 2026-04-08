@@ -88,6 +88,7 @@ button.bnxt:hover { background-color: #158a5e; border-color: #158a5e; }
 .sico svg { width: 24px; height: 24px; stroke: #1a9e6e; stroke-width: 2.5; fill: none; }
 .sstat { display: inline-flex; gap: 6px; align-items: center; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 13px; color: #64748b; margin: 10px 0 20px; }
 .sstat strong { color: #1a9e6e; font-weight: 700; }
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -122,6 +123,9 @@ button.bnxt:hover { background-color: #158a5e; border-color: #158a5e; }
 
 <script>
 const STORAGE_KEY = 'gxm_insights_v1';
+// ── Google Sheets backend ──
+// After deploying the Apps Script, paste your Web App URL here
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzicj7OL5vCQ8tB6KfwxpifX7uZB4niEQva58olsrA68DVCmJdeVkpHwNrZ0NY5bfcPWA/exec';
 const SEV_C = { Critical: '#dc2626', Significant: '#d97706', Minor: '#1a9e6e' };
 const TIMES = ['About 1 min','About 55s','About 48s','About 40s','About 32s','About 24s','About 16s','About 10s','About 5s','Almost done'];
 const TOTAL = 10;
@@ -360,17 +364,42 @@ function advance() { if (!validate()) return; if (cur < TOTAL - 1) { cur++; rend
 function goBack() { if (cur > 0) { cur--; renderStep(); } }
 function confirmCancel() { if (confirm("Cancel? Your answers won't be saved.")) { cur = 0; ans = {}; renderStep(); } }
 
-function doSubmit() {
+async function doSubmit() {
   const sl = ans.sourceType === 'Other' ? (ans.otherSource || 'Other') : ans.sourceType;
-  const rec = { ...ans, sourceLabel: sl, date: new Date().toISOString().split('T')[0], ts: Date.now(), id: Date.now().toString(36) };
+  const rec = {
+    ...ans, sourceLabel: sl,
+    date: new Date().toISOString().split('T')[0],
+    ts: Date.now(), id: Date.now().toString(36),
+    status: 'new', aiSummary: '', confidenceScore: 0.7
+  };
+  // Always save to localStorage immediately as backup
   const all = loadAll(); all.push(rec); saveAll(all);
+  // Show saving state
   document.getElementById('ftop').style.display = 'none';
   document.getElementById('navrow').style.display = 'none';
   document.getElementById('fbody').innerHTML = `
     <div class="succ">
+      <div class="sico" style="animation:spin 1s linear infinite"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#1a9e6e;fill:none;stroke-width:2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+      <div style="font-size:14px;color:#64748b">Saving insight...</div>
+    </div>`;
+  let sheetsSaved = false;
+  if (SHEETS_URL && SHEETS_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    try {
+      const res = await fetch(SHEETS_URL, { method:'POST', body:JSON.stringify(rec), headers:{'Content-Type':'text/plain'} });
+      const data = await res.json();
+      sheetsSaved = data.ok === true;
+    } catch(err) { console.warn('Sheets unavailable, localStorage used:', err); }
+  }
+  const msg = sheetsSaved
+    ? 'Saved to the shared dashboard. Your team can see this now.'
+    : (SHEETS_URL==='YOUR_APPS_SCRIPT_URL_HERE'
+        ? 'Saved locally. Paste your Apps Script URL to enable sharing.'
+        : 'Saved locally — Sheets unreachable. Data will be visible after reconnecting.');
+  document.getElementById('fbody').innerHTML = `
+    <div class="succ">
       <div class="sico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
       <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:5px">Insight captured</div>
-      <div style="font-size:13px;color:#64748b;margin-bottom:10px">Saved locally. Open the dashboard to view all insights.</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:10px">${msg}</div>
       <div class="sstat">Insight <strong>#${all.length}</strong> in the GXM repository</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="bnxt" onclick="resetForm()">Log another</button>
