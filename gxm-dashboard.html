@@ -75,7 +75,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .matrix-cell{border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer;transition:all .15s;min-height:90px}
 .matrix-cell:hover{transform:scale(1.03);box-shadow:0 4px 16px rgba(0,0,0,.1)}
 .matrix-label{font-size:13px;font-weight:600;color:var(--mu);text-align:center;padding:6px 4px}
-.trend-wrap{position:relative;height:170px}
+.trend-wrap{position:relative;height:220px}
 .feed{display:flex;flex-direction:column;gap:8px}
 .feed-item{display:flex;gap:12px;padding:11px 14px;background:var(--bg);border-radius:9px;border:1px solid var(--bd);cursor:pointer;transition:all .13s}
 .feed-item:hover{border-color:var(--g);background:#f0fdf4}
@@ -394,7 +394,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
           <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1.5px solid var(--bd);gap:12px">
             <div>
               <div class="card-title" style="margin-bottom:0">Insights over time</div>
-              <div class="card-sub" style="margin-bottom:0;margin-top:2px">30-day breakdown — stacked by severity</div>
+              <div class="card-sub" style="margin-bottom:0;margin-top:2px">8-week breakdown — stacked by severity</div>
             </div>
             <div style="display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px">
               <button id="trnd-sev" onclick="setTrendMode('severity')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:inherit;background:#1a9e6e;color:#fff;transition:all .13s">Severity</button>
@@ -560,42 +560,20 @@ const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emergi
 let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
 
 // NEW: Demo insights with lifecycle fields
-const DEMO=[
-  {id:'d1',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ef9c9b8a998a81af879c9f889d809a9fc18c8082">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Maria',lastName:'González',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="365b57445f57765144434659505f4555575a1855595b">[email&#160;protected]</a>',company:'Grupo Fiscal BR',role:'Compliance Manager',serviceLine:'Payroll',trying:'Upload payslips',painPattern:'Process Complexity',pain:'Had to upload payslips one by one — no bulk upload. With 120 employees this takes 2+ hours every cycle.',quote:'"My clients pay for this to save time, but I spend more time here than in Excel."',severity:'Critical',frequency:'Always',relatedFeature:'Task Execution Layer',date:'2026-03-28',ts:1711584000000,status:'validated',aiSummary:'LSP unable to bulk-upload payslips — forced into a 2-hour manual process each cycle.',problemType:'Missing bulk operation',jobToBeDone:'Efficiently upload payslips for 120+ employees',primaryTheme:'Bulk Operations Gap',confidenceScore:0.92,clusterId:'cl-bulk'},
-  {id:'d2',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="394a4d5c4f5c5779514a495e4b564c49175a5654">[email&#160;protected]</a>',sourceLabel:'Customer',firstName:'James',lastName:'Osei',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b515a565e487b5a57525c554f5e585315585456">[email&#160;protected]</a>',company:'AlignTech Global',role:'Finance Director',serviceLine:'Entities',trying:'Navigate to active processes',painPattern:'Navigation & Findability',pain:'Cannot find the processes table from the entity profile page. Always has to go back to main menu.',quote:'"I know the process exists but I can never find it from here."',severity:'Significant',frequency:'Always',relatedFeature:'Entity Management',date:'2026-03-27',ts:1711497600000,status:'validated',aiSummary:'Customer cannot navigate to active processes from entity profile — structural navigation gap.',problemType:'Navigation gap',jobToBeDone:'Access active processes from entity context',primaryTheme:'Navigation & Findability',confidenceScore:0.88,clusterId:'cl-nav'},
-  {id:'d3',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6d0c030c2d051e1d0a1f02181d430e0200">[email&#160;protected]</a>',sourceLabel:'Ops',firstName:'Ops',lastName:'Team',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e48b9497a48c979483968b9194ca878b89">[email&#160;protected]</a>',company:'HSP Group',role:'Operations',serviceLine:'Payroll',trying:'Match payslips to employees',painPattern:'Data & Accuracy',pain:'AI matching fails on accented characters. ~30% of LATAM payslips need manual matching.',quote:'',severity:'Critical',frequency:'Sometimes',relatedFeature:'Data Layer & Matching',date:'2026-03-26',ts:1711411200000,status:'new',aiSummary:'AI matching engine breaks on accented characters — 30% manual fallback in LATAM.',problemType:'AI accuracy failure',jobToBeDone:'Automatically match payslips to employee records',primaryTheme:'Data & Matching Quality',confidenceScore:0.85,clusterId:'cl-ai'},
-  {id:'d4',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3a494e5f4c5f547a52494a5d48554f4a14595557">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Yuki',lastName:'Tanaka',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="077e726c6e476f74772a6d667766692964686a">[email&#160;protected]</a>',company:'HSP Japan',role:'LSP Manager',serviceLine:'Entities Plus',trying:'Track compliance deadlines',painPattern:'System Feedback',pain:'No reminder system for filing deadlines. LSPs manually track dates outside the platform.',quote:'"We pay for a compliance platform that doesn\'t remind us about compliance."',severity:'Significant',frequency:'Always',relatedFeature:'Notifications & Feedback',date:'2026-03-25',ts:1711324800000,status:'new',aiSummary:'No deadline reminder system — LSPs track compliance dates externally in spreadsheets.',problemType:'Missing proactive notification',jobToBeDone:'Track and be reminded of upcoming compliance deadlines',primaryTheme:'Proactive Notifications',confidenceScore:0.90,clusterId:'cl-notif'},
-  {id:'d5',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="22434c43624a515245504d57520c414d4f">[email&#160;protected]</a>',sourceLabel:'Sales',firstName:'Chris',lastName:'Hammond',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b2d1dac0dbc1f2dac1c2d5c0ddc7c29cd1dddf">[email&#160;protected]</a>',company:'HSP Group',role:'Account Executive',serviceLine:'HR',trying:'Manage employee records',painPattern:'Navigation & Findability',pain:'HR and payroll are on separate screens. Expected one unified employee view.',quote:'"Every demo I have to explain why HR and payroll are disconnected."',severity:'Significant',frequency:'Sometimes',relatedFeature:'Entity Management',date:'2026-03-24',ts:1711238400000,status:'in_review',aiSummary:'HR and payroll data are siloed — losing deals as prospects compare unfavourably to competitors.',problemType:'Fragmented data model',jobToBeDone:'Access unified employee profile across HR and payroll',primaryTheme:'Data Fragmentation',confidenceScore:0.78,clusterId:'cl-frag'},
-  {id:'d6',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afdcdbcad9cac1efc7dcdfc8ddc0dadf81ccc0c2">[email&#160;protected]</a>',sourceLabel:'Customer',firstName:'Priya',lastName:'Sharma',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a3d3d1cadac2e3d4cad0c28dcacd">[email&#160;protected]</a>',company:'Wisa Technologies',role:'HR Manager',serviceLine:'Payroll',trying:'Track payroll status',painPattern:'System Feedback',pain:'Status labels like "In Progress" don\'t explain what stage payroll is at.',quote:'"I don\'t know if I should be doing something or waiting for someone else."',severity:'Significant',frequency:'Always',relatedFeature:'Process & Workflow Engine',date:'2026-03-23',ts:1711152000000,status:'validated',aiSummary:'Payroll status labels are ambiguous — users cannot tell if action is required.',problemType:'Unclear system feedback',jobToBeDone:'Understand current payroll stage and required actions',primaryTheme:'Proactive Notifications',confidenceScore:0.82,clusterId:'cl-notif'},
-  {id:'d7',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a1c0cfc0e1c9d2d1c6d3ced4d18fc2cecc">[email&#160;protected]</a>',sourceLabel:'Ops',firstName:'Ops',lastName:'Team',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="95fae5e6d5fde6e5f2e7fae0e5bbf6faf8">[email&#160;protected]</a>',company:'HSP Group',role:'Operations',serviceLine:'Books & Tax',trying:'Manage tax filings',painPattern:'Process Complexity',pain:'Tax filing requires switching between 4 screens. No consolidated workflow.',quote:'',severity:'Critical',frequency:'Always',relatedFeature:'Process & Workflow Engine',date:'2026-03-22',ts:1711065600000,status:'new',aiSummary:'Tax filing requires 4 screen switches — no consolidated workflow view.',problemType:'Fragmented workflow',jobToBeDone:'Complete tax filing process in one place',primaryTheme:'Navigation & Findability',confidenceScore:0.87,clusterId:'cl-nav'},
-  {id:'d8',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="06757263706368466e757661746973762865696b">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Carlos',lastName:'Méndez',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="99faf8ebf5f6ead9f5f8edf8f4e9f8ebedf7fcebeab7faf6f4">[email&#160;protected]</a>',company:'LATAM Partners',role:'Payroll Specialist',serviceLine:'Payroll',trying:'Submit payroll for approval',painPattern:'Access & Permissions',pain:'Approval button is greyed out with no explanation of what is blocking.',quote:'"The system blocks me but won\'t tell me why."',severity:'Critical',frequency:'Sometimes',relatedFeature:'Approval & Release Flow',date:'2026-03-21',ts:1710979200000,status:'new',aiSummary:'Approval button silently blocks users with no explanation of what is preventing submission.',problemType:'Silent system block',jobToBeDone:'Submit payroll for approval',primaryTheme:'Proactive Notifications',confidenceScore:0.91,clusterId:'cl-notif'},
-  {id:'d9',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="07666966476f747760756872772964686a">[email&#160;protected]</a>',sourceLabel:'Customer',firstName:'Sarah',lastName:'Mitchell',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="14677566757c546071777c777b66643a777b79">[email&#160;protected]</a>',company:'TechCorp EU',role:'Operations Manager',serviceLine:'Entities',trying:'Access entity-related documents',painPattern:'Navigation & Findability',pain:'Document section is buried inside entity profile.',quote:'"I know you uploaded it, I just can\'t find it."',severity:'Minor',frequency:'Sometimes',relatedFeature:'File Management',date:'2026-03-20',ts:1710892800000,status:'validated',aiSummary:'Documents are hard to locate inside entity profile — discovery friction.',problemType:'Navigation gap',jobToBeDone:'Find uploaded documents for an entity',primaryTheme:'Navigation & Findability',confidenceScore:0.75,clusterId:'cl-nav'},
-  {id:'d10',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1261667764777c527a616275607d67623c717d7f">[email&#160;protected]</a>',sourceLabel:'LSP',firstName:'Amara',lastName:'Diallo',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="12737f736073527374607b71737a61623c717d7f">[email&#160;protected]</a>',company:'Africa HSP',role:'Entity Manager',serviceLine:'EoR',trying:'Manage employee contracts',painPattern:'Data & Accuracy',pain:'Contract templates don\'t auto-populate entity data. Re-enter company name, jurisdiction per contract.',quote:'"This is exactly the kind of manual work the platform should eliminate."',severity:'Significant',frequency:'Always',relatedFeature:'Task Execution Layer',date:'2026-03-19',ts:1710806400000,status:'new',aiSummary:'Contract templates require manual data re-entry — entity data not auto-populated.',problemType:'Missing automation',jobToBeDone:'Generate pre-filled employee contracts from entity data',primaryTheme:'Bulk Operations Gap',confidenceScore:0.83,clusterId:'cl-bulk'},
-  {id:'d11',submitterName:'Ana Pérez',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="80e1eee1c0e8f3f0e7f2eff5f0aee3efed">[email&#160;protected]</a>',sourceLabel:'Internal',firstName:'Product',lastName:'Team',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1363617c77667067537b606374617c66633d707c7e">[email&#160;protected]</a>',company:'HSP Group',role:'Product',serviceLine:'Not service-specific',trying:'Navigate the platform',painPattern:'Performance & Reliability',pain:'Dashboard takes 6-8 seconds to load on first visit.',quote:'',severity:'Significant',frequency:'Sometimes',relatedFeature:'Dashboard',date:'2026-03-18',ts:1710720000000,status:'in_review',aiSummary:'Dashboard load time of 6-8 seconds causing users to think the page is broken.',problemType:'Performance issue',jobToBeDone:'Access dashboard quickly',primaryTheme:'Performance',confidenceScore:0.70,clusterId:'cl-perf'},
-  {id:'d12',submitterName:'Steven Cooper',submitterEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1b686f7e6d7e755b73686b7c69746e6b35787476">[email&#160;protected]</a>',sourceLabel:'Sales',firstName:'Emma',lastName:'Clarke',contactEmail:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f7a72727e5f776c6f786d706a6f317c7072">[email&#160;protected]</a>',company:'HSP Group',role:'Account Executive',serviceLine:'Tax',trying:'Submit tax filings',painPattern:'Navigation & Findability',pain:'Prospects ask for a deadline calendar — losing deals to competitors who have it.',quote:'"Your competitor showed me a calendar view in the first 5 minutes of the demo."',severity:'Critical',frequency:'Always',relatedFeature:'Calendar & Time Navigation',date:'2026-03-17',ts:1710633600000,status:'validated',aiSummary:'Missing deadline calendar view causes lost deals — competitors have this feature.',problemType:'Missing feature',jobToBeDone:'View all upcoming tax deadlines in calendar format',primaryTheme:'Proactive Notifications',confidenceScore:0.94,clusterId:'cl-notif'},
-];
+const DEMO=[];
 
 // NEW: Demo themes
-const DEMO_THEMES=[
-  {id:'th1',title:'Bulk Operations Gap',description:'Users across Payroll, EoR, and Entities lack bulk action capabilities — forced into repetitive manual work.',primaryTag:'Process Complexity',insightIds:['d1','d10'],patternStatus:'critical',trend:'up',recommendedAction:'Design a universal bulk action component. Start with payslip upload.',owner:'Steven Cooper',createdAt:'2026-03-25'},
-  {id:'th2',title:'Proactive Notifications',description:'The platform is reactive — users must actively check for deadlines, status changes, and required actions.',primaryTag:'System Feedback',insightIds:['d4','d6','d8','d12'],patternStatus:'recurring',trend:'up',recommendedAction:'Build notification engine with configurable alerts for deadlines, status changes, and blocked steps.',owner:'Ana Pérez',createdAt:'2026-03-24'},
-  {id:'th3',title:'Navigation & Findability',description:'Users consistently cannot find what they need — processes from entity profiles, documents, tax workflows.',primaryTag:'Navigation & Findability',insightIds:['d2','d7','d9'],patternStatus:'recurring',trend:'flat',recommendedAction:'Navigation audit. Add contextual quick links and breadcrumbs to entity pages.',owner:'Steven Cooper',createdAt:'2026-03-23'},
-  {id:'th4',title:'Data & Matching Quality',description:'AI matching failures on non-ASCII characters causing high manual fallback rates in LATAM markets.',primaryTag:'Data & Accuracy',insightIds:['d3'],patternStatus:'emerging',trend:'up',recommendedAction:'Fix character normalization in matching engine. Add confidence score display.',owner:'Ana Pérez',createdAt:'2026-03-22'},
-];
+const DEMO_THEMES=[];
 
 // NEW: Demo initiatives
-const DEMO_INITIATIVES=[
-  {id:'in1',title:'Bulk Payslip Upload',themeIds:['th1'],insightIds:['d1','d10'],hypothesis:'We believe adding bulk payslip upload will reduce LSP payroll processing time by 80%.',owner:'Steven Cooper',status:'in_progress',jiraLink:'https://jira.hspgroup.com/GXM-142',expectedOutcome:'2hr → 15min upload time. LSP satisfaction +20pts.',measuredOutcome:'',createdAt:'2026-03-26'},
-];
+const DEMO_INITIATIVES=[];
 
 // ── STORAGE ──
 function loadAll(){
   try{
     const stored=JSON.parse(localStorage.getItem(SK)||'[]');
-    const storedIds=new Set(stored.map(i=>i.id));
-    const merged=[...DEMO.filter(d=>!storedIds.has(d.id)),...stored];
-    return merged.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  }catch(e){return DEMO;}
+    return stored.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  }catch(e){return [];}
 }
 
 // Fetch from Google Sheets and merge with localStorage + demo
@@ -607,14 +585,9 @@ async function loadAllFromSheets(){
     if(!data.ok||!Array.isArray(data.insights))return null;
     _sheetsConnected=true;
     updateConnectionStatus(true);
-    // Merge: Sheets is source of truth, local demo fills gaps
-    const sheetsIds=new Set(data.insights.map(i=>i.id));
-    const demoOnly=DEMO.filter(d=>!sheetsIds.has(d.id));
-    const merged=[...demoOnly,...data.insights];
-    // Also sync sheets data to localStorage so offline works
-    const localStored=data.insights.filter(i=>!i.id.startsWith('d'));
-    localStorage.setItem(SK,JSON.stringify(localStored));
-    return merged.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    // Sheets is the single source of truth — sync to localStorage for offline
+    localStorage.setItem(SK,JSON.stringify(data.insights));
+    return data.insights.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
   }catch(e){
     console.warn('Sheets fetch failed, using localStorage:',e);
     _sheetsConnected=false;
@@ -646,9 +619,7 @@ function updateInsight(id,changes){
 }
 
 // NEW: Theme storage
-function loadThemes(){
-  try{const stored=JSON.parse(localStorage.getItem(SK_THEMES)||'[]');const storedIds=new Set(stored.map(t=>t.id));return[...DEMO_THEMES.filter(t=>!storedIds.has(t.id)),...stored];}catch(e){return DEMO_THEMES;}
-}
+function loadThemes(){try{return JSON.parse(localStorage.getItem(SK_THEMES)||'[]');}catch(e){return [];}}
 function saveThemeObj(theme){
   const stored=(()=>{try{return JSON.parse(localStorage.getItem(SK_THEMES)||'[]');}catch(e){return [];}})();
   const idx=stored.findIndex(t=>t.id===theme.id);
@@ -657,9 +628,7 @@ function saveThemeObj(theme){
 }
 
 // NEW: Initiative storage
-function loadInitiatives(){
-  try{const stored=JSON.parse(localStorage.getItem(SK_INITIATIVES)||'[]');const storedIds=new Set(stored.map(i=>i.id));return[...DEMO_INITIATIVES.filter(i=>!storedIds.has(i.id)),...stored];}catch(e){return DEMO_INITIATIVES;}
-}
+function loadInitiatives(){try{return JSON.parse(localStorage.getItem(SK_INITIATIVES)||'[]');}catch(e){return [];}}
 function saveInitiativeObj(init){
   const stored=(()=>{try{return JSON.parse(localStorage.getItem(SK_INITIATIVES)||'[]');}catch(e){return [];}})();
   const idx=stored.findIndex(i=>i.id===init.id);
@@ -734,19 +703,27 @@ function renderOverviewCharts(all,f){
   // Build date window: use last 30 days from today, but remap demo data dates
   // to be relative to today so bars always have actual height
   const today=new Date();today.setHours(0,0,0,0);
-  const last30=[];for(let d=29;d>=0;d--){const dt=new Date(today);dt.setDate(dt.getDate()-d);last30.push({label:d===0?'Today':d===1?'Yesterday':dt.toLocaleDateString('en',{month:'short',day:'numeric'}),date:dt.toISOString().split('T')[0]});}
-  // Remap any insight whose date falls outside the last 30 days window
-  // (e.g. hardcoded March dates when viewed in April) to spread across recent days
-  const windowDates=new Set(last30.map(d=>d.date));
+  // Build 8-week buckets — weekly bars are taller and easier to read than daily
+  const weeks=[];
+  for(let w=7;w>=0;w--){
+    const start=new Date(today);start.setDate(start.getDate()-(w*7+6));
+    const end=new Date(today);end.setDate(end.getDate()-w*7);
+    const startStr=start.toISOString().split('T')[0];
+    const endStr=end.toISOString().split('T')[0];
+    const label=w===0?'This week':w===1?'Last week':start.toLocaleDateString('en',{month:'short',day:'numeric'});
+    weeks.push({label,startStr,endStr});
+  }
+  // Remap out-of-window demo data evenly across the last 4 weeks
+  const allDates=new Set(all.map(i=>i.date));
+  const windowStart=weeks[0].startStr;
   const remapped=all.map((ins,idx)=>{
-    if(windowDates.has(ins.date))return ins;
-    // Spread out-of-window insights evenly across the last 15 days
-    const offset=idx%15;
-    const dt2=new Date(today);dt2.setDate(dt2.getDate()-offset);
+    if(ins.date>=windowStart)return ins;
+    const targetWeek=weeks[4+(idx%4)];
+    const dt2=new Date(targetWeek.startStr);dt2.setDate(dt2.getDate()+(idx%7));
     return {...ins,date:dt2.toISOString().split('T')[0]};
   });
-  // Store all data for trend chart toggle
-  window._trendAll=remapped;window._trendLast30=last30;
+  // Store for toggle — use weeks as the "last30" structure
+  window._trendAll=remapped;window._trendLast30=weeks;
   renderTrendChart(window._trendMode||'severity');
   const bySrc=countBy(f,'sourceLabel').slice(0,6);
   charts.source=new Chart(document.getElementById('source-chart').getContext('2d'),{type:'doughnut',data:{labels:bySrc.map(([l])=>l),datasets:[{data:bySrc.map(([,v])=>v),backgroundColor:SRC_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:3}]},options:{cutout:'66%',plugins:{legend:{display:false}},animation:{duration:500}}});
@@ -800,13 +777,15 @@ function renderTrendChart(mode){
 
   const datasets=keys.map((k,i)=>({
     label:k,
-    data:last30.map(day=>all.filter(ins=>ins.date===day.date&&ins[mode]===k).length),
+    data:last30.map(week=>all.filter(ins=>ins.date>=week.startStr&&ins.date<=week.endStr&&ins[mode]===k).length),
     backgroundColor:colors[i%colors.length],
-    borderRadius:3,
+    borderRadius:4,
     borderSkipped:false,
+    barPercentage:0.7,
+    categoryPercentage:0.8,
   }));
 
-  const xLabels=last30.map((_,i)=>i%5===0?last30[i].label:'');
+  const xLabels=last30.map(w=>w.label);
   const ctx=document.getElementById('trend-chart').getContext('2d');
   charts.trend=new Chart(ctx,{
     type:'bar',
