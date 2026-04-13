@@ -17,6 +17,7 @@ html,body{background:#f8fafc;font-family:'Inter',-apple-system,sans-serif;color:
 .nav-link:hover{color:#1a9e6e}
 .page{padding:32px 24px;max-width:620px;margin:0 auto}
 .fc{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px}
+/* Form header (guided mode) */
 .ftop{padding:24px 28px 0}
 .ftitle{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px}
 .fsub{font-size:13px;color:#64748b;margin-bottom:18px}
@@ -75,12 +76,27 @@ button.bbk{background:#fff;border:2px solid #1a9e6e;border-radius:8px;padding:9p
 button.bbk:hover{background:rgba(26,158,110,.08)}
 button.bnxt{background:#1a9e6e;border:2px solid #1a9e6e;border-radius:8px;padding:9px 22px;font-size:13.5px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit}
 button.bnxt:hover{background:#158a5e;border-color:#158a5e}
+/* Mode select */
+.mode-card{border:1.5px solid #e2e8f0;border-radius:12px;padding:22px 24px;cursor:pointer;background:#fff;transition:all .15s;display:flex;align-items:flex-start;gap:16px;margin-bottom:12px}
+.mode-card:hover{border-color:#1a9e6e;box-shadow:0 2px 12px rgba(26,158,110,.08)}
+.mode-card:last-child{margin-bottom:0}
+.mode-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+.mode-title{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.mode-desc{font-size:12.5px;color:#64748b;line-height:1.5}
+.mode-tag{display:inline-block;margin-top:7px;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600}
+/* Review screen */
+.review-field{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.review-label{font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.review-val{font-size:13.5px;color:#1e293b;line-height:1.5}
+.review-edit{font-size:11px;font-weight:600;color:#1a9e6e;cursor:pointer;text-decoration:none;padding:2px 8px;border-radius:4px;background:rgba(26,158,110,.08)}
+.review-edit:hover{background:rgba(26,158,110,.15)}
+.review-input{width:100%;padding:6px 0;border:none;border-bottom:1.5px solid #e2e8f0;background:transparent;font-size:13.5px;color:#1e293b;outline:none;font-family:inherit;margin-top:4px}
+.review-input:focus{border-bottom-color:#1a9e6e}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;background:rgba(26,158,110,.1);color:#1a9e6e;margin-left:6px}
 /* Success */
 .succ{text-align:center;padding:40px 16px}
 .sico{width:52px;height:52px;border-radius:50%;background:rgba(26,158,110,.1);border:2px solid #1a9e6e;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .sico svg{width:24px;height:24px;stroke:#1a9e6e;stroke-width:2.5;fill:none}
-.sstat{display:inline-flex;gap:6px;align-items:center;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:13px;color:#64748b;margin:10px 0 20px}
-.sstat strong{color:#1a9e6e;font-weight:700}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -88,13 +104,13 @@ button.bnxt:hover{background:#158a5e;border-color:#158a5e}
 <div class="topnav">
   <div class="logo">
     <div class="logo-mark">GX</div>
-    <div class="logo-name">GXM Insight Capture</div>
+    <div class="logo-name">GXM · HSP Group</div>
   </div>
   <a class="nav-link" href="gxm-dashboard.html">View dashboard →</a>
 </div>
 <div class="page">
   <div class="fc">
-    <div class="ftop" id="ftop">
+    <div class="ftop" id="ftop" style="display:none">
       <div class="ftitle">Log a GXM insight</div>
       <div class="fsub">One step at a time — most answers are a single tap.</div>
       <div class="prow">
@@ -104,7 +120,7 @@ button.bnxt:hover{background:#158a5e;border-color:#158a5e}
       <div class="ptrack"><div class="pfill" id="pfill" style="width:9%"></div></div>
     </div>
     <div class="fbody" id="fbody"></div>
-    <div class="nav-row" id="navrow">
+    <div class="nav-row" id="navrow" style="display:none">
       <div class="nrl"><button class="bcnl" onclick="confirmCancel()">Cancel</button></div>
       <span id="bbwrap"></span>
       <button class="bnxt" id="bnxt" onclick="advance()">Continue</button>
@@ -144,9 +160,13 @@ const SERVICE_LINES = [
 
 const FRICTION_CATS = ['Navigation & Findability','System Feedback','Process Complexity','Data & Accuracy','Performance & Reliability','Access & Permissions','Other'];
 
+const GXM_AREAS = ['Access & Entry Points','Dashboard','Entity Management','Process & Workflow Engine','Task Execution Layer','Communication Layer','Calendar & Time Navigation','File Management','Notifications & Feedback','Approval & Release Flow','Employee Self-Service','Data Layer & Matching'];
+
 // ── State ──
+let mode = null;        // null = mode select | 'guided' | 'transcript'
 let cur = 0;
 let ans = {};
+let extracted = null;  // transcript extraction result
 
 // ── Helpers ──
 function radio(label, sub, selected, onclick) {
@@ -155,13 +175,58 @@ function radio(label, sub, selected, onclick) {
     <div><div class="rct">${label}</div><div class="rcs">${sub}</div></div>
   </div>`;
 }
-
 function chip(label, selected, onclick) {
   return `<div class="chip${selected?' sel':''}" onclick="${onclick}">${label}</div>`;
 }
-
 function errMsg(msg, show) {
   return `<div class="ferr${show?' show':''}">${msg}</div>`;
+}
+function showChrome(show) {
+  document.getElementById('ftop').style.display = show ? '' : 'none';
+  document.getElementById('navrow').style.display = show ? '' : 'none';
+}
+
+// ════════════════════════════════════════════
+// MODE SELECT SCREEN
+// ════════════════════════════════════════════
+function showModeSelect() {
+  mode = null;
+  showChrome(false);
+  document.getElementById('fbody').innerHTML = `
+    <div style="padding:36px 32px 0;text-align:center">
+      <img src="data:image/jpeg;base64,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" alt="HSP Group" style="height:44px;width:auto;margin-bottom:28px;display:block;margin-left:auto;margin-right:auto">
+      <div style="font-size:19px;font-weight:700;color:#1e293b;margin-bottom:8px">Help us build what matters the most.</div>
+      <div style="font-size:13.5px;color:#64748b;margin-bottom:28px">Choose how you want to capture this insight.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 32px 24px">
+      <div onclick="startGuided()" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:20px;cursor:pointer;background:#fff" onmouseover="this.style.borderColor='#1a9e6e'" onmouseout="this.style.borderColor='#e2e8f0'">
+        <div style="display:inline-block;background:#1a9e6e;color:#fff;font-size:11px;font-weight:600;padding:3px 11px;border-radius:20px;margin-bottom:14px">1 Minute</div>
+        <div style="font-size:14.5px;font-weight:700;color:#1e293b;margin-bottom:10px">Written Insight</div>
+        <div style="font-size:12.5px;color:#64748b;line-height:1.6;margin-bottom:20px">Answer 8 guided questions. Best for a single insight from a call, email, or observation.</div>
+        <div style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:4px;text-decoration:underline">Start Now <svg viewBox="0 0 16 16" style="width:13px;height:13px;stroke:#1e293b;fill:none;stroke-width:2.5"><polyline points="6 3 11 8 6 13"/></svg></div>
+      </div>
+      <div onclick="startTranscript()" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:20px;cursor:pointer;background:#fff" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#e2e8f0'">
+        <div style="display:inline-block;background:#3b82f6;color:#fff;font-size:11px;font-weight:600;padding:3px 11px;border-radius:20px;margin-bottom:14px">AI-Powered</div>
+        <div style="font-size:14.5px;font-weight:700;color:#1e293b;margin-bottom:10px">Paste a transcript</div>
+        <div style="font-size:12.5px;color:#64748b;line-height:1.6;margin-bottom:20px">Paste a meeting transcript, Copilot summary, or email thread. We'll extract and structure the insight for you.</div>
+        <div style="font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:4px;text-decoration:underline">Start Now <svg viewBox="0 0 16 16" style="width:13px;height:13px;stroke:#1e293b;fill:none;stroke-width:2.5"><polyline points="6 3 11 8 6 13"/></svg></div>
+      </div>
+    </div>
+    <div style="margin:0 32px 28px;border-top:1.5px solid #f1f5f9;padding-top:20px">
+      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px">Got ideas to make this tool better? We'd love to hear them!</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.6">Welcome to our beta program! We're excited to hear your thoughts and suggestions. Feel free to drop us a line at <a href="mailto:scooper@hsp.com" style="color:#1a9e6e;text-decoration:none">scooper@hsp.com</a> anytime!</div>
+    </div>`;
+}
+
+
+// ════════════════════════════════════════════
+// GUIDED MODE — 8-step form
+// ════════════════════════════════════════════
+function startGuided() {
+  mode = 'guided';
+  cur = 0; ans = {};
+  showChrome(true);
+  renderStep();
 }
 
 // ── Step renderers ──
@@ -186,7 +251,7 @@ function r0() {
 
 function r1() {
   return `
-    <div class="sey">Step 1 of 9</div>
+    <div class="sey">Step 1 of 8</div>
     <div class="stit">Who did this come from?</div>
     <div class="shin">Select the source type for this insight.</div>
     <div class="rgrid">
@@ -203,7 +268,7 @@ function r1() {
 
 function r2() {
   return `
-    <div class="sey">Step 2 of 9</div>
+    <div class="sey">Step 2 of 8</div>
     <div class="stit">Contact details</div>
     <div class="shin">Who did you speak with? First name and email are required.</div>
     <div class="fstack">
@@ -234,7 +299,7 @@ function r2() {
 
 function r3() {
   return `
-    <div class="sey">Step 3 of 9</div>
+    <div class="sey">Step 3 of 8</div>
     <div class="stit">Which service line does this relate to?</div>
     <div class="shin">Select the area they were working in.</div>
     <div class="sl-grid">
@@ -254,7 +319,7 @@ function r4() {
   const sl = SERVICE_LINES.find(s => s.k === ans.serviceLine);
   const jobs = sl ? sl.jobs : ['Navigate the platform','Find information','Complete a task'];
   return `
-    <div class="sey">Step 4 of 9</div>
+    <div class="sey">Step 4 of 8</div>
     <div class="stit">What were they trying to do?</div>
     <div class="shin">Tasks specific to <strong>${ans.serviceLine||'the platform'}</strong> — tap the closest one or pick Other.</div>
     <div class="chips">
@@ -272,7 +337,7 @@ function r4() {
 
 function r5() {
   return `
-    <div class="sey">Step 5 of 9</div>
+    <div class="sey">Step 5 of 8</div>
     <div class="stit">What was the friction?</div>
     <div class="shin">Pick the <strong>category</strong> first, then describe what specifically happened.</div>
     <div class="sdiv">1 — Friction category<span style="color:#dc2626;margin-left:4px">*</span></div>
@@ -296,7 +361,7 @@ function r5() {
 
 function r6() {
   return `
-    <div class="sey">Step 6 of 9</div>
+    <div class="sey">Step 6 of 8</div>
     <div class="stit">Direct quote</div>
     <div class="shin">The most memorable thing they said verbatim. Skip if nothing stands out.</div>
     <div class="fld">
@@ -306,14 +371,10 @@ function r6() {
 }
 
 function r7() {
-  const sevs = [
-    {k:'Critical',d:'Blocked or losing trust'},
-    {k:'Significant',d:'Major friction, workarounds needed'},
-    {k:'Minor',d:'Nice to have, low urgency'},
-  ];
+  const sevs = [{k:'Critical',d:'Blocked or losing trust'},{k:'Significant',d:'Major friction, workarounds needed'},{k:'Minor',d:'Nice to have, low urgency'}];
   const SEV_C = {Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
   return `
-    <div class="sey">Step 7 of 9</div>
+    <div class="sey">Step 7 of 8</div>
     <div class="stit">How severe was it?</div>
     <div class="shin">Selecting an option advances automatically.</div>
     <div class="rgrid">
@@ -330,13 +391,9 @@ function r7() {
 }
 
 function r8() {
-  const freqs = [
-    {k:'First time',d:'Never seen this before'},
-    {k:'Sometimes',d:'Happens occasionally'},
-    {k:'Always',d:'Consistent, recurring issue'},
-  ];
+  const freqs = [{k:'First time',d:'Never seen this before'},{k:'Sometimes',d:'Happens occasionally'},{k:'Always',d:'Consistent, recurring issue'}];
   return `
-    <div class="sey">Step 8 of 9</div>
+    <div class="sey">Step 8 of 8</div>
     <div class="stit">How often does this happen?</div>
     <div class="shin">Helps distinguish one-off issues from systemic problems. Selecting advances automatically.</div>
     <div class="rgrid">
@@ -345,299 +402,374 @@ function r8() {
     ${errMsg('Please select a frequency', ans._efreq)}`;
 }
 
-// ── Render ──
 const STEPS = [r0,r1,r2,r3,r4,r5,r6,r7,r8];
 
 function renderStep() {
   document.getElementById('fbody').innerHTML = STEPS[cur]();
-  document.getElementById('bbwrap').innerHTML = cur > 0 ? `<button class="bbk" onclick="goBack()">Back</button>` : '';
+  document.getElementById('bbwrap').innerHTML = cur > 0
+    ? `<button class="bbk" onclick="goBack()">Back</button>`
+    : `<button class="bbk" onclick="showModeSelect()">← Modes</button>`;
   document.getElementById('bnxt').textContent = cur === TOTAL - 1 ? 'Submit insight' : 'Continue';
   document.getElementById('plbl').textContent = STEP_LABELS[cur];
   document.getElementById('ptime').textContent = TIMES[cur];
   document.getElementById('pfill').style.width = Math.max(9, Math.round((cur / TOTAL) * 100)) + '%';
-  // Scroll to top of card
   document.querySelector('.fc').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// ── Pickers ──
-function pickSource(k) {
-  ans.sourceType = k; ans._es = false;
-  if (k !== 'Other') ans.otherSource = '';
-  renderStep();
-}
+// ── Guided pickers ──
+function pickSource(k) { ans.sourceType=k; ans._es=false; if(k!=='Other') ans.otherSource=''; renderStep(); }
+function pickServiceLine(k) { ans.serviceLine=k; ans._esl=false; ans.trying=''; ans._goalIsCustom=false; ans._customTrying=''; ans._et=false; renderStep(); }
+function pickGoal(idx) { const sl=SERVICE_LINES.find(s=>s.k===ans.serviceLine); ans.trying=(sl?sl.jobs:[])[idx]; ans._goalIsCustom=false; ans._customTrying=''; ans._et=false; renderStep(); }
+function pickGoalOther() { ans._goalIsCustom=true; ans.trying=''; ans._et=false; renderStep(); setTimeout(()=>{const el=document.getElementById('f-trying-custom');if(el)el.focus();},50); }
+function pickFriction(cat) { ans.frictionCat=cat; ans._efriction=false; ans._efrcat=false; if(cat!=='Other') ans._customFriction=''; renderStep(); setTimeout(()=>{if(cat==='Other'){const el=document.getElementById('f-friction-custom');if(el)el.focus();}},50); }
+function pickSev(k) { ans.severity=k; ans._esev=false; renderStep(); setTimeout(()=>advance(),300); }
+function pickFreq(k) { ans.frequency=k; ans._efreq=false; renderStep(); setTimeout(()=>advance(),300); }
 
-function pickServiceLine(k) {
-  ans.serviceLine = k; ans._esl = false;
-  // Reset goal when service line changes
-  ans.trying = ''; ans._goalIsCustom = false; ans._customTrying = ''; ans._et = false;
-  renderStep();
-}
-
-function pickGoal(idx) {
-  const sl = SERVICE_LINES.find(s => s.k === ans.serviceLine);
-  const jobs = sl ? sl.jobs : [];
-  ans.trying = jobs[idx];
-  ans._goalIsCustom = false;
-  ans._customTrying = '';
-  ans._et = false;
-  renderStep();
-}
-
-function pickGoalOther() {
-  ans._goalIsCustom = true;
-  ans.trying = '';
-  ans._et = false;
-  renderStep();
-  setTimeout(() => { const el = document.getElementById('f-trying-custom'); if (el) el.focus(); }, 50);
-}
-
-function pickFriction(cat) {
-  ans.frictionCat = cat;
-  ans._efriction = false;
-  ans._efrcat = false;
-  if (cat !== 'Other') ans._customFriction = '';
-  renderStep();
-  setTimeout(() => { if (cat === 'Other') { const el = document.getElementById('f-friction-custom'); if (el) el.focus(); } }, 50);
-}
-
-function pickSev(k) {
-  ans.severity = k; ans._esev = false;
-  renderStep();
-  setTimeout(() => advance(), 300);
-}
-
-function pickFreq(k) {
-  ans.frequency = k; ans._efreq = false;
-  renderStep();
-  setTimeout(() => advance(), 300);
-}
-
-// ── Validation ──
+// ── Guided validation ──
 function validate() {
-  // Step 0: submitter info
-  if (cur === 0) {
-    const name = document.getElementById('f-name')?.value.trim() || '';
-    const email = document.getElementById('f-email')?.value.trim() || '';
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    ans._en = !name;
-    ans._ee = !email || !emailOk;
-    if (ans._en || ans._ee) { renderStep(); return false; }
-    ans.submitterName = name;
-    ans.submitterEmail = email;
+  if (cur===0) {
+    const name=document.getElementById('f-name')?.value.trim()||'';
+    const email=document.getElementById('f-email')?.value.trim()||'';
+    ans._en=!name; ans._ee=!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(ans._en||ans._ee){renderStep();return false;}
+    ans.submitterName=name; ans.submitterEmail=email; return true;
+  }
+  if (cur===1) {
+    if(!ans.sourceType){ans._es=true;renderStep();return false;}
+    if(ans.sourceType==='Other'){const v=document.getElementById('f-other-src')?.value.trim()||'';if(!v){ans._eo=true;renderStep();return false;}ans.otherSource=v;ans._eo=false;}
     return true;
   }
-
-  // Step 1: source
-  if (cur === 1) {
-    if (!ans.sourceType) { ans._es = true; renderStep(); return false; }
-    if (ans.sourceType === 'Other') {
-      const v = document.getElementById('f-other-src')?.value.trim() || '';
-      if (!v) { ans._eo = true; renderStep(); return false; }
-      ans.otherSource = v; ans._eo = false;
-    }
+  if (cur===2) {
+    const first=document.getElementById('f-first')?.value.trim()||'';
+    const email=document.getElementById('f-cemail')?.value.trim()||'';
+    ans._ef=!first; ans._ecemail=!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(ans._ef||ans._ecemail){renderStep();return false;}
+    ans.firstName=first; ans.contactEmail=email;
+    ans.lastName=document.getElementById('f-last')?.value.trim()||'';
+    ans.company=document.getElementById('f-company')?.value.trim()||'';
+    ans.role=document.getElementById('f-role')?.value.trim()||'';
+    ans.contact=[ans.firstName,ans.lastName].filter(Boolean).join(' ')+(ans.company?', '+ans.company:'');
     return true;
   }
-
-  // Step 2: contact details
-  if (cur === 2) {
-    const first = document.getElementById('f-first')?.value.trim() || '';
-    const email = document.getElementById('f-cemail')?.value.trim() || '';
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    ans._ef = !first;
-    ans._ecemail = !email || !emailOk;
-    if (ans._ef || ans._ecemail) { renderStep(); return false; }
-    ans.firstName = first;
-    ans.contactEmail = email;
-    ans.lastName = document.getElementById('f-last')?.value.trim() || '';
-    ans.company = document.getElementById('f-company')?.value.trim() || '';
-    ans.role = document.getElementById('f-role')?.value.trim() || '';
-    ans.contact = [ans.firstName, ans.lastName].filter(Boolean).join(' ') + (ans.company ? ', ' + ans.company : '');
+  if (cur===3) { if(!ans.serviceLine){ans._esl=true;renderStep();return false;} return true; }
+  if (cur===4) {
+    if(ans._goalIsCustom){const v=document.getElementById('f-trying-custom')?.value.trim()||'';if(!v){ans._et=true;renderStep();return false;}ans._customTrying=v;ans.trying=v;ans._et=false;}
+    else if(!ans.trying){ans._et=true;renderStep();return false;}
     return true;
   }
-
-  // Step 3: service line
-  if (cur === 3) {
-    if (!ans.serviceLine) { ans._esl = true; renderStep(); return false; }
+  if (cur===5) {
+    let ok=true;
+    if(!ans.frictionCat){ans._efriction=true;ok=false;}
+    else{ans._efriction=false;if(ans.frictionCat==='Other'){const v=document.getElementById('f-friction-custom')?.value.trim()||'';if(!v){ans._efrcat=true;ok=false;}else{ans._efrcat=false;ans._customFriction=v;}}}
+    const pain=document.getElementById('f-pain')?.value.trim()||'';
+    if(!pain){ans._epain=true;ok=false;}else{ans._epain=false;ans.pain=pain;}
+    if(!ok){renderStep();return false;}
+    ans.painPattern=ans.frictionCat==='Other'?(ans._customFriction||'Other'):ans.frictionCat;
     return true;
   }
-
-  // Step 4: goal
-  if (cur === 4) {
-    if (ans._goalIsCustom) {
-      const v = document.getElementById('f-trying-custom')?.value.trim() || '';
-      if (!v) { ans._et = true; renderStep(); return false; }
-      ans._customTrying = v;
-      ans.trying = v;
-      ans._et = false;
-    } else if (!ans.trying) {
-      ans._et = true; renderStep(); return false;
-    }
-    return true;
-  }
-
-  // Step 5: friction — the fixed one
-  if (cur === 5) {
-    let ok = true;
-
-    // Validate category
-    if (!ans.frictionCat) {
-      ans._efriction = true;
-      ok = false;
-    } else {
-      ans._efriction = false;
-      // If Other, need the custom description
-      if (ans.frictionCat === 'Other') {
-        const v = document.getElementById('f-friction-custom')?.value.trim() || '';
-        if (!v) { ans._efrcat = true; ok = false; }
-        else { ans._efrcat = false; ans._customFriction = v; }
-      }
-    }
-
-    // Validate description
-    const pain = document.getElementById('f-pain')?.value.trim() || '';
-    if (!pain) { ans._epain = true; ok = false; }
-    else { ans._epain = false; ans.pain = pain; }
-
-    if (!ok) { renderStep(); return false; }
-
-    // Set the final painPattern value
-    ans.painPattern = ans.frictionCat === 'Other' ? (ans._customFriction || 'Other') : ans.frictionCat;
-    return true;
-  }
-
-  // Step 6: quote (optional)
-  if (cur === 6) {
-    ans.quote = document.getElementById('f-quote')?.value.trim() || '';
-    return true;
-  }
-
-  // Step 7: severity
-  if (cur === 7) {
-    if (!ans.severity) { ans._esev = true; renderStep(); return false; }
-    return true;
-  }
-
-  // Step 8: frequency
-  if (cur === 8) {
-    if (!ans.frequency) { ans._efreq = true; renderStep(); return false; }
-    return true;
-  }
-
+  if (cur===6) { ans.quote=document.getElementById('f-quote')?.value.trim()||''; return true; }
+  if (cur===7) { if(!ans.severity){ans._esev=true;renderStep();return false;} return true; }
+  if (cur===8) { if(!ans.frequency){ans._efreq=true;renderStep();return false;} return true; }
   return true;
 }
 
-// ── Navigation ──
-function advance() {
-  if (!validate()) return;
-  if (cur < TOTAL - 1) {
-    cur++;
-    renderStep();
-  } else {
-    doSubmit();
+function advance() { if(!validate())return; if(cur<TOTAL-1){cur++;renderStep();}else{doSubmit();} }
+function goBack() { if(cur>0){cur--;renderStep();} }
+function confirmCancel() { if(confirm("Cancel? Your answers won't be saved.")){showModeSelect();} }
+
+// ════════════════════════════════════════════
+// TRANSCRIPT MODE
+// ════════════════════════════════════════════
+function startTranscript() {
+  mode = 'transcript';
+  showChrome(false);
+  showTranscriptPaste();
+}
+
+function showTranscriptPaste() {
+  document.getElementById('fbody').innerHTML = `
+    <div style="padding:28px">
+      <button onclick="showModeSelect()" style="background:none;border:none;font-size:13px;color:#64748b;cursor:pointer;font-family:inherit;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#64748b;fill:none;stroke-width:2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:6px">Paste your transcript</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.55">Works with Copilot meeting summaries, call transcripts, email threads, or raw notes. Claude will extract and structure the insight.</div>
+      <div class="fld" style="margin-bottom:16px">
+        <label class="flbl">Your name<span class="req">*</span></label>
+        <input class="inp" id="tr-name" placeholder="e.g. Steven Cooper" autocomplete="name" value="${ans._trName||''}">
+      </div>
+      <div class="fld" style="margin-bottom:16px">
+        <label class="flbl">Your email<span class="req">*</span></label>
+        <input class="inp" id="tr-email" type="email" placeholder="e.g. steven@hspgroup.com" autocomplete="email" value="${ans._trEmail||''}">
+      </div>
+      <div class="fld" style="margin-bottom:20px">
+        <label class="flbl">Transcript or notes<span class="req">*</span></label>
+        <textarea class="inp" id="tr-text" rows="10" placeholder="Paste your meeting summary, transcript excerpt, email thread, or any raw notes here...&#10;&#10;Claude will identify: who the insight is about, what they were trying to do, what went wrong, severity, and the relevant GXM area."></textarea>
+      </div>
+      <div id="tr-err" class="ferr"></div>
+      <button class="bnxt" style="width:100%" onclick="extractTranscript()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;display:inline;margin-right:6px;vertical-align:middle"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>
+        Extract with Claude
+      </button>
+    </div>`;
+}
+
+async function extractTranscript() {
+  const name = document.getElementById('tr-name')?.value.trim() || '';
+  const email = document.getElementById('tr-email')?.value.trim() || '';
+  const text = document.getElementById('tr-text')?.value.trim() || '';
+  const errEl = document.getElementById('tr-err');
+
+  if (!name || !email || !text) {
+    errEl.textContent = 'Please fill in your name, email, and paste a transcript.';
+    errEl.classList.add('show');
+    return;
   }
-}
-
-function goBack() {
-  if (cur > 0) { cur--; renderStep(); }
-}
-
-function confirmCancel() {
-  if (confirm("Cancel? Your answers won't be saved.")) {
-    cur = 0; ans = {}; renderStep();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.classList.add('show');
+    return;
   }
-}
 
-// ── Submit ──
-const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
-const GXM_AREAS = ['Access & Entry Points','Dashboard','Entity Management','Process & Workflow Engine','Task Execution Layer','Communication Layer','Calendar & Time Navigation','File Management','Notifications & Feedback','Approval & Release Flow','Employee Self-Service','Data Layer & Matching'];
+  // Store submitter info (preserved across back navigation)
+  ans.submitterName = name;
+  ans.submitterEmail = email;
+  ans._trName = name;
+  ans._trEmail = email;
 
-async function doSubmit() {
-  const sourceLabel = ans.sourceType === 'Other' ? (ans.otherSource || 'Other') : ans.sourceType;
-  const rec = {
-    ...ans,
-    sourceLabel,
-    painPattern: ans.painPattern || ans.frictionCat || '',
-    date: new Date().toISOString().split('T')[0],
-    ts: Date.now(),
-    id: Date.now().toString(36),
-    status: 'new',
-    aiSummary: '',
-    relatedFeature: '',
-    problemType: '',
-    jobToBeDone: '',
-    confidenceScore: 0.7,
-  };
+  // Show loading
+  document.getElementById('fbody').innerHTML = `
+    <div style="padding:60px 28px;text-align:center">
+      <div class="sico" style="animation:spin 1s linear infinite;margin:0 auto 20px">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#1a9e6e;fill:none;stroke-width:2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:6px">Claude is reading your transcript…</div>
+      <div style="font-size:13px;color:#94a3b8">Extracting insight, contact details, severity and GXM area</div>
+    </div>`;
 
-  // Strip internal state flags
-  Object.keys(rec).filter(k => k.startsWith('_')).forEach(k => delete rec[k]);
-
-  // Hide form chrome
-  document.getElementById('ftop').style.display = 'none';
-  document.getElementById('navrow').style.display = 'none';
-
-  // Phase 1: analysing
-  showLoading('Claude is analysing your insight…', 'Classifying the GXM area and generating a structured summary.');
-
-  // Call Claude to enrich the insight
   try {
-    const prompt = `You are a product analyst for GXM, a global entity and payroll management platform. Analyse this product insight and return ONLY valid JSON with no other text.
-
-Insight data:
-- Service line: ${rec.serviceLine}
-- What they were trying to do: ${rec.trying}
-- Friction category: ${rec.painPattern}
-- What happened: ${rec.pain}
-- Direct quote: ${rec.quote || 'none'}
-- Severity: ${rec.severity}
-- Frequency: ${rec.frequency}
-- Source: ${rec.sourceLabel}
-
-GXM platform areas (pick the single best match):
-${GXM_AREAS.join(', ')}
-
-Return this exact JSON structure:
-{
-  "relatedFeature": "one of the GXM areas listed above",
-  "aiSummary": "one crisp sentence summarising the core problem (max 120 chars)",
-  "problemType": "normalised problem category (e.g. Missing bulk operation, Navigation gap, Silent system block)",
-  "jobToBeDone": "user goal in JTBD format: verb + object + context (max 80 chars)",
-  "confidenceScore": 0.85
-}`;
-
-    const res = await fetch(CLAUDE_API, {
+    const res = await fetch(SHEETS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ action: 'extractTranscript', transcript: text }),
+      headers: { 'Content-Type': 'text/plain' }
     });
-
     const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-    const enriched = JSON.parse(text.replace(/```json|```/g, '').trim());
-
-    rec.relatedFeature  = enriched.relatedFeature  || '';
-    rec.aiSummary       = enriched.aiSummary        || '';
-    rec.problemType     = enriched.problemType      || '';
-    rec.jobToBeDone     = enriched.jobToBeDone      || '';
-    rec.confidenceScore = enriched.confidenceScore  || 0.7;
-
+    if (!data.ok || !data.extracted) throw new Error(data.error || 'Extraction failed');
+    extracted = data.extracted;
+    showReviewScreen();
   } catch (err) {
-    console.warn('Claude enrichment failed, using defaults:', err);
-    rec.aiSummary = rec.pain ? rec.pain.slice(0, 120) : '';
+    console.warn('Extraction failed:', err);
+    document.getElementById('fbody').innerHTML = `
+      <div style="padding:28px;text-align:center">
+        <div style="font-size:32px;margin-bottom:16px">⚠️</div>
+        <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:8px">Extraction failed</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:24px">Claude couldn't process the transcript. Check that the Apps Script has your API key configured, then try again.</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="bnxt" onclick="startTranscript()">Try again</button>
+          <button class="bbk" onclick="showModeSelect()">Change mode</button>
+        </div>
+      </div>`;
+  }
+}
+
+function reviewSelectField(label, key, value, options) {
+  const opts = options.map(o =>
+    `<option value="${o}"${o===value?' selected':''}>${o}</option>`
+  ).join('');
+  return `<div class="review-field">
+    <div class="review-label">${label}</div>
+    <select class="review-input" style="display:block;width:100%;padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;font-family:inherit"
+      onchange="extracted['${key}']=this.value;document.getElementById('rv-${key}').textContent=this.value">
+      ${opts}
+    </select>
+  </div>`;
+}
+
+function showReviewScreen() {
+  const e = extracted;
+  const SEV_C = {Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
+
+  function reviewField(label, key, value, editable=true) {
+    return `<div class="review-field">
+      <div class="review-label">
+        ${label}
+        ${editable ? `<span class="review-edit" onclick="toggleEdit('${key}')">Edit</span>` : ''}
+      </div>
+      <div class="review-val" id="rv-${key}">${value||'—'}</div>
+      <input class="review-input" id="re-${key}" value="${(value||'').replace(/"/g,'&quot;')}" style="display:none" oninput="extracted['${key}']=this.value;document.getElementById('rv-${key}').textContent=this.value||'—'">
+    </div>`;
   }
 
-  // Phase 2: saving
-  showLoading('Saving insight…', 'Almost done.');
+  document.getElementById('fbody').innerHTML = `
+    <div style="padding:24px 28px">
+      <button onclick="startTranscript()" style="background:none;border:none;font-size:13px;color:#64748b;cursor:pointer;font-family:inherit;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#64748b;fill:none;stroke-width:2"><polyline points="15 18 9 12 15 6"/></svg>
+        Edit transcript
+      </button>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:4px">Review extracted insight</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5">Claude extracted the following from your transcript. Review and edit anything before saving.</div>
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#1a9e6e;fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
+        <span style="font-size:12px;color:#166534;font-weight:500">AI-extracted — click <strong>Edit</strong> on any field to correct it</span>
+      </div>
+
+      ${reviewField('Summary (AI)', 'aiSummary', e.aiSummary)}
+      ${reviewField('Who — contact name', 'firstName', e.firstName)}
+      ${reviewField('Company', 'company', e.company)}
+      ${reviewField('Source type', 'sourceLabel', e.sourceLabel)}
+      ${reviewField('Service line', 'serviceLine', e.serviceLine)}
+      ${reviewField('Friction category', 'frictionCategory', e.frictionCategory||e.frictionCat||e.painPattern||'')}
+      ${reviewField('What they were trying to do', 'trying', e.trying)}
+      ${reviewField('What happened (friction detail)', 'pain', e.pain)}
+      ${reviewField('Direct quote', 'quote', e.quote||'')}
+      ${reviewSelectField('Severity', 'severity', e.severity, ['Critical','Significant','Minor'])}
+      ${reviewSelectField('Frequency', 'frequency', e.frequency, ['Always','Sometimes','First time'])}
+      ${reviewField('GXM area', 'relatedFeature', e.relatedFeature)}
+
+      <button class="bnxt" style="width:100%;margin-top:8px" onclick="submitExtracted()">
+        Save insight →
+      </button>
+    </div>`;
+}
+
+function toggleEdit(key) {
+  const valEl = document.getElementById(`rv-${key}`);
+  const inputEl = document.getElementById(`re-${key}`);
+  if (!inputEl) return;
+  const isHidden = inputEl.style.display === 'none';
+  valEl.style.display = isHidden ? 'none' : '';
+  inputEl.style.display = isHidden ? '' : 'none';
+  if (isHidden) { inputEl.focus(); inputEl.select(); }
+}
+
+async function submitExtracted() {
+  const e = extracted;
+
+  // Normalise enums — Claude sometimes returns slight variations
+  const VALID_SOURCES   = ['LSP','Customer','Sales','Ops','Internal','Other'];
+  const VALID_SL        = ['Payroll','Entities','Entities Plus','HR','Books & Tax','Tax','EoR','Not service-specific'];
+  const VALID_FRICTION  = ['Navigation & Findability','System Feedback','Process Complexity','Data & Accuracy','Performance & Reliability','Access & Permissions','Other'];
+  const VALID_SEV       = ['Critical','Significant','Minor'];
+  const VALID_FREQ      = ['Always','Sometimes','First time'];
+  const VALID_AREAS     = ['Access & Entry Points','Dashboard','Entity Management','Process & Workflow Engine','Task Execution Layer','Communication Layer','Calendar & Time Navigation','File Management','Notifications & Feedback','Approval & Release Flow','Employee Self-Service','Data Layer & Matching'];
+
+  function closest(val, list) {
+    if (!val) return '';
+    const v = val.trim();
+    // Exact match first
+    const exact = list.find(x => x.toLowerCase() === v.toLowerCase());
+    if (exact) return exact;
+    // Partial match
+    const partial = list.find(x => x.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(x.toLowerCase()));
+    return partial || '';
+  }
+
+  const sourceLabel   = closest(e.sourceLabel, VALID_SOURCES) || 'Other';
+  const serviceLine   = closest(e.serviceLine, VALID_SL)      || '';
+  const frictionCat   = closest(e.frictionCategory || e.painPattern || e.frictionCat, VALID_FRICTION) || 'Other';
+  const severity      = closest(e.severity, VALID_SEV)        || 'Significant';
+  const frequency     = closest(e.frequency, VALID_FREQ)      || 'Sometimes';
+  const relatedFeature = closest(e.relatedFeature, VALID_AREAS) || '';
+
+  const rec = {
+    submitterName:   ans.submitterName,
+    submitterEmail:  ans.submitterEmail,
+    sourceType:      sourceLabel,
+    sourceLabel:     sourceLabel,
+    firstName:       e.firstName    || '',
+    lastName:        e.lastName     || '',
+    company:         e.company      || '',
+    role:            e.role         || '',
+    contactEmail:    e.contactEmail || '',
+    contact: [e.firstName, e.lastName].filter(Boolean).join(' ') + (e.company ? ', ' + e.company : ''),
+    serviceLine:     serviceLine,
+    trying:          e.trying       || '',
+    painPattern:     frictionCat,
+    frictionCat:     frictionCat,
+    pain:            e.pain         || '',
+    quote:           e.quote        || '',
+    severity:        severity,
+    frequency:       frequency,
+    aiSummary:       e.aiSummary    || '',
+    relatedFeature:  relatedFeature,
+    problemType:     e.problemType  || '',
+    jobToBeDone:     e.jobToBeDone  || '',
+    confidenceScore: e.confidenceScore || 0.7,
+    date:  new Date().toISOString().split('T')[0],
+    ts:    Date.now(),
+    id:    Date.now().toString(36),
+    status: 'new',
+  };
+  await doSubmit(rec);
+}
+
+// ════════════════════════════════════════════
+// SHARED SUBMIT + SUCCESS
+// ════════════════════════════════════════════
+async function doSubmit(prebuiltRec) {
+  let rec;
+
+  if (prebuiltRec) {
+    // Transcript mode — record already built
+    rec = prebuiltRec;
+  } else {
+    // Guided mode — build from ans
+    const sourceLabel = ans.sourceType === 'Other' ? (ans.otherSource || 'Other') : ans.sourceType;
+    rec = {
+      ...ans,
+      sourceLabel,
+      painPattern: ans.painPattern || ans.frictionCat || '',
+      date: new Date().toISOString().split('T')[0],
+      ts: Date.now(),
+      id: Date.now().toString(36),
+      status: 'new',
+      aiSummary: '',
+      relatedFeature: '',
+      problemType: '',
+      jobToBeDone: '',
+      confidenceScore: 0.7,
+    };
+    Object.keys(rec).filter(k => k.startsWith('_')).forEach(k => delete rec[k]);
+  }
+
+  showChrome(false);
+
+  // Guided mode: enrich with Claude first
+  if (!prebuiltRec) {
+    showLoading('Claude is analysing your insight…', 'Classifying the GXM area and generating a summary.');
+    try {
+      const enrichRes = await fetch(SHEETS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'enrich', insight: rec }),
+        headers: { 'Content-Type': 'text/plain' }
+      });
+      const enrichData = await enrichRes.json();
+      if (enrichData.ok && enrichData.enriched) {
+        const en = enrichData.enriched;
+        rec.relatedFeature  = en.relatedFeature  || '';
+        rec.aiSummary       = en.aiSummary        || '';
+        rec.problemType     = en.problemType      || '';
+        rec.jobToBeDone     = en.jobToBeDone      || '';
+        rec.confidenceScore = en.confidenceScore  || 0.7;
+      } else {
+        rec.aiSummary = (rec.pain || '').slice(0, 120);
+      }
+    } catch (err) {
+      rec.aiSummary = (rec.pain || '').slice(0, 120);
+    }
+    showLoading('Saving insight…', 'Almost done.');
+  }
 
   // Save to localStorage
   const all = loadAll();
   all.push(rec);
   saveAll(all);
 
-  // Try to save to Sheets
+  // Save to Sheets
   let sheetsSaved = false;
   try {
     const res = await fetch(SHEETS_URL, {
@@ -648,62 +780,49 @@ Return this exact JSON structure:
     const data = await res.json();
     sheetsSaved = data.ok === true;
   } catch (err) {
-    console.warn('Sheets POST failed, localStorage used:', err);
+    console.warn('Sheets POST failed:', err);
   }
 
-  const msg = sheetsSaved
-    ? 'Saved and shared with your team.'
-    : 'Saved locally — will sync when Sheets is reachable.';
-
-  const areaTag = rec.relatedFeature
-    ? `<div style="display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:4px 10px;font-size:12px;color:#166534;margin-bottom:14px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#1a9e6e;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Classified as: <strong>${rec.relatedFeature}</strong></div>`
-    : '';
+  const savedMsg = sheetsSaved ? 'Saved and shared with your team.' : 'Saved locally — will sync when Sheets is reachable.';
 
   document.getElementById('fbody').innerHTML = `
     <div class="succ">
       <div class="sico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:5px">Insight captured</div>
-      ${rec.aiSummary ? `<div style="font-size:13px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:10px;line-height:1.5;text-align:left">"${rec.aiSummary}"</div>` : ''}
-      ${areaTag}
-      <div style="font-size:13px;color:#64748b;margin-bottom:10px">${msg}</div>
-      <div class="sstat">Insight <strong>#${all.length}</strong> in the GXM repository</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="bnxt" onclick="resetForm()">Log another</button>
-        <button class="bbk" onclick="window.location.href='gxm-dashboard.html'">View dashboard</button>
-      </div>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:16px">Insight captured</div>
+      ${rec.aiSummary ? `
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:14px;text-align:left">
+        <div style="font-size:10.5px;font-weight:700;color:#1a9e6e;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Summary</div>
+        <div style="font-size:13.5px;color:#1e293b;line-height:1.6">${rec.aiSummary}</div>
+      </div>` : ''}
+      ${rec.relatedFeature ? `
+      <div style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#166534;margin-bottom:16px">
+        <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#1a9e6e;fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        ${rec.relatedFeature}
+      </div>` : ''}
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:20px">${savedMsg}</div>
+      <button class="bnxt" style="width:100%;max-width:260px" onclick="showModeSelect()">Log another insight</button>
     </div>`;
 }
 
 function showLoading(title, sub) {
   document.getElementById('fbody').innerHTML = `
-    <div class="succ">
-      <div class="sico" style="animation:spin 1s linear infinite">
+    <div style="padding:60px 28px;text-align:center">
+      <div class="sico" style="animation:spin 1s linear infinite;margin:0 auto 20px">
         <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#1a9e6e;fill:none;stroke-width:2">
           <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
         </svg>
       </div>
-      <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:12px">${title}</div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:4px">${sub}</div>
+      <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:6px">${title}</div>
+      <div style="font-size:13px;color:#94a3b8">${sub}</div>
     </div>`;
 }
 
-function resetForm() {
-  cur = 0; ans = {};
-  document.getElementById('ftop').style.display = '';
-  document.getElementById('navrow').style.display = '';
-  renderStep();
-}
-
 // ── Storage ──
-function loadAll() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
-}
-function saveAll(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
+function loadAll() { try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return [];} }
+function saveAll(data) { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){} }
 
 // ── Init ──
-renderStep();
+showModeSelect();
 </script>
 </body>
 </html>
