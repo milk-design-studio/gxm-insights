@@ -546,7 +546,7 @@ const SK_INITIATIVES='gxm_initiatives_v1';
 const API='https://api.anthropic.com/v1/messages';
 // ── Google Sheets backend ──
 // Paste your Apps Script Web App URL here after deploying
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbzYLcZ5o_xQYkw4Rg0gHsMr0PtSTIql8daY54QR9bqJQ8W_bxDcYJ6GmrCyDfqwO7bk_w/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbz_rHyz6e428l6AD8Mw3XzaUfbcZfb6q-d8GGuonzAYOPP7e3pMyNCR2UlDRT2yHq9JmQ/exec';
 let _sheetsConnected=false;
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
@@ -689,12 +689,15 @@ function renderKPIs(all,f){
   const newCount=f.filter(i=>i.status==='new').length;
   const always=f.filter(i=>i.frequency==='Always').length;
   const themes=loadThemes();
+  const formCount=f.filter(i=>i.captureMethod==='guided'||(!i.captureMethod&&i.submitterName)).length;
+  const transcriptCount=f.filter(i=>i.captureMethod==='transcript').length;
   document.getElementById('kpi-row').innerHTML=`
     <div class="kpi"><div class="kpi-accent" style="background:var(--g)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Total insights</div><div class="kpi-val">${t}</div><div class="kpi-trend flat">${newCount} awaiting triage</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:var(--r)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Critical</div><div class="kpi-val" style="color:var(--r)">${c}</div><div class="kpi-trend up">${t>0?Math.round((c/t)*100):0}% of total</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:var(--g)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Validated</div><div class="kpi-val" style="color:var(--g)">${validated}</div><div class="kpi-trend flat">${t>0?Math.round((validated/t)*100):0}% triage rate</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:var(--a)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Recurring issues</div><div class="kpi-val" style="color:var(--a)">${always}</div><div class="kpi-trend flat">happening always</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--p)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Active themes</div><div class="kpi-val" style="color:var(--p)">${themes.filter(t=>t.patternStatus!=='resolved').length}</div><div class="kpi-trend flat">${themes.length} total</div></div>`;
+    <div class="kpi"><div class="kpi-accent" style="background:var(--p)"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Active themes</div><div class="kpi-val" style="color:var(--p)">${themes.filter(t=>t.patternStatus!=='resolved').length}</div><div class="kpi-trend flat">${themes.length} total</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#8b5cf6"></div><div class="kpi-label"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Capture method</div><div class="kpi-val" style="font-size:14px;display:flex;gap:12px;align-items:baseline"><span>${formCount} <span style="font-size:11px;color:var(--mu);font-weight:500">form</span></span><span>${transcriptCount} <span style="font-size:11px;color:var(--mu);font-weight:500">transcript</span></span></div><div class="kpi-trend flat">${t?Math.round((transcriptCount/t)*100):0}% via transcript</div></div>`;
 }
 
 // ── OVERVIEW CHARTS ──
@@ -1005,7 +1008,7 @@ function renderInbox(all){
   };
   let html='';
   if(priority.length){html+=`<div class="iq-group-label">Insights</div>${priority.map(renderRow).join('')}`;}
-  if(rest.length){html+=`<div class="iq-group-label">${priority.length?'Other':'Insights'}</div>${rest.map(renderRow).join('')}`;}
+  if(rest.length){html+=`<div class="iq-group-label">${priority.length?'Viewed':'Insights'}</div>${rest.map(renderRow).join('')}`;}
   listEl.innerHTML=html;
   // Auto-select first or restore selection
   if(!_selectedInboxId||!items.find(i=>i.id===_selectedInboxId)){
@@ -1246,21 +1249,70 @@ function deleteTheme(themeId){
 }
 
 async function generateThemes(){
-  const all=loadAll().filter(i=>i.status==='validated');
-  if(all.length<2){alert('Validate some insights in the Inbox first.');return;}
-  const notice=document.createElement('div');notice.style.cssText='position:fixed;bottom:20px;right:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:400';notice.textContent='Claude is generating themes…';document.body.appendChild(notice);
-  const summary=all.map(i=>`[${i.severity}|${i.frequency}] ${i.serviceLine}: ${i.aiSummary||i.pain}`).join('\n');
-  const prompt=`Analyze these ${all.length} validated product insights for GXM (B2B global entity management platform) and identify 3-5 recurring themes. Respond ONLY with valid JSON:\n{"themes":[{"title":"short theme title","description":"2-3 sentence pattern description","primaryTag":"most common painPattern","patternStatus":"emerging|recurring|critical","trend":"up|flat|down","recommendedAction":"one clear next step"}]}\n\n${summary}`;
+  // Use all insights with meaningful data — not just validated ones
+  const all=loadAll().filter(i=>i.pain||i.aiSummary);
+  if(all.length<1){alert('No insights found. Log some insights first.');return;}
+
+  const notice=document.createElement('div');
+  notice.style.cssText='position:fixed;bottom:20px;right:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:400';
+  notice.textContent='Claude is generating themes…';
+  document.body.appendChild(notice);
+
+  const summary=all.map(i=>`[${i.severity||'?'}|${i.frequency||'?'}|${i.serviceLine||'?'}] ${i.aiSummary||i.pain}`).join('\n');
+  const prompt=`Analyze these ${all.length} product insights for GXM (a B2B global entity and payroll management platform) and identify the key recurring themes. Respond ONLY with valid JSON — no other text.
+
+{"themes":[
+  {
+    "title":"short descriptive theme title (max 6 words)",
+    "description":"2-3 sentences describing the pattern, who is affected, and the business impact",
+    "primaryTag":"the most common friction category across these insights",
+    "patternStatus":"emerging|recurring|critical",
+    "trend":"up|flat|down",
+    "recommendedAction":"one specific, actionable next step for the product team",
+    "insightSummaries":["brief description of insight 1","brief description of insight 2"]
+  }
+]}
+
+Rules:
+- Identify 2-5 themes depending on how many distinct patterns exist
+- A theme needs at least 1 insight but ideally 2+ similar ones
+- patternStatus = critical if any insight is Critical severity, recurring if Always frequency, emerging otherwise
+- Only group insights that are genuinely related — don't force unrelated issues into a theme
+
+Insights:
+${summary}`;
+
   try{
-    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();const text=data.content?.[0]?.text||'';
-    const json=JSON.parse(text.replace(/```json|```/g,'').trim());
-    json.themes.forEach(t=>{
-      const existing=loadThemes().find(th=>th.title.toLowerCase()===t.title.toLowerCase());
-      if(!existing){saveThemeObj({id:'th'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),insightIds:[],insightCount:0,...t,createdAt:new Date().toISOString().split('T')[0]});}
+    // Route through Apps Script to avoid CORS — same as enrich/extract
+    const res=await fetch(SHEETS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'generateThemes',prompt,insightCount:all.length})
     });
-    notice.remove();renderThemes();updateBadges(loadAll());
-  }catch(e){notice.textContent='Failed to generate themes.';setTimeout(()=>notice.remove(),3000);}
+    const data=await res.json();
+    if(!data.ok)throw new Error(data.error||'Theme generation failed');
+    const json=JSON.parse(data.result.replace(/```json|```/g,'').trim());
+    const existingThemes=loadThemes();
+    json.themes.forEach(t=>{
+      const exists=existingThemes.find(th=>th.title.toLowerCase()===t.title.toLowerCase());
+      if(!exists){
+        saveThemeObj({
+          id:'th'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+          insightIds:[],
+          insightCount:0,
+          ...t,
+          createdAt:new Date().toISOString().split('T')[0]
+        });
+      }
+    });
+    notice.textContent=`✓ ${json.themes.length} theme${json.themes.length!==1?'s':''} generated`;
+    setTimeout(()=>notice.remove(),2500);
+    renderThemes();updateBadges(loadAll());
+  }catch(e){
+    console.error('Theme generation error:',e);
+    notice.textContent='Failed: '+e.message;
+    setTimeout(()=>notice.remove(),4000);
+  }
 }
 
 // NEW: INITIATIVES

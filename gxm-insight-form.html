@@ -131,7 +131,7 @@ button.bnxt:hover{background:#158a5e;border-color:#158a5e}
 <script>
 // ── Config ──
 const STORAGE_KEY = 'gxm_insights_v1';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzYLcZ5o_xQYkw4Rg0gHsMr0PtSTIql8daY54QR9bqJQ8W_bxDcYJ6GmrCyDfqwO7bk_w/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz_rHyz6e428l6AD8Mw3XzaUfbcZfb6q-d8GGuonzAYOPP7e3pMyNCR2UlDRT2yHq9JmQ/exec';
 
 // ── Data ──
 const TIMES = ['About 1 min','About 50s','About 42s','About 34s','About 26s','About 18s','About 12s','About 6s','Almost done'];
@@ -711,6 +711,7 @@ async function submitExtracted() {
     ts:    Date.now(),
     id:    Date.now().toString(36),
     status: 'new',
+    captureMethod: 'transcript',
   };
   await doSubmit(rec);
 }
@@ -735,6 +736,7 @@ async function doSubmit(prebuiltRec) {
       ts: Date.now(),
       id: Date.now().toString(36),
       status: 'new',
+      captureMethod: 'guided',
       aiSummary: '',
       relatedFeature: '',
       problemType: '',
