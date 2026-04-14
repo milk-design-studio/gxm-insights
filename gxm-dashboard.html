@@ -706,10 +706,29 @@ body{display:flex;height:100vh;overflow:hidden}
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
 const SK_INITIATIVES='gxm_initiatives_v1';
 const SHEETS_URL='https://script.google.com/macros/s/AKfycbz5EBfgCeDVBaIo6qV0DCjTXsl395KNXXgtdAdXl9kBwxIUvJEAVFzKtxAZujgoJ69ETQ/exec';
+let _sheetsConnected=false;
+const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
+const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
+const AC=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2'];
+const SRC_COLORS=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
+const STATUS_LABELS={new:'New',in_review:'Pending',validated:'Validated',merged:'Merged',rejected:'Rejected',clustered:'Clustered',actioned:'Actioned',resolved:'Resolved'};
+const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
+const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
+const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
+let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
+const DEMO=[],DEMO_THEMES=[],DEMO_INITIATIVES=[];
+
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
+
+const SK='gxm_insights_v1';
+const SK_THEMES='gxm_themes_v1';
+const SK_INITIATIVES='gxm_initiatives_v1';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbzws2loC8KKvB_ZBoXGonmocAmdm3xilKnFGItaNAG0pCY5X9nCfvvRfr5QM7kmWH5jKA/exec';
 let _sheetsConnected=false;
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
@@ -831,6 +850,18 @@ function updateBadges(all){
 
 // ── KPIs ──
 function renderKPIs(all,f){
+  // Show empty state if no insights at all
+  const es = document.getElementById('overview-empty');
+  const kpiRow = document.getElementById('kpi-row');
+  if (!f.length) {
+    renderEmptyOverview();
+    // Hide the chart/table sections
+    ['activity-thead','activity-tbody'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+    return;
+  }
+  // Hide empty state if present
+  if (es) es.style.display = 'none';
+  if (kpiRow) kpiRow.style.display = '';
   const t=f.length,c=f.filter(i=>i.severity==='Critical').length;
   const validated=f.filter(i=>i.status==='validated').length;
   const newCount=f.filter(i=>i.status==='new').length;
@@ -1058,6 +1089,43 @@ function resetActivityFilters(){
 
 // ── PATTERNS ──
 function renderPatterns(f){
+  if (!f.length) {
+    const containers = ['matrix-container','sl-bars','cat-bars','area-bars'];
+    containers.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+    const chartsEl = document.getElementById('analytics-charts');
+    if (chartsEl) chartsEl.innerHTML = renderEmptyAnalytics();
+    return;
+  }
+  // Restore charts layout if it was replaced by empty state
+  if (document.getElementById('matrix-container') === null) {
+    // charts layout was replaced — rebuild it
+    const chartsEl = document.getElementById('analytics-charts');
+    if (chartsEl) chartsEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px">
+          <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Severity × Frequency matrix</div>
+          <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Top-right = highest priority</div>
+          <div id="matrix-container"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;flex:1">
+            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">By service line</div>
+            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Volume per service</div>
+            <div id="sl-bars"></div>
+          </div>
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;flex:1">
+            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Friction categories</div>
+            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Problem types across insights</div>
+            <div id="cat-bars"></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:16px">
+        <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">GXM areas affected</div>
+        <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Which platform areas generate the most feedback</div>
+        <div id="area-bars"></div>
+      </div>`;
+  }
   const sevs=['Critical','Significant','Minor'],freqs=['Always','Sometimes','First time'];
   const matrix={};f.forEach(i=>{const k=`${i.severity}|${i.frequency}`;matrix[k]=(matrix[k]||0)+1;});
   const maxVal=Math.max(1,...Object.values(matrix));
@@ -1129,8 +1197,9 @@ function renderInbox(all){
   });
   const listEl=document.getElementById('inbox-list');
   if(!items.length){
-    listEl.innerHTML='<div style="padding:48px 24px;text-align:center"><svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:13px;font-weight:600;color:var(--mu);margin-bottom:4px">All caught up</div><div style="font-size:12px;color:var(--di)">No insights in this category</div></div>';
-    document.getElementById('inbox-detail').innerHTML='<div style="text-align:center"><svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div style="font-size:13px;font-weight:500;color:var(--mu)">Nothing to show here</div></div>';
+    listEl.innerHTML = renderEmptyInbox(_inboxTab);
+    document.getElementById('inbox-detail').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--di);font-size:13px">Select an insight to review</div>';
+    document.getElementById('inbox-meta').innerHTML = '';
     return;
   }
   const sevDotColor=sev=>sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e';
@@ -1240,30 +1309,13 @@ function selectInboxItem(id,allData){
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
             <div style="font-size:16px;font-weight:600;color:var(--tx)">AI Recommendation</div>
             <div style="flex:1"></div>
-            <!-- Actions dropdown -->
-            <div style="position:relative" id="actions-menu-wrap-${ins.id}">
-              <button onclick="toggleActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--primary);border-radius:6px;background:var(--primary);font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">
-                Actions
-                <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div id="actions-menu-${ins.id}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--bd);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;z-index:50;overflow:hidden">
-                <div onclick="triageInsight('${ins.id}','validated');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#16a34a" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
-                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg> Validate
-                </div>
-                <div onclick="triageInsight('${ins.id}','rejected');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#dc2626;border-top:1px solid var(--bd2)" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background=''">
-                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject
-                </div>
-                <div onclick="openThemeAssign('${ins.id}');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#7c3aed;border-top:1px solid var(--bd2)" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background=''">
-                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg> Assign theme
-                </div>
-                <div onclick="generateRecommendation('${ins.id}');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);border-top:1px solid var(--bd2)" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Regenerate AI rec
-                </div>
-              </div>
-            </div>
+            <button onclick="generateRecommendation('${ins.id}')" id="rec-btn-${ins.id}" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--primary);border-radius:6px;background:var(--surf);font-size:14px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit">
+              Actions
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
           </div>
-          <div id="rec-content-${ins.id}" style="background:#F5F9FF;border:1px solid var(--b-light);border-radius:4px;padding:14px;font-size:14px;color:var(--tx2);line-height:1.6">
-            ${ins.recommendation||'<span style="color:var(--di);font-size:13px">Generating recommendation…</span>'}
+          <div id="rec-content-${ins.id}" style="background:#F5F9FF;border:1px solid var(--b-light);border-radius:4px;padding:14px;font-size:16px;color:var(--tx2);line-height:1.5">
+            ${ins.recommendation||'<span style="color:var(--di)">Click <strong>Actions</strong> to generate a product recommendation for this insight.</span>'}
           </div>
         </div>
 
@@ -1305,12 +1357,6 @@ function selectInboxItem(id,allData){
       </div>
     </div>`;
 
-  // ── Auto-generate recommendation if not cached ───────────────
-  if (!ins.recommendation) {
-    // Small delay so DOM renders first
-    setTimeout(() => generateRecommendation(id), 100);
-  }
-
   // ── Right metadata sidebar ─────────────────────────────────
   function metaField(label, value, dropdown=false) {
     return `<div style="margin-bottom:20px">
@@ -1347,38 +1393,17 @@ function triageInsight(id,status,mergeTargetId=null){
   updateInsight(id,changes);
 }
 
-function toggleActionsMenu(id) {
-  // Close any other open menus first
-  document.querySelectorAll('[id^="actions-menu-"]').forEach(el => {
-    if (el.id !== 'actions-menu-'+id) el.style.display = 'none';
-  });
-  const menu = document.getElementById('actions-menu-'+id);
-  if (menu) menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
-  if (menu) menu.style.flexDirection = 'column';
-  // Close on outside click
-  setTimeout(() => {
-    document.addEventListener('click', function handler(e) {
-      const wrap = document.getElementById('actions-menu-wrap-'+id);
-      if (wrap && !wrap.contains(e.target)) {
-        if (menu) menu.style.display = 'none';
-        document.removeEventListener('click', handler);
-      }
-    });
-  }, 0);
-}
-function closeActionsMenu(id) {
-  const menu = document.getElementById('actions-menu-'+id);
-  if (menu) menu.style.display = 'none';
-}
-
 async function generateRecommendation(id){
   const all=loadAll();
   const ins=all.find(i=>i.id===id);if(!ins)return;
-  const contentEl=document.getElementById('rec-content-'+id);
-  if(!contentEl)return;
+  const btn=document.getElementById('rec-btn-'+id);
+  const content=document.getElementById('rec-content-'+id);
+  if(!btn||!content)return;
 
   // Show loading state
-  contentEl.innerHTML='<span style="color:var(--mu);font-size:13px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Generating recommendation…</span>';
+  btn.disabled=true;
+  btn.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating…';
+  content.innerHTML='<span style="color:var(--di)">Claude is analysing this insight and generating a recommendation…</span>';
 
   const prompt=`You are a senior product manager at GXM, a B2B global entity and payroll management platform.
 
@@ -1418,12 +1443,14 @@ Be direct and specific. Avoid generic advice. Write for a product team that will
     updateInsight(id,{recommendation:rec});
 
     // Render formatted recommendation
-    contentEl.innerHTML=`<div style="font-size:14px;color:var(--tx);line-height:1.7;white-space:pre-wrap">${rec}</div>`;
-    // done
+    content.innerHTML=`<div style="font-size:14px;color:var(--tx);line-height:1.7;white-space:pre-wrap">${rec}</div>`;
+    btn.disabled=false;
+    btn.innerHTML='Regenerate <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>';
   } catch(err){
     console.error('Recommendation error:',err);
-    contentEl.innerHTML=`<span style="color:var(--r);font-size:13px">Could not generate recommendation — check your API key in Apps Script.</span>`;
-    // done
+    content.innerHTML=`<span style="color:var(--r)">Failed: ${err.message}. Check your API key is configured in Apps Script.</span>`;
+    btn.disabled=false;
+    btn.innerHTML='Try again <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>';
   }
 }
 
@@ -1500,7 +1527,7 @@ function renderThemes(){
   if(!filtered.length){
     const label=_themeTab==='all'?'No themes yet':'No '+_themeTab+' themes';
     const sub=_themeTab==='all'?'Accept insights in the Review queue and group them, or click "AI suggest themes".':'No themes with this classification yet.';
-    document.getElementById('theme-grid').innerHTML=`<div class="empty" style="grid-column:1/-1"><strong>${label}</strong><p>${sub}</p></div>`;
+    document.getElementById('theme-grid').innerHTML = renderEmptyThemes(_themeTab);
     return;
   }
   document.getElementById('theme-grid').innerHTML=filtered.map(theme=>{
@@ -1864,6 +1891,95 @@ const TAB_TITLES={inbox:'Insights Inbox',themes:'Themes',initiatives:'Initiative
 const SB_IDS=['sb-overview','sb-inbox','sb-themes','sb-patterns'];
 const SB_TABS=['overview','inbox','themes','patterns'];
 
+
+function renderEmptyOverview() {
+  document.getElementById('kpi-row').innerHTML = '';
+  const act = document.getElementById('activity-tbody');
+  const head = document.getElementById('activity-thead');
+  if (act) act.innerHTML = '';
+  if (head) head.innerHTML = '';
+  // Replace the whole overview section content with empty state
+  const el = document.getElementById('sec-overview');
+  if (!el) return;
+  // Only inject if there's no real content div already
+  let es = document.getElementById('overview-empty');
+  if (!es) {
+    es = document.createElement('div');
+    es.id = 'overview-empty';
+    es.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:60px 24px;text-align:center';
+    el.appendChild(es);
+  }
+  es.style.display = 'flex';
+  es.innerHTML = `
+    <div style="width:72px;height:72px;border-radius:16px;background:#f0fdf4;border:1.5px solid #bbf7d0;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+      <svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:#1a9e6e;fill:none;stroke-width:1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px">No insights yet</div>
+    <div style="font-size:14px;color:#64748b;max-width:360px;line-height:1.6;margin-bottom:24px">Your dashboard will populate as your team logs product insights from customer calls, LSP feedback, and sales conversations.</div>
+    <a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#1a9e6e;color:#fff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Log your first insight
+    </a>`;
+}
+
+
+function renderEmptyInbox(reason) {
+  const msgs = {
+    all:       { icon: '📬', title: 'No insights yet', sub: 'Start logging feedback from customer calls, LSP reviews, and sales conversations. Every insight captured here becomes a product decision.', cta: true },
+    new:       { icon: '✅', title: 'Nothing new to triage', sub: 'All insights have been reviewed. Check the Pending or Validated tabs to see where things stand.' },
+    in_review: { icon: '🔍', title: 'Nothing pending review', sub: 'No insights are waiting for more context right now.' },
+    validated: { icon: '🎯', title: 'No validated insights yet', sub: 'Validate insights in the All tab to move them here. Validated insights are ready to be grouped into themes.' },
+    rejected:  { icon: '🗑️', title: 'No rejected insights', sub: 'Insights you reject will appear here for reference.' },
+  };
+  const m = msgs[reason] || msgs.all;
+  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center;flex:1">
+    <div style="font-size:36px;margin-bottom:16px">${m.icon}</div>
+    <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px">${m.title}</div>
+    <div style="font-size:13px;color:#64748b;max-width:300px;line-height:1.6;margin-bottom:${m.cta ? '24px' : '0'}">${m.sub}</div>
+    ${m.cta ? `<a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:#1a9e6e;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log first insight</a>` : ''}
+  </div>`;
+}
+
+
+function renderEmptyThemes(reason) {
+  const isFiltered = reason !== 'all';
+  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center;grid-column:1/-1">
+    <div style="width:64px;height:64px;border-radius:14px;background:#f5f3ff;border:1.5px solid #ddd6fe;display:flex;align-items:center;justify-content:center;margin-bottom:18px">
+      <svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:#7c3aed;fill:none;stroke-width:1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px">${isFiltered ? 'No ' + reason + ' themes' : 'No themes yet'}</div>
+    <div style="font-size:13px;color:#64748b;max-width:320px;line-height:1.6;margin-bottom:24px">${isFiltered
+      ? 'No themes have been classified as ' + reason + ' yet. Change the filter or create a new theme manually.'
+      : 'Themes group related insights into patterns. Once you have a few insights validated, use AI to suggest themes automatically.'
+    }</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      ${!isFiltered ? `<a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;color:#1e293b;text-decoration:none;background:#fff">Log insights first</a>` : ''}
+      <button onclick="openThemeModal()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create theme manually
+      </button>
+      <button onclick="generateThemes()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;color:#1e293b;cursor:pointer;font-family:inherit">
+        ✨ AI suggest themes
+      </button>
+    </div>
+  </div>`;
+}
+
+
+function renderEmptyAnalytics() {
+  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center">
+    <div style="width:64px;height:64px;border-radius:14px;background:#eff6ff;border:1.5px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin-bottom:18px">
+      <svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:#2563eb;fill:none;stroke-width:1.5"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px">No data to analyse yet</div>
+    <div style="font-size:13px;color:#64748b;max-width:320px;line-height:1.6;margin-bottom:24px">Charts and patterns will appear here once your team has logged insights. Severity distributions, service line breakdowns, and friction categories all populate automatically.</div>
+    <a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:#2563eb;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Start logging insights
+    </a>
+  </div>`;
+}
+
 function showTab(tab){
   document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
   const sec=document.getElementById('sec-'+tab);
@@ -1912,4 +2028,17 @@ function setAnalyticsTab(tab, el) {
   document.querySelectorAll('#analytics-tabs .page-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('analytics-charts').style.display = tab === 'charts' ? '' : 'none';
-  document.getElementById('analytics-explorer').style.display = tab === 'explore
+  document.getElementById('analytics-explorer').style.display = tab === 'explorer' ? '' : 'none';
+  if (tab === 'explorer') { populateFilters(); renderExplorer(); }
+}
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  refreshWithSheets();
+  showTab('overview');
+});
+
+
+</script>
+</body>
+</html>
