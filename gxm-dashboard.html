@@ -720,10 +720,10 @@ const STATUS_LABELS={new:'New',in_review:'Pending',validated:'Validated',merged:
 const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
 const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
 const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
-let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
+let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null,_dataLoaded=false;
 const DEMO=[],DEMO_THEMES=[],DEMO_INITIATIVES=[];
 
-function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:i.confidenceScore||0.7})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
 
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
@@ -738,10 +738,10 @@ const STATUS_LABELS={new:'New',in_review:'Pending',validated:'Validated',merged:
 const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
 const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
 const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
-let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
+let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null,_dataLoaded=false;
 const DEMO=[],DEMO_THEMES=[],DEMO_INITIATIVES=[];
 
-function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:i.confidenceScore||0.7})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
 // Fetch from Google Sheets and merge with localStorage + demo
 async function loadAllFromSheets(){
   if(!SHEETS_URL||SHEETS_URL==='YOUR_APPS_SCRIPT_URL_HERE')return null;
@@ -750,13 +750,15 @@ async function loadAllFromSheets(){
     const data=await res.json();
     if(!data.ok||!Array.isArray(data.insights))return null;
     _sheetsConnected=true;
+    _dataLoaded=true;
     updateConnectionStatus(true);
     // Sheets is the single source of truth — sync to localStorage for offline
     localStorage.setItem(SK,JSON.stringify(data.insights));
-    return data.insights.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    return data.insights.map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:i.confidenceScore||0.7,clusterId:i.clusterId||'',duplicateOf:i.duplicateOf||null})).sort((a,b)=>(b.ts||0)-(a.ts||0));
   }catch(e){
     console.warn('Sheets fetch failed, using localStorage:',e);
     _sheetsConnected=false;
+    _dataLoaded=true;
     updateConnectionStatus(false);
     return null;
   }
@@ -850,16 +852,15 @@ function updateBadges(all){
 
 // ── KPIs ──
 function renderKPIs(all,f){
-  // Show empty state if no insights at all
   const es = document.getElementById('overview-empty');
   const kpiRow = document.getElementById('kpi-row');
-  if (!f.length) {
+  // Only show empty state if we have genuinely no data (all rows, not just filtered)
+  if (_dataLoaded && !all.length) {
     renderEmptyOverview();
-    // Hide the chart/table sections
     ['activity-thead','activity-tbody'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
     return;
   }
-  // Hide empty state if present
+  if (!_dataLoaded || !all.length) return; // still loading, don't render yet
   if (es) es.style.display = 'none';
   if (kpiRow) kpiRow.style.display = '';
   const t=f.length,c=f.filter(i=>i.severity==='Critical').length;
@@ -1090,6 +1091,7 @@ function resetActivityFilters(){
 // ── PATTERNS ──
 function renderPatterns(f){
   if (!f.length) {
+    if (!_dataLoaded) return; // still loading
     const containers = ['matrix-container','sl-bars','cat-bars','area-bars'];
     containers.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
     const chartsEl = document.getElementById('analytics-charts');
@@ -1197,6 +1199,7 @@ function renderInbox(all){
   });
   const listEl=document.getElementById('inbox-list');
   if(!items.length){
+    if (!_dataLoaded) return; // still loading
     listEl.innerHTML = renderEmptyInbox(_inboxTab);
     document.getElementById('inbox-detail').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--di);font-size:13px">Select an insight to review</div>';
     document.getElementById('inbox-meta').innerHTML = '';
@@ -1525,8 +1528,7 @@ function renderThemes(){
   updateThemeBadges(themes);
   const filtered=_themeTab==='all'?themes:themes.filter(t=>t.patternStatus===_themeTab);
   if(!filtered.length){
-    const label=_themeTab==='all'?'No themes yet':'No '+_themeTab+' themes';
-    const sub=_themeTab==='all'?'Accept insights in the Review queue and group them, or click "AI suggest themes".':'No themes with this classification yet.';
+    if (!_dataLoaded) return;
     document.getElementById('theme-grid').innerHTML = renderEmptyThemes(_themeTab);
     return;
   }
