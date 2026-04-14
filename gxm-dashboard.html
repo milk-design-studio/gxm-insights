@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GXM Insight Dashboard</title>
-<meta name="version" content="20260414-0356">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
+/* ── CSS PLACEHOLDER — filled by Python ── */
 :root{
   color-scheme:light only;
   /* Figma design tokens */
@@ -67,9 +67,9 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .btn-green:hover{background:#158a5e;border-color:#158a5e;color:#fff}
 .btn-red{background:var(--r);border-color:var(--r);color:#fff}
 .btn-red:hover{background:#b91c1c;border-color:#b91c1c;color:#fff}
-.page{flex:1;overflow:hidden;display:flex;flex-direction:column;width:100%}
+.page{flex:1;max-width:1600px;overflow:hidden;display:flex;flex-direction:column}
 .section{display:none}
-.section.active{display:flex;flex-direction:column;animation:fadeIn .18s ease;flex:1}
+.section.active{display:block;animation:fadeIn .18s ease;flex:1}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 /* KPI row */
 .kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:24px}
@@ -378,7 +378,7 @@ body{display:flex;height:100vh;overflow:hidden}
         <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">SC</div>
         <div style="min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Steven Cooper</div>
-          <div style="font-size:11px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="087b6b6767786d7a48607b78266b6765">[email&#160;protected]</a></div>
+          <div style="font-size:11px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">scooper@hsp.com</div>
         </div>
       </div>
     </div>
@@ -390,7 +390,6 @@ body{display:flex;height:100vh;overflow:hidden}
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-title" id="page-title">Dashboard</div>
-      <div id="ver-badge" style="font-size:10px;color:#94a3b8;margin-left:8px">v20260414-0356</div>
       <div class="topbar-right">
         <div class="topbar-search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -708,12 +707,11 @@ body{display:flex;height:100vh;overflow:hidden}
 </div>
 
 <script>
-
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
 const SK_INITIATIVES='gxm_initiatives_v1';
-const SHEETS_URL='AKfycbwjyX9daqx3WBY0U3uArhr8hKYWAJ4tFCthJ23UaOdCnwkCubqNpOSUQrfOc_3yvRlL5Q';
-let _sheetsConnected=false;
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbxbJfiQ8uHLpSATxdj50xLaq1DNReFKSzolUg7UGhB4RhJc-OGxhi5k_pqSmFhwCxrZzQ/exec';
+let _sheetsConnected=false,_dataLoaded=false;
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
 const AC=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2'];
@@ -722,17 +720,30 @@ const STATUS_LABELS={new:'New',in_review:'Pending',validated:'Validated',merged:
 const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
 const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
 const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
-let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null,_dataLoaded=false;
+let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
 const DEMO=[],DEMO_THEMES=[],DEMO_INITIATIVES=[];
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:parseFloat(i.confidenceScore)||0.7})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
 
-function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:i.confidenceScore||0.7})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
-// Fetch from Google Sheets and merge with localStorage + demo
+
+function updateConnectionStatus(connected,detail){
+  const el=document.getElementById('conn-status');
+  if(!el)return;
+  if(connected){
+    el.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:#1a9e6e;display:inline-block;margin-right:5px"></span>Sheets connected';
+    el.style.color='#1a9e6e';
+  }else{
+    const msg=detail?detail:'Local only';
+    el.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:5px"></span>'+msg;
+    el.style.color=detail?'#ef4444':'#94a3b8';
+  }
+}
+
 async function loadAllFromSheets(){
   if(!SHEETS_URL||SHEETS_URL==='YOUR_APPS_SCRIPT_URL_HERE'){_dataLoaded=true;return null;}
   try{
     const res=await fetch(SHEETS_URL+'?t='+Date.now(),{redirect:'follow',cache:'no-store'});
     if(!res.ok){
-      console.error('Sheets HTTP error:',res.status,res.statusText);
+      console.error('Sheets HTTP error:',res.status);
       _sheetsConnected=false;_dataLoaded=true;
       updateConnectionStatus(false,'HTTP '+res.status);
       return null;
@@ -740,25 +751,19 @@ async function loadAllFromSheets(){
     const text=await res.text();
     let data;
     try{data=JSON.parse(text);}catch(e){
-      console.error('Sheets JSON parse error. Raw response:',text.slice(0,300));
+      console.error('Sheets JSON parse error:',text.slice(0,200));
       _sheetsConnected=false;_dataLoaded=true;
       updateConnectionStatus(false,'Bad response');
       return null;
     }
-    console.log('Sheets response:',data.ok,'count:',data.count,'insights:',Array.isArray(data.insights)?data.insights.length:'not array');
     if(!data.ok){
       console.error('Sheets error:',data.error);
       _sheetsConnected=false;_dataLoaded=true;
-      updateConnectionStatus(false,data.error||'Script error');
+      updateConnectionStatus(false,data.error);
       return null;
     }
-    if(!Array.isArray(data.insights)){
-      console.error('Insights not an array:',typeof data.insights, JSON.stringify(data).slice(0,200));
-      _sheetsConnected=false;_dataLoaded=true;
-      updateConnectionStatus(false,'Bad data shape');
-      return null;
-    }
-    const insights=data.insights;
+    const insights=Array.isArray(data.insights)?data.insights:[];
+    console.log('Sheets OK — loaded',insights.length,'insights');
     _sheetsConnected=true;_dataLoaded=true;
     updateConnectionStatus(true);
     localStorage.setItem(SK,JSON.stringify(insights));
@@ -775,10 +780,41 @@ async function loadAllFromSheets(){
   }catch(e){
     console.error('Sheets fetch exception:',e.message);
     _sheetsConnected=false;_dataLoaded=true;
-    updateConnectionStatus(false,'Error: '+e.message);
+    updateConnectionStatus(false,'Connection failed');
     return null;
   }
 }
+
+function switchDetailTab(tab,id){
+  ['comments','contact'].forEach(t=>{
+    const tabEl=document.getElementById('tab-'+t+'-'+id);
+    const panel=document.getElementById('panel-'+t+'-'+id);
+    if(!tabEl||!panel)return;
+    const active=t===tab;
+    tabEl.style.color=active?'var(--primary)':'var(--mu)';
+    tabEl.style.borderBottomColor=active?'var(--primary)':'transparent';
+    panel.style.display=active?'':'none';
+  });
+}
+
+function toggleActionsMenu(id){
+  document.querySelectorAll('[id^="actions-menu-"]').forEach(el=>{
+    if(el.id!=='actions-menu-'+id)el.style.display='none';
+  });
+  const menu=document.getElementById('actions-menu-'+id);
+  if(!menu)return;
+  const isOpen=menu.style.display==='flex';
+  menu.style.display=isOpen?'none':'flex';
+  if(!isOpen){menu.style.flexDirection='column';
+    setTimeout(()=>{document.addEventListener('click',function h(e){
+      const wrap=document.getElementById('actions-menu-wrap-'+id);
+      if(wrap&&!wrap.contains(e.target)){menu.style.display='none';}
+      document.removeEventListener('click',h);
+    });},0);
+  }
+}
+function closeActionsMenu(id){const m=document.getElementById('actions-menu-'+id);if(m)m.style.display='none';}
+
 
 function saveInsight(rec){
   const stored=(()=>{try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return [];}})();
@@ -849,18 +885,7 @@ async function refreshWithSheets(){
   renderExplorer();renderChannels(all);updateBadges(all);
 }
 
-function updateConnectionStatus(connected,detail){
-  const el=document.getElementById('conn-status');
-  if(!el)return;
-  if(connected){
-    el.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:#1a9e6e;display:inline-block;margin-right:5px"></span>Sheets connected';
-    el.style.color='#1a9e6e';
-  }else{
-    const msg=detail?'Error: '+detail:'Local only';
-    el.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:5px"></span>'+msg;
-    el.style.color='#ef4444';
-  }
-}
+
 
 function updateBadges(all){
   document.getElementById('inbox-badge').textContent=all.filter(i=>i.status==='new'||i.status==='in_review').length;
@@ -869,14 +894,6 @@ function updateBadges(all){
 
 // ── KPIs ──
 function renderKPIs(all,f){
-  const es = document.getElementById('overview-empty');
-  const kpiRow = document.getElementById('kpi-row');
-  if (!all.length) {
-    if (_dataLoaded) renderEmptyOverview();
-    return;
-  }
-  if (es) es.style.display = 'none';
-  if (kpiRow) kpiRow.style.display = '';
   const t=f.length,c=f.filter(i=>i.severity==='Critical').length;
   const validated=f.filter(i=>i.status==='validated').length;
   const newCount=f.filter(i=>i.status==='new').length;
@@ -1104,44 +1121,6 @@ function resetActivityFilters(){
 
 // ── PATTERNS ──
 function renderPatterns(f){
-  if (!f.length) {
-    if (!_dataLoaded) { return; } // still loading, skip empty state
-    const containers = ['matrix-container','sl-bars','cat-bars','area-bars'];
-    containers.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
-    const chartsEl = document.getElementById('analytics-charts');
-    if (chartsEl) chartsEl.innerHTML = renderEmptyAnalytics();
-    return;
-  }
-  // Restore charts layout if it was replaced by empty state
-  if (document.getElementById('matrix-container') === null) {
-    // charts layout was replaced — rebuild it
-    const chartsEl = document.getElementById('analytics-charts');
-    if (chartsEl) chartsEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-        <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px">
-          <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Severity × Frequency matrix</div>
-          <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Top-right = highest priority</div>
-          <div id="matrix-container"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:16px">
-          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;flex:1">
-            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">By service line</div>
-            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Volume per service</div>
-            <div id="sl-bars"></div>
-          </div>
-          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;flex:1">
-            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Friction categories</div>
-            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Problem types across insights</div>
-            <div id="cat-bars"></div>
-          </div>
-        </div>
-      </div>
-      <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:16px">
-        <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">GXM areas affected</div>
-        <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Which platform areas generate the most feedback</div>
-        <div id="area-bars"></div>
-      </div>`;
-  }
   const sevs=['Critical','Significant','Minor'],freqs=['Always','Sometimes','First time'];
   const matrix={};f.forEach(i=>{const k=`${i.severity}|${i.frequency}`;matrix[k]=(matrix[k]||0)+1;});
   const maxVal=Math.max(1,...Object.values(matrix));
@@ -1213,10 +1192,8 @@ function renderInbox(all){
   });
   const listEl=document.getElementById('inbox-list');
   if(!items.length){
-    if (!_dataLoaded) { listEl.innerHTML=''; return; } // still loading
-    listEl.innerHTML = renderEmptyInbox(_inboxTab);
-    document.getElementById('inbox-detail').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--di);font-size:13px">Select an insight to review</div>';
-    document.getElementById('inbox-meta').innerHTML = '';
+    listEl.innerHTML='<div style="padding:48px 24px;text-align:center"><svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><polyline points="20 6 9 17 4 12"/></svg><div style="font-size:13px;font-weight:600;color:var(--mu);margin-bottom:4px">All caught up</div><div style="font-size:12px;color:var(--di)">No insights in this category</div></div>';
+    document.getElementById('inbox-detail').innerHTML='<div style="text-align:center"><svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div style="font-size:13px;font-weight:500;color:var(--mu)">Nothing to show here</div></div>';
     return;
   }
   const sevDotColor=sev=>sev==='Critical'?'#dc2626':sev==='Significant'?'#d97706':'#1a9e6e';
@@ -1321,58 +1298,49 @@ function selectInboxItem(id,allData){
         </div>
 
         <!-- AI Recommendation -->
-        <div style="margin-bottom:24px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-            <div style="font-size:16px;font-weight:600;color:var(--tx)">AI Recommendation</div>
-            <div style="flex:1"></div>
-            <button onclick="generateRecommendation('${ins.id}')" id="rec-btn-${ins.id}" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--primary);border-radius:6px;background:var(--surf);font-size:14px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit">
-              Actions
-              <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            <div style="font-size:15px;font-weight:600;color:var(--tx)">AI Recommendation</div>
           </div>
-          <div id="rec-content-${ins.id}" style="background:#F5F9FF;border:1px solid var(--b-light);border-radius:4px;padding:14px;font-size:16px;color:var(--tx2);line-height:1.5">
-            ${ins.recommendation||'<span style="color:var(--di)">Click <strong>Actions</strong> to generate a product recommendation for this insight.</span>'}
+          <div id="rec-content-${ins.id}" style="background:#F5F9FF;border:1px solid var(--b-light);border-radius:6px;padding:14px;font-size:14px;color:var(--tx2);line-height:1.6;min-height:56px">
+            ${ins.recommendation||'<span style="color:var(--mu);font-size:13px">Generating\u2026</span>'}
           </div>
         </div>
 
-        <!-- Comments tab area -->
-        <div style="border-bottom:2px solid var(--bd2);margin-bottom:20px">
-          <div style="display:inline-flex;align-items:center;gap:7px;padding:16px 20px;border-bottom:2px solid var(--primary);font-size:16px;font-weight:700;color:var(--tx)">
-            Comments
-            <span style="background:var(--primary);color:#fff;font-size:12px;font-weight:700;padding:0 8px;height:24px;line-height:24px;border-radius:10.5px;min-width:24px;text-align:center">${ins._comments?.length||0}</span>
-          </div>
-          <div style="display:inline-flex;align-items:center;padding:16px 20px;font-size:16px;font-weight:700;color:var(--mu);cursor:pointer" onclick="showContactInfo('${ins.id}')">
-            Contact Information
-          </div>
-        </div>
-
-        <!-- Comment input -->
-        <div style="margin-bottom:16px">
-          <textarea class="iqd-comment" id="comment-${ins.id}" placeholder="Add your comment here..."></textarea>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
-          <button style="display:flex;align-items:center;gap:6px;padding:10px 20px;border:1px solid var(--primary);border-radius:6px;background:var(--surf);font-size:14px;font-weight:700;color:var(--tx);cursor:pointer;font-family:inherit">
-            Add Attachments
-            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <button onclick="saveComment('${ins.id}')" style="display:flex;align-items:center;gap:6px;padding:10px 20px;border:1px solid var(--primary);border-radius:6px;background:var(--primary);font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">
-            Send
-            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
-        </div>
-
-        <!-- Triage actions -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1px solid var(--bd2)">
+        <!-- Triage -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);margin-bottom:20px">
           <button class="iqd-btn validate" onclick="triageInsight('${ins.id}','validated')">✓ Validate</button>
           <button class="iqd-btn reject" onclick="triageInsight('${ins.id}','rejected')">✕ Reject</button>
           <button class="iqd-btn" onclick="triageInsight('${ins.id}','in_review')" style="border-color:var(--a);color:var(--a)">◷ Needs context</button>
-          ${dupes.length?`<button class="iqd-btn" style="border-color:var(--p);color:var(--p)" onclick="triageInsight('${ins.id}','merged','${dupes[0].id}')">⊕ Merge</button>`:''}
           ${suggestedTheme?`<button class="iqd-btn" style="border-color:var(--p);color:var(--p)" onclick="assignTheme('${ins.id}','${suggestedTheme.id}')">⬡ ${suggestedTheme.title}</button>`:`<button class="iqd-btn" style="border-color:var(--p);color:var(--p)" onclick="openThemeAssign('${ins.id}')">+ Assign theme</button>`}
+          ${dupes.length?`<button class="iqd-btn" style="border-color:var(--p);color:var(--p)" onclick="triageInsight('${ins.id}','merged','${dupes[0].id}')">⊕ Merge</button>`:''}
         </div>
 
-      </div>
-    </div>`;
+        <!-- Comments + Contact tabs -->
+        <div style="border-radius:8px;border:1px solid var(--bd);overflow:hidden">
+          <div style="display:flex;border-bottom:1px solid var(--bd)">
+            <div id="tab-comments-${ins.id}" onclick="switchDetailTab('comments','${ins.id}')"
+              style="padding:11px 18px;font-size:14px;font-weight:700;color:var(--primary);cursor:pointer;border-bottom:2px solid var(--primary);display:flex;align-items:center;gap:6px">
+              Comments
+              <span style="background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:0 7px;height:20px;line-height:20px;border-radius:10px;min-width:20px;text-align:center">${(ins._comments||[]).length}</span>
+            </div>
+            <div id="tab-contact-${ins.id}" onclick="switchDetailTab('contact','${ins.id}')"
+              style="padding:11px 18px;font-size:14px;font-weight:700;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent">
+              Contact
+            </div>
+          </div>
+          <div id="panel-comments-${ins.id}" style="padding:16px">
+            ${(ins._comments||[]).length?(ins._comments||[]).map(c=>`<div style="padding:8px 0;border-bottom:1px solid var(--bd2)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div style="width:22px;height:22px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${(c.by||'Y')[0]}</div><span style="font-size:12px;font-weight:600;color:var(--tx)">${c.by||'You'}</span><span style="font-size:11px;color:var(--mu)">${new Date(c.ts).toLocaleDateString('en',{month:'short',day:'numeric'})}</span></div><div style="font-size:13px;color:var(--tx2);padding-left:30px;line-height:1.5">${c.text}</div></div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--mu);font-size:13px">No comments yet</div>'}
+            <div style="margin-top:12px">
+              <textarea id="comment-${ins.id}" placeholder="Add a comment\u2026" style="width:100%;padding:9px 12px;border:1.5px solid var(--input-bd);border-radius:6px;font-size:13px;color:var(--tx);font-family:inherit;resize:vertical;min-height:64px;outline:none;box-sizing:border-box"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:6px"><button onclick="saveComment('${ins.id}')" style="padding:7px 18px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Send</button></div>
+            </div>
+          </div>
+          <div id="panel-contact-${ins.id}" style="display:none;padding:16px">
+            ${(ins.firstName||ins.lastName||ins.company||ins.contactEmail)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${[['Name',[ins.firstName,ins.lastName].filter(Boolean).join(' ')],['Role',ins.role],['Company',ins.company],['Email',ins.contactEmail],['Submitted by',ins.submitterName],['Source',ins.sourceLabel]].filter(([,v])=>v).map(([l,v])=>`<div><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">${l}</div><div style="font-size:13px;color:var(--tx)">${v}</div></div>`).join('')}</div>`:'<div style="text-align:center;padding:16px;color:var(--mu);font-size:13px">No contact information captured</div>'}
+          </div>
+        </div>
 
   // ── Right metadata sidebar ─────────────────────────────────
   function metaField(label, value, dropdown=false) {
@@ -1408,30 +1376,6 @@ function selectInboxItem(id,allData){
 function triageInsight(id,status,mergeTargetId=null){
   const changes={status};if(mergeTargetId)changes.duplicateOf=mergeTargetId;
   updateInsight(id,changes);
-}
-
-function toggleActionsMenu(id){
-  document.querySelectorAll('[id^="actions-menu-"]').forEach(el=>{
-    if(el.id!=='actions-menu-'+id)el.style.display='none';
-  });
-  const menu=document.getElementById('actions-menu-'+id);
-  if(!menu)return;
-  const isOpen=menu.style.display==='flex';
-  menu.style.display=isOpen?'none':'flex';
-  menu.style.flexDirection='column';
-  if(!isOpen){
-    setTimeout(()=>{
-      document.addEventListener('click',function h(e){
-        const wrap=document.getElementById('actions-menu-wrap-'+id);
-        if(wrap&&!wrap.contains(e.target)){menu.style.display='none';}
-        document.removeEventListener('click',h);
-      });
-    },0);
-  }
-}
-function closeActionsMenu(id){
-  const menu=document.getElementById('actions-menu-'+id);
-  if(menu)menu.style.display='none';
 }
 
 async function generateRecommendation(id){
@@ -1476,7 +1420,11 @@ Be direct and specific. Avoid generic advice. Write for a product team that will
       headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'generateRecommendation',prompt,insightId:id})
     });
-    const data=await res.json();
+    const rawText=await res.text();
+    let data;
+    try{data=JSON.parse(rawText);}catch(e){
+      throw new Error('Apps Script returned invalid response ('+res.status+'). Check deployment: Execute as Me, Access: Anyone.');
+    }
     if(!data.ok)throw new Error(data.error||'Recommendation failed');
 
     const rec=data.recommendation;
@@ -1566,8 +1514,9 @@ function renderThemes(){
   updateThemeBadges(themes);
   const filtered=_themeTab==='all'?themes:themes.filter(t=>t.patternStatus===_themeTab);
   if(!filtered.length){
-    if (!_dataLoaded) return;
-    document.getElementById('theme-grid').innerHTML = renderEmptyThemes(_themeTab);
+    const label=_themeTab==='all'?'No themes yet':'No '+_themeTab+' themes';
+    const sub=_themeTab==='all'?'Accept insights in the Review queue and group them, or click "AI suggest themes".':'No themes with this classification yet.';
+    document.getElementById('theme-grid').innerHTML=`<div class="empty" style="grid-column:1/-1"><strong>${label}</strong><p>${sub}</p></div>`;
     return;
   }
   document.getElementById('theme-grid').innerHTML=filtered.map(theme=>{
@@ -1931,95 +1880,6 @@ const TAB_TITLES={inbox:'Insights Inbox',themes:'Themes',initiatives:'Initiative
 const SB_IDS=['sb-overview','sb-inbox','sb-themes','sb-patterns'];
 const SB_TABS=['overview','inbox','themes','patterns'];
 
-
-function renderEmptyOverview() {
-  document.getElementById('kpi-row').innerHTML = '';
-  const act = document.getElementById('activity-tbody');
-  const head = document.getElementById('activity-thead');
-  if (act) act.innerHTML = '';
-  if (head) head.innerHTML = '';
-  // Replace the whole overview section content with empty state
-  const el = document.getElementById('sec-overview');
-  if (!el) return;
-  // Only inject if there's no real content div already
-  let es = document.getElementById('overview-empty');
-  if (!es) {
-    es = document.createElement('div');
-    es.id = 'overview-empty';
-    es.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:60px 24px;text-align:center';
-    el.appendChild(es);
-  }
-  es.style.display = 'flex';
-  es.innerHTML = `
-    <div style="width:72px;height:72px;border-radius:16px;background:#f0fdf4;border:1.5px solid #bbf7d0;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-      <svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:#1a9e6e;fill:none;stroke-width:1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-    </div>
-    <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px">No insights yet</div>
-    <div style="font-size:14px;color:#64748b;max-width:360px;line-height:1.6;margin-bottom:24px">Your dashboard will populate as your team logs product insights from customer calls, LSP feedback, and sales conversations.</div>
-    <a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#1a9e6e;color:#fff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none">
-      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Log your first insight
-    </a>`;
-}
-
-
-function renderEmptyInbox(reason) {
-  const msgs = {
-    all:       { icon: '📬', title: 'No insights yet', sub: 'Start logging feedback from customer calls, LSP reviews, and sales conversations. Every insight captured here becomes a product decision.', cta: true },
-    new:       { icon: '✅', title: 'Nothing new to triage', sub: 'All insights have been reviewed. Check the Pending or Validated tabs to see where things stand.' },
-    in_review: { icon: '🔍', title: 'Nothing pending review', sub: 'No insights are waiting for more context right now.' },
-    validated: { icon: '🎯', title: 'No validated insights yet', sub: 'Validate insights in the All tab to move them here. Validated insights are ready to be grouped into themes.' },
-    rejected:  { icon: '🗑️', title: 'No rejected insights', sub: 'Insights you reject will appear here for reference.' },
-  };
-  const m = msgs[reason] || msgs.all;
-  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center;flex:1">
-    <div style="font-size:36px;margin-bottom:16px">${m.icon}</div>
-    <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px">${m.title}</div>
-    <div style="font-size:13px;color:#64748b;max-width:300px;line-height:1.6;margin-bottom:${m.cta ? '24px' : '0'}">${m.sub}</div>
-    ${m.cta ? `<a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:#1a9e6e;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log first insight</a>` : ''}
-  </div>`;
-}
-
-
-function renderEmptyThemes(reason) {
-  const isFiltered = reason !== 'all';
-  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center;grid-column:1/-1">
-    <div style="width:64px;height:64px;border-radius:14px;background:#f5f3ff;border:1.5px solid #ddd6fe;display:flex;align-items:center;justify-content:center;margin-bottom:18px">
-      <svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:#7c3aed;fill:none;stroke-width:1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-    </div>
-    <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px">${isFiltered ? 'No ' + reason + ' themes' : 'No themes yet'}</div>
-    <div style="font-size:13px;color:#64748b;max-width:320px;line-height:1.6;margin-bottom:24px">${isFiltered
-      ? 'No themes have been classified as ' + reason + ' yet. Change the filter or create a new theme manually.'
-      : 'Themes group related insights into patterns. Once you have a few insights validated, use AI to suggest themes automatically.'
-    }</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-      ${!isFiltered ? `<a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;color:#1e293b;text-decoration:none;background:#fff">Log insights first</a>` : ''}
-      <button onclick="openThemeModal()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Create theme manually
-      </button>
-      <button onclick="generateThemes()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;color:#1e293b;cursor:pointer;font-family:inherit">
-        ✨ AI suggest themes
-      </button>
-    </div>
-  </div>`;
-}
-
-
-function renderEmptyAnalytics() {
-  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center">
-    <div style="width:64px;height:64px;border-radius:14px;background:#eff6ff;border:1.5px solid #bfdbfe;display:flex;align-items:center;justify-content:center;margin-bottom:18px">
-      <svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:#2563eb;fill:none;stroke-width:1.5"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
-    </div>
-    <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:8px">No data to analyse yet</div>
-    <div style="font-size:13px;color:#64748b;max-width:320px;line-height:1.6;margin-bottom:24px">Charts and patterns will appear here once your team has logged insights. Severity distributions, service line breakdowns, and friction categories all populate automatically.</div>
-    <a href="gxm-insight-form.html" style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:#2563eb;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">
-      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Start logging insights
-    </a>
-  </div>`;
-}
-
 function showTab(tab){
   document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
   const sec=document.getElementById('sec-'+tab);
@@ -2078,6 +1938,12 @@ window.addEventListener('DOMContentLoaded', () => {
   showTab('overview');
 });
 
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  refreshWithSheets();
+  showTab('overview');
+});
 
 </script>
 </body>
