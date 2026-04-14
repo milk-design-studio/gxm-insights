@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GXM Insight Dashboard</title>
+<meta name="version" content="20260414-0356">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -389,6 +390,7 @@ body{display:flex;height:100vh;overflow:hidden}
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-title" id="page-title">Dashboard</div>
+      <div id="ver-badge" style="font-size:10px;color:#94a3b8;margin-left:8px">v20260414-0356</div>
       <div class="topbar-right">
         <div class="topbar-search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -854,10 +856,8 @@ function updateBadges(all){
 function renderKPIs(all,f){
   const es = document.getElementById('overview-empty');
   const kpiRow = document.getElementById('kpi-row');
-  // Only show empty state if we have genuinely no data (all rows, not just filtered)
-  if (_dataLoaded && !all.length) {
-    renderEmptyOverview();
-    ['activity-thead','activity-tbody'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  if (!all.length) {
+    if (_dataLoaded) renderEmptyOverview();
     return;
   }
   if (es) es.style.display = 'none';
