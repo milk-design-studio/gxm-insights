@@ -32,11 +32,11 @@
   --input-bd:#D1D5DB;
   --radius:4px;
 }
-html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,sans-serif;font-size:14px;margin:0;padding:0;color-scheme:light only}
+html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,sans-serif;font-size:14px;margin:0;padding:0;color-scheme:light only;display:flex;height:100vh;overflow:hidden}
 *{box-sizing:border-box;margin:0;padding:0}
-.shell{display:flex;min-height:100vh}
+.shell{display:flex;height:100vh;overflow:hidden;width:100%}
 .sidebar{width:276px;background:#FFFFFF;border-right:1px solid #DFE7EF;flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .sb-logo{padding:20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
 .sb-mark{width:30px;height:30px;background:var(--primary);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
 .sb-name{font-size:14px;font-weight:700;color:#1F2937;line-height:1.2}
@@ -66,9 +66,9 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .btn-green:hover{background:#158a5e;border-color:#158a5e;color:#fff}
 .btn-red{background:var(--r);border-color:var(--r);color:#fff}
 .btn-red:hover{background:#b91c1c;border-color:#b91c1c;color:#fff}
-.page{padding:28px 32px;flex:1;max-width:1400px}
+.page{flex:1;max-width:1600px;overflow:hidden;display:flex;flex-direction:column}
 .section{display:none}
-.section.active{display:block;animation:fadeIn .18s ease}
+.section.active{display:block;animation:fadeIn .18s ease;flex:1}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 /* KPI row */
 .kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:24px}
@@ -321,318 +321,408 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
 .conf-bar{height:4px;background:#f1f5f9;border-radius:2px;margin-top:4px;overflow:hidden}
 .conf-fill{height:100%;border-radius:2px;background:var(--g)}
+
+
+
+/* ── Layout fixes ── */
+body{display:flex;height:100vh;overflow:hidden}
+.shell{display:flex;width:100%;height:100vh;overflow:hidden}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.page{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.section{display:none;flex:1;min-height:0;box-sizing:border-box}
+.section.active{display:flex;flex-direction:column}
+/* Scrollable sections get padding + overflow-y */
+.section#sec-overview,
+.section#sec-themes,
+.section#sec-patterns{padding:28px 32px;overflow-y:auto}
+/* Inbox fills full height, no padding (handles its own) */
+.section#sec-inbox{overflow:hidden}
 </style>
 </head>
 <body>
 <div class="shell">
-<div class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-mark">GX</div>
-    <div><div class="sb-name">GXM</div><div class="sb-sub">Insight Platform</div></div>
-  </div>
-  <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:20px 16px;overflow-y:auto">
-    <div class="sb-item" id="sb-overview" onclick="showTab('overview')">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Dashboard
-    </div>
-    <div class="sb-item" id="sb-inbox" onclick="showTab('inbox')">
-      <svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
-      Insights
-      <span class="sb-badge green" id="inbox-badge">0</span>
-    </div>
-    <div class="sb-item" id="sb-themes" onclick="showTab('themes')">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      Themes
-      <span class="sb-badge" id="themes-badge">0</span>
-    </div>
-    <div class="sb-item" id="sb-patterns" onclick="showTab('patterns')">
-      <svg viewBox="0 0 24 24"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
-      Analytics
-    </div>
-  </div>
-  <div class="sb-footer">
-    <a class="sb-add" href="gxm-insight-form.html">
-      <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Log new insight
-    </a>
-    <div style="display:flex;align-items:center;gap:10px;padding:14px 0 0;margin-top:12px;border-top:1px solid var(--bd)">
-      <div style="width:28px;height:28px;border-radius:14px;background:#E5E7EB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--tx);flex-shrink:0">SC</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Steven Cooper</div>
-        <div style="font-size:11px;color:var(--tx2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b7c4d4d8d8c7d2c5f7dfc4c799d4d8da">[email&#160;protected]</a></div>
-      </div>
-      <span id="conn-status" style="font-size:10px;font-weight:500;display:flex;align-items:center;gap:3px;color:#94a3b8;flex-shrink:0">
-        <span style="width:6px;height:6px;border-radius:50%;background:#94a3b8;display:inline-block"></span>
-      </span>
-    </div>
-  </div>
-</div>
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-title" id="page-title">Dashboard</div>
-    <div class="topbar-right">
-      <div class="topbar-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search insights..." id="global-search" oninput="onSearch(this.value)"></div>
-      <button class="btn-sm" onclick="exportCSV()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export CSV</button>
-      <button class="btn-sm" onclick="clearData()">Clear data</button>
-    </div>
-  </div>
-  <div class="page">
 
-    <!-- INSIGHTS -->
-    <div class="section" id="sec-inbox" style="padding:0;display:flex;flex-direction:column;height:calc(100vh - 52px)">
-      <!-- Page header -->
-      <div style="padding:32px 20px 0;flex-shrink:0">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
-          <div style="font-size:24px;font-weight:600;color:var(--tx);flex:1">Insights</div>
-          <div class="topbar-search" style="max-width:280px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search insights..." id="global-search" oninput="onSearch(this.value)"></div>
-        </div>
-        <div class="page-tabs" id="inbox-tabs" style="border-bottom:2px solid var(--bd2)">
-          <div class="page-tab active" onclick="setInboxTab('all',this)">All Insights<span class="page-tab-badge" id="itab-all">0</span></div>
-          <div class="page-tab" onclick="setInboxTab('new',this)">New<span class="page-tab-badge green" id="itab-new">0</span></div>
-          <div class="page-tab" onclick="setInboxTab('in_review',this)">Pending<span class="page-tab-badge" id="itab-pending">0</span></div>
-          <div class="page-tab" onclick="setInboxTab('validated',this)">Validated<span class="page-tab-badge" id="itab-validated">0</span></div>
-          <div class="page-tab" onclick="setInboxTab('rejected',this)">Rejected<span class="page-tab-badge" id="itab-rejected">0</span></div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark">GX</div>
+      <div><div class="sb-name">GXM</div><div class="sb-sub">Insight Platform</div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:20px 16px;overflow-y:auto">
+      <div class="sb-item active" id="sb-overview" onclick="showTab('overview')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="sb-item" id="sb-inbox" onclick="showTab('inbox')">
+        <svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+        Insights
+        <span class="sb-badge green" id="inbox-badge">0</span>
+      </div>
+      <div class="sb-item" id="sb-themes" onclick="showTab('themes')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Themes
+        <span class="sb-badge" id="themes-badge">0</span>
+      </div>
+      <div class="sb-item" id="sb-patterns" onclick="showTab('patterns')">
+        <svg viewBox="0 0 24 24"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
+        Analytics
+      </div>
+    </div>
+    <div class="sb-footer">
+      <a class="sb-add" href="gxm-insight-form.html">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Log new insight
+      </a>
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 0 0;margin-top:12px;border-top:1px solid var(--bd)">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">SC</div>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Steven Cooper</div>
+          <div style="font-size:11px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="087b6b6767786d7a48607b78266b6765">[email&#160;protected]</a></div>
         </div>
       </div>
-      <!-- Three-column content -->
-      <div style="display:flex;flex:1;min-height:0;overflow:hidden;gap:20px;padding:20px">
-        <!-- Left: insight list -->
-        <div style="width:420px;flex-shrink:0;overflow-y:auto;padding-right:4px" id="inbox-list"></div>
-        <!-- Centre: detail panel -->
-        <div id="inbox-detail" style="flex:1;min-width:0;background:var(--surf);border:1px solid var(--b-light);border-radius:0;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:40px">
-          <div style="text-align:center">
-            <svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 14px;display:block"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <div style="font-size:14px;font-weight:600;color:var(--mu)">Select an insight to review</div>
-            <div style="font-size:13px;color:var(--di);margin-top:5px">Details and actions appear here</div>
-          </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search insights..." id="global-search" oninput="onSearch(this.value)">
         </div>
-        <!-- Right: metadata sidebar (rendered by selectInboxItem) -->
-        <div id="inbox-meta" style="width:280px;flex-shrink:0;overflow-y:auto"></div>
+        <button class="btn-sm" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <span id="conn-status" style="font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;color:#94a3b8;white-space:nowrap">
+          <span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block"></span>Local only
+        </span>
       </div>
     </div>
 
-    <!-- THEMES -->
-    <div class="section" id="sec-themes">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:16px">
-        <div>
-          <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:2px">Themes</div>
-          <div style="font-size:12px;color:var(--mu)">Recurring patterns in your feedback. Each theme can drive a decision.</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <button class="btn-sm btn-green" onclick="openThemeModal()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New theme</button>
-          <button class="btn-sm" onclick="generateThemes()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>AI suggest themes</button>
-        </div>
-      </div>
-      <div class="page-tabs" id="theme-tabs">
-        <div class="page-tab active" onclick="setThemeTab('all',this)">All themes<span class="page-tab-badge" id="ttab-all">0</span></div>
-        <div class="page-tab" onclick="setThemeTab('critical',this)">Critical<span class="page-tab-badge red" id="ttab-critical">0</span></div>
-        <div class="page-tab" onclick="setThemeTab('recurring',this)">Recurring<span class="page-tab-badge" id="ttab-recurring">0</span></div>
-        <div class="page-tab" onclick="setThemeTab('emerging',this)">Emerging<span class="page-tab-badge" id="ttab-emerging">0</span></div>
-        <div class="page-tab" onclick="setThemeTab('resolved',this)">Resolved<span class="page-tab-badge" id="ttab-resolved">0</span></div>
-      </div>
-      <div id="theme-summary-bar" style="display:none"></div>
-      <div class="theme-grid" id="theme-grid"></div>
-    </div>
+    <!-- PAGE CONTENT -->
+    <div class="page">
 
-    <!-- NEW: INITIATIVES -->
-    <div class="section" id="sec-initiatives">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
-        <div><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:3px">Initiatives</div><div style="font-size:12px;color:var(--mu)">Decisions traceable from insight → theme → outcome.</div></div>
-        <button class="btn-sm btn-green" onclick="openInitiativeModal()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New initiative</button>
-      </div>
-      <div id="initiatives-list"></div>
-    </div>
-
-    <!-- OVERVIEW -->
-    <div class="section active" id="sec-overview">
-      <div class="kpi-row" id="kpi-row"></div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-bottom:18px;">
-        <div class="card" style="padding:0;overflow:hidden">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1.5px solid var(--bd);gap:12px">
-            <div>
-              <div class="card-title" style="margin-bottom:0">Insights over time</div>
-              <div class="card-sub" style="margin-bottom:0;margin-top:2px">8-week breakdown — stacked by severity</div>
-            </div>
-            <div style="display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px">
-              <button id="trnd-sev" onclick="setTrendMode('severity')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:inherit;background:#1a9e6e;color:#fff;transition:all .13s">Severity</button>
-              <button id="trnd-sl" onclick="setTrendMode('serviceLine')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:500;border:none;cursor:pointer;font-family:inherit;background:transparent;color:var(--mu);transition:all .13s">Service line</button>
-              <button id="trnd-src" onclick="setTrendMode('sourceLabel')" style="padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:500;border:none;cursor:pointer;font-family:inherit;background:transparent;color:var(--mu);transition:all .13s">Source</button>
-            </div>
-          </div>
-          <div style="padding:16px 20px 12px">
-            <div class="trend-wrap"><canvas id="trend-chart"></canvas></div>
-          </div>
-        </div>
-        <div class="card"><div class="card-title">By source</div><div class="card-sub">Contribution per channel</div><div class="donut-wrap" style="margin-top:8px;flex-direction:column;gap:10px"><canvas id="source-chart" width="110" height="110"></canvas><div class="donut-leg" id="source-leg"></div></div></div>
-        <div class="card"><div class="card-title">Severity</div><div class="card-sub">Distribution across insights</div><div class="donut-wrap" style="margin-top:8px;flex-direction:column;gap:10px"><canvas id="sev-chart" width="110" height="110"></canvas><div class="donut-leg" id="sev-leg"></div></div></div>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1.5px solid var(--bd);gap:12px;flex-wrap:wrap">
+      <!-- ═══════════════════════════════════════════════
+           DASHBOARD (overview)
+      ═══════════════════════════════════════════════ -->
+      <div class="section active" id="sec-overview">
+        <div style="margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
           <div>
-            <div class="card-title" style="margin-bottom:0">Recent activity</div>
-            <div class="card-sub" style="margin-bottom:0;margin-top:2px">Click any row description to view full details</div>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-            <select id="ra-src" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All sources</option></select>
-            <select id="ra-sl" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All service lines</option></select>
-            <select id="ra-sev" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All severities</option><option>Critical</option><option>Significant</option><option>Minor</option></select>
-            <select id="ra-freq" onchange="renderActivityTable()" style="padding:5px 9px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--tx);background:var(--surf);outline:none;font-family:inherit;cursor:pointer"><option value="">All frequencies</option><option>Always</option><option>Sometimes</option><option>First time</option></select>
-            <button onclick="resetActivityFilters()" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;color:var(--mu);background:var(--surf);cursor:pointer;font-family:inherit">Reset</button>
-            <span id="ra-count" style="font-size:12px;color:var(--mu);white-space:nowrap"></span>
+            <div style="font-size:24px;font-weight:600;color:var(--tx)">Dashboard</div>
+            <div style="font-size:14px;color:var(--tx2);margin-top:4px">Overview of all captured product insights</div>
           </div>
         </div>
-        <div style="overflow-x:auto" id="feed">
-          <table style="width:100%;border-collapse:collapse" id="activity-table">
-            <thead id="activity-thead"></thead>
-            <tbody id="activity-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
-    <!-- PATTERNS -->
-    <div class="section" id="sec-patterns">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
-        <div class="card"><div class="card-title">Severity × Frequency matrix</div><div class="card-sub">Bubble size = insight count. Top-right = highest priority.</div><div id="matrix-container"></div></div>
-        <div style="display:flex;flex-direction:column;gap:16px">
-          <div class="card"><div class="card-title">By service line</div><div id="sl-bars" style="margin-top:8px"></div></div>
-          <div class="card"><div class="card-title">Friction categories</div><div id="cat-bars" style="margin-top:8px"></div></div>
-        </div>
-      </div>
-      <div class="card"><div class="card-title">GXM areas affected</div><div class="card-sub">Which platform areas generate the most feedback</div><div id="area-bars" style="margin-top:12px"></div></div>
-    </div>
+        <!-- KPI row -->
+        <div class="kpi-row" id="kpi-row" style="margin-bottom:24px"></div>
 
-    <!-- EXPLORER -->
-    <div class="section" id="sec-explorer">
-      <div class="filter-row">
-        <select class="filter-select" id="f-source" onchange="renderExplorer()"><option value="">All sources</option></select>
-        <select class="filter-select" id="f-sl" onchange="renderExplorer()"><option value="">All service lines</option></select>
-        <select class="filter-select" id="f-sev" onchange="renderExplorer()"><option value="">All severities</option><option>Critical</option><option>Significant</option><option>Minor</option></select>
-        <select class="filter-select" id="f-freq" onchange="renderExplorer()"><option value="">All frequencies</option><option>Always</option><option>Sometimes</option><option>First time</option></select>
-        <select class="filter-select" id="f-status" onchange="renderExplorer()"><option value="">All statuses</option><option value="new">New</option><option value="validated">Validated</option><option value="in_review">In review</option><option value="merged">Merged</option><option value="rejected">Rejected</option></select>
-        <span class="insight-count" id="explorer-count"></span>
-        <button class="btn-sm" onclick="resetFilters()">Reset</button>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="tbl-wrap"><table class="itbl"><thead><tr><th>Date</th><th>Status</th><th>Source</th><th>Contact</th><th>Service line</th><th>Goal</th><th>Friction</th><th>Severity</th><th>Freq.</th><th>Theme</th></tr></thead><tbody id="explorer-body"></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- INGEST -->
-    <div class="section" id="sec-ingest">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="ingest-card">
-          <div class="card-title" style="margin-bottom:4px">AI Intake Layer</div>
-          <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Paste raw text — Claude extracts and structures it automatically.</div>
-          <div class="ingest-tabs">
-            <div class="itab active" onclick="switchIngestTab('meeting')">Meeting summary</div>
-            <div class="itab" onclick="switchIngestTab('email')">Email thread</div>
-            <div class="itab" onclick="switchIngestTab('note')">Raw notes</div>
+        <!-- Charts -->
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd2);gap:12px">
+              <div>
+                <div style="font-size:15px;font-weight:600;color:var(--tx)">Insights over time</div>
+                <div style="font-size:13px;color:var(--tx2);margin-top:2px">8-week breakdown</div>
+              </div>
+              <div style="display:flex;gap:3px;background:#F3F4F6;border-radius:6px;padding:3px">
+                <button id="trnd-sev" onclick="setTrendMode('severity')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit;background:var(--primary);color:#fff;transition:all .13s">Severity</button>
+                <button id="trnd-sl"  onclick="setTrendMode('serviceLine')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:500;border:none;cursor:pointer;font-family:inherit;background:transparent;color:var(--mu);transition:all .13s">Service</button>
+                <button id="trnd-src" onclick="setTrendMode('sourceLabel')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:500;border:none;cursor:pointer;font-family:inherit;background:transparent;color:var(--mu);transition:all .13s">Source</button>
+              </div>
+            </div>
+            <div style="padding:16px 20px 12px"><div class="trend-wrap"><canvas id="trend-chart"></canvas></div></div>
           </div>
-          <div class="ingest-area active" id="ia-meeting"><textarea class="paste-box" id="paste-meeting" placeholder="Paste your Copilot meeting summary here..."></textarea><div class="ingest-hint">Accepts raw Copilot recap, transcript excerpts, or meeting notes.</div></div>
-          <div class="ingest-area" id="ia-email"><textarea class="paste-box" id="paste-email" placeholder="Paste an email thread or forwarded message..."></textarea><div class="ingest-hint">Works with forwarded emails, reply chains, or single messages.</div></div>
-          <div class="ingest-area" id="ia-note"><textarea class="paste-box" id="paste-note" placeholder="Type or paste any raw observation..."></textarea><div class="ingest-hint">For informal notes, Slack messages, or verbal feedback.</div></div>
-          <div class="ingest-actions">
-            <button class="btn-sm btn-green" onclick="processIngest()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg>Extract with Claude</button>
-            <span id="ingest-status" style="font-size:12px;color:var(--mu)"></span>
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px">
+            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">By source</div>
+            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Contribution per channel</div>
+            <div class="donut-wrap" style="flex-direction:column;gap:10px"><canvas id="source-chart" width="110" height="110"></canvas><div class="donut-leg" id="source-leg"></div></div>
           </div>
-          <div class="result-preview" id="result-preview"></div>
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px">
+            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Severity</div>
+            <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Distribution across insights</div>
+            <div class="donut-wrap" style="flex-direction:column;gap:10px"><canvas id="sev-chart" width="110" height="110"></canvas><div class="donut-leg" id="sev-leg"></div></div>
+          </div>
         </div>
-        <div>
-          <div class="card" style="margin-bottom:14px"><div class="card-title" style="margin-bottom:12px">Channel breakdown</div><div id="channel-list"></div></div>
-          <div class="card"><div class="card-title" style="margin-bottom:4px">Productboard email</div><div style="font-size:12px;color:var(--mu);margin-bottom:12px">Forward emails to your Productboard inbox.</div><div style="display:flex;gap:8px"><input type="email" id="pb-email" placeholder="your-inbox@productboard.com" style="flex:1;padding:8px 11px;border:1.5px solid var(--bd);border-radius:7px;font-size:12.5px;color:var(--tx);background:#fff;outline:none;font-family:inherit"><button class="btn-sm btn-green" onclick="savePBEmail()">Save</button></div></div>
+
+        <!-- Activity table -->
+        <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--bd2);gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:15px;font-weight:600;color:var(--tx)">Recent activity</div>
+              <div style="font-size:13px;color:var(--tx2);margin-top:2px">Click any row to view full details</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <select id="ra-src" onchange="renderActivityTable()" style="padding:6px 10px;border:1px solid var(--input-bd);border-radius:6px;font-size:13px;color:var(--tx2);background:var(--surf);font-family:inherit"><option value="">All sources</option></select>
+              <select id="ra-sev" onchange="renderActivityTable()" style="padding:6px 10px;border:1px solid var(--input-bd);border-radius:6px;font-size:13px;color:var(--tx2);background:var(--surf);font-family:inherit"><option value="">All severities</option><option>Critical</option><option>Significant</option><option>Minor</option></select>
+              <select id="ra-sl"  onchange="renderActivityTable()" style="padding:6px 10px;border:1px solid var(--input-bd);border-radius:6px;font-size:13px;color:var(--tx2);background:var(--surf);font-family:inherit"><option value="">All service lines</option></select>
+              <button onclick="resetActivityFilters()" style="padding:6px 12px;border:1px solid var(--input-bd);border-radius:6px;font-size:13px;color:var(--tx2);background:var(--surf);cursor:pointer;font-family:inherit">Reset</button>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table class="itbl">
+              <thead id="activity-thead"></thead>
+              <tbody id="activity-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
-  </div>
+      <!-- ═══════════════════════════════════════════════
+           INSIGHTS (inbox)
+      ═══════════════════════════════════════════════ -->
+      <div class="section" id="sec-inbox" style="padding:0">
+        <!-- Header + tabs -->
+        <div style="padding:24px 24px 0;flex-shrink:0;background:var(--surf);border-bottom:1px solid var(--bd2)">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <div style="font-size:24px;font-weight:600;color:var(--tx);flex:1">Insights</div>
+          </div>
+          <div class="page-tabs" id="inbox-tabs">
+            <div class="page-tab active" onclick="setInboxTab('all',this)">All<span class="page-tab-badge" id="itab-all">0</span></div>
+            <div class="page-tab" onclick="setInboxTab('new',this)">New<span class="page-tab-badge green" id="itab-new">0</span></div>
+            <div class="page-tab" onclick="setInboxTab('in_review',this)">Pending<span class="page-tab-badge" id="itab-pending">0</span></div>
+            <div class="page-tab" onclick="setInboxTab('validated',this)">Validated<span class="page-tab-badge" id="itab-validated">0</span></div>
+            <div class="page-tab" onclick="setInboxTab('rejected',this)">Rejected<span class="page-tab-badge" id="itab-rejected">0</span></div>
+          </div>
+        </div>
+        <!-- Three-column content -->
+        <div style="display:flex;flex:1;min-height:0;overflow:hidden">
+          <!-- List -->
+          <div style="width:360px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--bd2)" id="inbox-list"></div>
+          <!-- Detail -->
+          <div id="inbox-detail" style="flex:1;min-width:0;overflow-y:auto;display:flex;align-items:center;justify-content:center;background:var(--surf);border-right:1px solid var(--b-light)">
+            <div style="text-align:center;padding:40px">
+              <svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:var(--di);fill:none;stroke-width:1.5;margin:0 auto 14px;display:block"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <div style="font-size:14px;font-weight:600;color:var(--mu)">Select an insight to review</div>
+              <div style="font-size:13px;color:var(--di);margin-top:5px">Details and actions appear here</div>
+            </div>
+          </div>
+          <!-- Meta sidebar -->
+          <div id="inbox-meta" style="width:280px;flex-shrink:0;overflow-y:auto;padding:20px"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════
+           THEMES
+      ═══════════════════════════════════════════════ -->
+      <div class="section" id="sec-themes">
+        <div style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;flex-shrink:0">
+          <div>
+            <div style="font-size:24px;font-weight:600;color:var(--tx)">Themes</div>
+            <div style="font-size:14px;color:var(--tx2);margin-top:4px">Recurring patterns across captured feedback</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-sm" onclick="generateThemes()" style="display:flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              AI suggest themes
+            </button>
+            <button class="btn-sm btn-green" onclick="openThemeModal()" style="display:flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New theme
+            </button>
+          </div>
+        </div>
+        <div class="page-tabs" id="theme-tabs" style="margin-bottom:24px;flex-shrink:0">
+          <div class="page-tab active" onclick="setThemeTab('all',this)">All<span class="page-tab-badge" id="ttab-all">0</span></div>
+          <div class="page-tab" onclick="setThemeTab('critical',this)">Critical<span class="page-tab-badge red" id="ttab-critical">0</span></div>
+          <div class="page-tab" onclick="setThemeTab('recurring',this)">Recurring<span class="page-tab-badge" id="ttab-recurring">0</span></div>
+          <div class="page-tab" onclick="setThemeTab('emerging',this)">Emerging<span class="page-tab-badge" id="ttab-emerging">0</span></div>
+          <div class="page-tab" onclick="setThemeTab('resolved',this)">Resolved<span class="page-tab-badge" id="ttab-resolved">0</span></div>
+        </div>
+        <div id="theme-summary-bar" style="display:none;flex-shrink:0"></div>
+        <div class="theme-grid" id="theme-grid" style="flex:1;min-height:0;overflow-y:auto"></div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════
+           ANALYTICS (patterns + explorer)
+      ═══════════════════════════════════════════════ -->
+      <div class="section" id="sec-patterns">
+        <div style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;flex-shrink:0">
+          <div>
+            <div style="font-size:24px;font-weight:600;color:var(--tx)">Analytics</div>
+            <div style="font-size:14px;color:var(--tx2);margin-top:4px">Patterns, distributions and full data explorer</div>
+          </div>
+          <button onclick="exportCSV()" class="btn-sm" style="display:flex;align-items:center;gap:6px">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+        <!-- Sub-tabs -->
+        <div class="page-tabs" id="analytics-tabs" style="margin-bottom:24px;flex-shrink:0">
+          <div class="page-tab active" onclick="setAnalyticsTab('charts',this)">Charts</div>
+          <div class="page-tab" onclick="setAnalyticsTab('explorer',this)">Data explorer</div>
+        </div>
+
+        <!-- Charts view -->
+        <div id="analytics-charts" style="flex:1;min-height:0;overflow-y:auto">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px">
+              <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Severity × Frequency matrix</div>
+              <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Top-right = highest priority</div>
+              <div id="matrix-container"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;flex:1">
+                <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">By service line</div>
+                <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Volume per service</div>
+                <div id="sl-bars"></div>
+              </div>
+              <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;flex:1">
+                <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">Friction categories</div>
+                <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Problem types across insights</div>
+                <div id="cat-bars"></div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:16px">
+            <div style="font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px">GXM areas affected</div>
+            <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Which platform areas generate the most feedback</div>
+            <div id="area-bars"></div>
+          </div>
+        </div>
+
+        <!-- Explorer view -->
+        <div id="analytics-explorer" style="display:none;flex:1;min-height:0;overflow:hidden;flex-direction:column">
+          <div style="background:var(--surf);border:1px solid var(--bd);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0">
+            <div style="display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--bd2);flex-wrap:wrap;flex-shrink:0">
+              <select class="filter-select" id="f-source" onchange="renderExplorer()"><option value="">All sources</option></select>
+              <select class="filter-select" id="f-sl" onchange="renderExplorer()"><option value="">All service lines</option></select>
+              <select class="filter-select" id="f-sev" onchange="renderExplorer()"><option value="">All severities</option><option>Critical</option><option>Significant</option><option>Minor</option></select>
+              <select class="filter-select" id="f-freq" onchange="renderExplorer()"><option value="">All frequencies</option><option>Always</option><option>Sometimes</option><option>First time</option></select>
+              <select class="filter-select" id="f-status" onchange="renderExplorer()"><option value="">All statuses</option><option value="new">New</option><option value="validated">Validated</option><option value="in_review">In review</option><option value="merged">Merged</option><option value="rejected">Rejected</option></select>
+              <span id="explorer-count" style="font-size:12px;font-weight:600;color:var(--mu)"></span>
+              <div style="flex:1"></div>
+              <button class="btn-sm" onclick="resetFilters()">Reset</button>
+            </div>
+            <div class="tbl-wrap" style="flex:1;overflow-y:auto">
+              <table class="itbl">
+                <thead><tr><th>Date</th><th>Status</th><th>Source</th><th>Contact</th><th>Service line</th><th>Goal</th><th>Friction</th><th>Severity</th><th>Freq.</th><th>Theme</th></tr></thead>
+                <tbody id="explorer-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ═══════════════════════════════════════════════
+     HIDDEN PLACEHOLDERS (JS compatibility)
+═══════════════════════════════════════════════ -->
+<div style="display:none">
+  <div id="sec-initiatives"><div id="initiatives-list"></div></div>
+  <div id="channel-list"></div>
+  <div id="ingest-status"></div>
+  <div id="result-preview"></div>
 </div>
-</div>
 
-<!-- INSIGHT DRAWER -->
+<!-- ═══════════════════════════════════════════════
+     MODALS & DRAWERS
+═══════════════════════════════════════════════ -->
+<!-- ─── Insight drawer ─────────────────────────── -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
-  <div class="drawer-header"><div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px" id="d-title">Insight detail</div><div style="display:flex;gap:6px;flex-wrap:wrap" id="d-badges"></div></div><button class="drawer-close" onclick="closeDrawer()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-  <div class="drawer-body" id="drawer-body"></div>
-  <div class="drawer-similar" id="drawer-similar"></div>
+  <div class="d-header">
+    <div>
+      <div class="d-title" id="d-title">Insight</div>
+      <div id="d-badges" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+    </div>
+    <button onclick="closeDrawer()" style="background:none;border:none;cursor:pointer;padding:4px">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--mu);fill:none;stroke-width:2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="d-body" id="drawer-body"></div>
+  <div id="drawer-similar"></div>
 </div>
 
-<!-- THEME DRAWER -->
+<!-- ─── Theme drawer ───────────────────────────── -->
 <div class="drawer-overlay" id="theme-drawer-overlay" onclick="closeThemeDrawer()"></div>
 <div class="drawer" id="theme-drawer">
-  <div class="drawer-header"><div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px" id="td-title">Theme</div><div id="td-badges" style="display:flex;gap:6px;flex-wrap:wrap"></div></div><button class="drawer-close" onclick="closeThemeDrawer()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-  <div class="drawer-body" id="td-body"></div>
+  <div class="d-header">
+    <div>
+      <div class="d-title" id="td-title">Theme</div>
+      <div id="td-badges" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+    </div>
+    <button onclick="closeThemeDrawer()" style="background:none;border:none;cursor:pointer;padding:4px">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--mu);fill:none;stroke-width:2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="d-body" id="td-body"></div>
 </div>
 
-<!-- THEME MODAL -->
+<!-- ─── Theme modal ────────────────────────────── -->
 <div class="modal-overlay" id="theme-modal">
   <div class="modal">
     <div class="modal-title" id="theme-modal-title">New theme</div>
-    <div class="modal-sub">Group related insights into a named pattern.</div>
-    <div class="modal-field"><label class="modal-label">Title *</label><input class="modal-input" id="tm-title" placeholder="e.g. Bulk operations missing across service lines"></div>
-    <div class="modal-field"><label class="modal-label">Description</label><textarea class="modal-textarea" id="tm-desc" rows="3" placeholder="Describe the pattern and why it matters..."></textarea></div>
-    <div class="modal-field"><label class="modal-label">Pattern status</label><select class="modal-input" id="tm-status"><option value="emerging">Emerging</option><option value="recurring">Recurring</option><option value="critical">Critical</option><option value="resolved">Resolved</option></select></div>
-    <div class="modal-field"><label class="modal-label">Owner</label><input class="modal-input" id="tm-owner" placeholder="e.g. Steven Cooper"></div>
-    <div class="modal-field"><label class="modal-label">Recommended action</label><input class="modal-input" id="tm-action" placeholder="e.g. Design bulk upload component for all service lines"></div>
-    <div class="modal-actions"><button class="btn-sm" onclick="closeThemeModal()">Cancel</button><button class="btn-sm btn-green" onclick="saveTheme()">Save theme</button></div>
+    <div class="modal-sub">Group related insights into a pattern to track and act on.</div>
+    <div class="modal-field"><label class="modal-label">Theme title *</label><input class="modal-input" id="tm-title" placeholder="e.g. Entity creation friction"></div>
+    <div class="modal-field"><label class="modal-label">Description</label><textarea class="modal-input" id="tm-desc" rows="2" placeholder="Describe the pattern..."></textarea></div>
+    <div class="modal-field"><label class="modal-label">Status</label>
+      <select class="modal-input" id="tm-status">
+        <option value="emerging">Emerging</option>
+        <option value="recurring">Recurring</option>
+        <option value="critical">Critical</option>
+        <option value="resolved">Resolved</option>
+      </select>
+    </div>
+    <div class="modal-field"><label class="modal-label">Owner</label><input class="modal-input" id="tm-owner" placeholder="Team or person"></div>
+    <div class="modal-field"><label class="modal-label">Recommended action</label><input class="modal-input" id="tm-action" placeholder="What should the product team do?"></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeThemeModal()">Cancel</button>
+      <button class="btn-sm btn-green" onclick="saveTheme()">Save theme</button>
+    </div>
   </div>
 </div>
 
-<!-- INITIATIVE MODAL -->
+<!-- ─── Initiative modal ──────────────────────── -->
 <div class="modal-overlay" id="initiative-modal">
   <div class="modal">
     <div class="modal-title">New initiative</div>
-    <div class="modal-sub">Create a traceable decision linked to themes and insights.</div>
-    <div class="modal-field"><label class="modal-label">Title *</label><input class="modal-input" id="im-title" placeholder="e.g. Implement bulk payslip upload"></div>
-    <div class="modal-field"><label class="modal-label">Hypothesis</label><textarea class="modal-textarea" id="im-hyp" rows="2" placeholder="We believe that... will result in..."></textarea></div>
-    <div class="modal-field"><label class="modal-label">Expected outcome</label><input class="modal-input" id="im-outcome" placeholder="e.g. Reduce payroll upload time by 80%"></div>
-    <div class="modal-field"><label class="modal-label">Owner</label><input class="modal-input" id="im-owner" placeholder="e.g. Steven Cooper"></div>
+    <div class="modal-sub">Create a product decision traceable to insights.</div>
+    <div class="modal-field"><label class="modal-label">Title *</label><input class="modal-input" id="im-title" placeholder="e.g. Redesign entity creation flow"></div>
+    <div class="modal-field"><label class="modal-label">Hypothesis</label><textarea class="modal-input" id="im-hyp" rows="2" placeholder="If we... then... because..."></textarea></div>
+    <div class="modal-field"><label class="modal-label">Expected outcome</label><input class="modal-input" id="im-outcome" placeholder="What does success look like?"></div>
+    <div class="modal-field"><label class="modal-label">Owner</label><input class="modal-input" id="im-owner" placeholder="Team or person"></div>
+    <div class="modal-field"><label class="modal-label">Status</label>
+      <select class="modal-input" id="im-status">
+        <option value="planned">Planned</option>
+        <option value="in_progress">In progress</option>
+        <option value="shipped">Shipped</option>
+      </select>
+    </div>
     <div class="modal-field"><label class="modal-label">Jira link</label><input class="modal-input" id="im-jira" placeholder="https://..."></div>
-    <div class="modal-field"><label class="modal-label">Status</label><select class="modal-input" id="im-status"><option value="planned">Planned</option><option value="in_progress">In progress</option><option value="shipped">Shipped</option></select></div>
     <input type="hidden" id="im-theme-id">
-    <div class="modal-actions"><button class="btn-sm" onclick="closeInitiativeModal()">Cancel</button><button class="btn-sm btn-green" onclick="saveInitiative()">Save initiative</button></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeInitiativeModal()">Cancel</button>
+      <button class="btn-sm btn-green" onclick="saveInitiative()">Save initiative</button>
+    </div>
   </div>
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-
-// NEW: Insight lifecycle
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
 const SK_INITIATIVES='gxm_initiatives_v1';
-const API='https://api.anthropic.com/v1/messages';
-// ── Google Sheets backend ──
-// Paste your Apps Script Web App URL here after deploying
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbzws2loC8KKvB_ZBoXGonmocAmdm3xilKnFGItaNAG0pCY5X9nCfvvRfr5QM7kmWH5jKA/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbwX6ntgpp5Q1K6_HYS48AYnvQNtwGT3BJe7PDTup1o5B_XJOD-zGFWnbqCsCJlnjFNWoQ/exec';
 let _sheetsConnected=false;
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
-const AC=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2','#0e7490','#7c3aed','#be185d','#065f46'];
+const AC=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280','#e24b4a','#0891b2'];
 const SRC_COLORS=['#1a9e6e','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
 const STATUS_LABELS={new:'New',in_review:'Pending',validated:'Validated',merged:'Merged',rejected:'Rejected',clustered:'Clustered',actioned:'Actioned',resolved:'Resolved'};
 const STATUS_CLASSES={new:'status-new',in_review:'status-review',validated:'status-validated',merged:'status-merged',rejected:'status-rejected',clustered:'status-clustered',actioned:'status-actioned',resolved:'status-actioned'};
 const PATTERN_STATUS_COLORS={critical:'ts-critical',recurring:'ts-recurring',emerging:'ts-emerging',resolved:'ts-resolved'};
 const THEME_BORDER={critical:'critical-theme',recurring:'recurring-theme',emerging:'emerging-theme',resolved:'resolved-theme'};
-
 let charts={},searchQ='',ingestTab='meeting',activeRow=null,editingThemeId=null;
+const DEMO=[],DEMO_THEMES=[],DEMO_INITIATIVES=[];
 
-// NEW: Demo insights with lifecycle fields
-const DEMO=[];
-
-// NEW: Demo themes
-const DEMO_THEMES=[];
-
-// NEW: Demo initiatives
-const DEMO_INITIATIVES=[];
-
-// ── STORAGE ──
-function loadAll(){
-  try{
-    const stored=JSON.parse(localStorage.getItem(SK)||'[]');
-    return stored.map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,clusterId:'',duplicateOf:null,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  }catch(e){return [];}
-}
-
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({status:'new',aiSummary:'',problemType:i.painPattern||'',jobToBeDone:i.trying||'',primaryTheme:'',confidenceScore:0.7,...i})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
 // Fetch from Google Sheets and merge with localStorage + demo
 async function loadAllFromSheets(){
   if(!SHEETS_URL||SHEETS_URL==='YOUR_APPS_SCRIPT_URL_HERE')return null;
@@ -1150,13 +1240,30 @@ function selectInboxItem(id,allData){
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
             <div style="font-size:16px;font-weight:600;color:var(--tx)">AI Recommendation</div>
             <div style="flex:1"></div>
-            <button onclick="generateRecommendation('${ins.id}')" id="rec-btn-${ins.id}" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--primary);border-radius:6px;background:var(--surf);font-size:14px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit">
-              Actions
-              <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
+            <!-- Actions dropdown -->
+            <div style="position:relative" id="actions-menu-wrap-${ins.id}">
+              <button onclick="toggleActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--primary);border-radius:6px;background:var(--primary);font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">
+                Actions
+                <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="actions-menu-${ins.id}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--bd);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;z-index:50;overflow:hidden">
+                <div onclick="triageInsight('${ins.id}','validated');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#16a34a" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg> Validate
+                </div>
+                <div onclick="triageInsight('${ins.id}','rejected');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#dc2626;border-top:1px solid var(--bd2)" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background=''">
+                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject
+                </div>
+                <div onclick="openThemeAssign('${ins.id}');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#7c3aed;border-top:1px solid var(--bd2)" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background=''">
+                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg> Assign theme
+                </div>
+                <div onclick="generateRecommendation('${ins.id}');closeActionsMenu('${ins.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);border-top:1px solid var(--bd2)" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Regenerate AI rec
+                </div>
+              </div>
+            </div>
           </div>
-          <div id="rec-content-${ins.id}" style="background:#F5F9FF;border:1px solid var(--b-light);border-radius:4px;padding:14px;font-size:16px;color:var(--tx2);line-height:1.5">
-            ${ins.recommendation||'<span style="color:var(--di)">Click <strong>Actions</strong> to generate a product recommendation for this insight.</span>'}
+          <div id="rec-content-${ins.id}" style="background:#F5F9FF;border:1px solid var(--b-light);border-radius:4px;padding:14px;font-size:14px;color:var(--tx2);line-height:1.6">
+            ${ins.recommendation||'<span style="color:var(--di);font-size:13px">Generating recommendation…</span>'}
           </div>
         </div>
 
@@ -1198,6 +1305,12 @@ function selectInboxItem(id,allData){
       </div>
     </div>`;
 
+  // ── Auto-generate recommendation if not cached ───────────────
+  if (!ins.recommendation) {
+    // Small delay so DOM renders first
+    setTimeout(() => generateRecommendation(id), 100);
+  }
+
   // ── Right metadata sidebar ─────────────────────────────────
   function metaField(label, value, dropdown=false) {
     return `<div style="margin-bottom:20px">
@@ -1234,17 +1347,38 @@ function triageInsight(id,status,mergeTargetId=null){
   updateInsight(id,changes);
 }
 
+function toggleActionsMenu(id) {
+  // Close any other open menus first
+  document.querySelectorAll('[id^="actions-menu-"]').forEach(el => {
+    if (el.id !== 'actions-menu-'+id) el.style.display = 'none';
+  });
+  const menu = document.getElementById('actions-menu-'+id);
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+  if (menu) menu.style.flexDirection = 'column';
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function handler(e) {
+      const wrap = document.getElementById('actions-menu-wrap-'+id);
+      if (wrap && !wrap.contains(e.target)) {
+        if (menu) menu.style.display = 'none';
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 0);
+}
+function closeActionsMenu(id) {
+  const menu = document.getElementById('actions-menu-'+id);
+  if (menu) menu.style.display = 'none';
+}
+
 async function generateRecommendation(id){
   const all=loadAll();
   const ins=all.find(i=>i.id===id);if(!ins)return;
-  const btn=document.getElementById('rec-btn-'+id);
-  const content=document.getElementById('rec-content-'+id);
-  if(!btn||!content)return;
+  const contentEl=document.getElementById('rec-content-'+id);
+  if(!contentEl)return;
 
   // Show loading state
-  btn.disabled=true;
-  btn.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating…';
-  content.innerHTML='<span style="color:var(--di)">Claude is analysing this insight and generating a recommendation…</span>';
+  contentEl.innerHTML='<span style="color:var(--mu);font-size:13px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Generating recommendation…</span>';
 
   const prompt=`You are a senior product manager at GXM, a B2B global entity and payroll management platform.
 
@@ -1284,14 +1418,12 @@ Be direct and specific. Avoid generic advice. Write for a product team that will
     updateInsight(id,{recommendation:rec});
 
     // Render formatted recommendation
-    content.innerHTML=`<div style="font-size:14px;color:var(--tx);line-height:1.7;white-space:pre-wrap">${rec}</div>`;
-    btn.disabled=false;
-    btn.innerHTML='Regenerate <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    contentEl.innerHTML=`<div style="font-size:14px;color:var(--tx);line-height:1.7;white-space:pre-wrap">${rec}</div>`;
+    // done
   } catch(err){
     console.error('Recommendation error:',err);
-    content.innerHTML=`<span style="color:var(--r)">Failed: ${err.message}. Check your API key is configured in Apps Script.</span>`;
-    btn.disabled=false;
-    btn.innerHTML='Try again <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    contentEl.innerHTML=`<span style="color:var(--r);font-size:13px">Could not generate recommendation — check your API key in Apps Script.</span>`;
+    // done
   }
 }
 
@@ -1729,8 +1861,8 @@ function renderChannels(all){
 
 // Navigation
 const TAB_TITLES={inbox:'Insights Inbox',themes:'Themes',initiatives:'Initiatives',overview:'Overview',patterns:'Patterns & Trends',explorer:'Insight Explorer',ingest:'Add Insights'};
-const SB_IDS=['sb-overview','sb-patterns','sb-explorer','sb-inbox','sb-themes','sb-initiatives','sb-ingest'];
-const SB_TABS=['overview','patterns','explorer','inbox','themes','initiatives','ingest'];
+const SB_IDS=['sb-overview','sb-inbox','sb-themes','sb-patterns'];
+const SB_TABS=['overview','inbox','themes','patterns'];
 
 function showTab(tab){
   document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
@@ -1739,9 +1871,12 @@ function showTab(tab){
   document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
   const idx=SB_TABS.indexOf(tab);
   if(idx>=0){const el=document.getElementById(SB_IDS[idx]);if(el)el.classList.add('active');}
-  const titleEl=document.getElementById('page-title');
-  if(titleEl)titleEl.textContent=TAB_TITLES[tab]||tab;
-  if(tab==='explorer'){populateFilters();renderExplorer();}
+  const titles={overview:'Dashboard',inbox:'Insights',themes:'Themes',patterns:'Analytics',explorer:'Analytics',initiatives:'Initiatives',ingest:'Add Insights'};
+  const t=document.getElementById('page-title');if(t)t.textContent=titles[tab]||tab;
+  if(tab==='overview'){refreshWithSheets();}
+  else if(tab==='inbox'){renderInbox(loadAll());}
+  else if(tab==='themes'){renderThemes();}
+  else if(tab==='patterns'||tab==='explorer'){const all=loadAll();renderPatterns(getFiltered(all));renderExplorer();}
 }
 
 function onSearch(q){searchQ=q;refreshWithSheets();populateFilters();renderExplorer();}
@@ -1771,5 +1906,10 @@ function savePBEmail(){
   if(e){localStorage.setItem('gxm_pb_email',e);alert('Saved! Forward emails to this address.');}
 }
 
-// Init
-const savedPB=localStorag
+
+
+function setAnalyticsTab(tab, el) {
+  document.querySelectorAll('#analytics-tabs .page-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('analytics-charts').style.display = tab === 'charts' ? '' : 'none';
+  document.getElementById('analytics-explorer').style.display = tab === 'explore
