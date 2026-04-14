@@ -8,15 +8,15 @@
 <style>
 :root{color-scheme:light only}
 *{box-sizing:border-box;margin:0;padding:0;color-scheme:light only}
-html,body{background:#f8fafc;font-family:'Inter',-apple-system,sans-serif;color:#1e293b;font-size:14px;min-height:100vh}
+html,body{background:#f8fafc;font-family:'Inter',-apple-system,sans-serif;color:#1e293b;font-size:14px;min-height:100vh;margin:0;padding:0;width:100%}
 .topnav{background:#fff;border-bottom:1.5px solid #e2e8f0;padding:0 24px;display:flex;height:52px;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-mark{width:28px;height:28px;background:#1a9e6e;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
 .logo-name{font-size:14px;font-weight:600;color:#1e293b}
 .nav-link{font-size:13px;color:#64748b;text-decoration:none}
 .nav-link:hover{color:#1a9e6e}
-.page{padding:32px 24px;max-width:620px;margin:0 auto}
-.fc{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px}
+.page{padding:24px 16px;width:100%;box-sizing:border-box}
+.fc{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;width:100%;max-width:640px;margin:0 auto;box-sizing:border-box}
 /* Form header (guided mode) */
 .ftop{padding:24px 28px 0}
 .ftitle{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px}
@@ -98,6 +98,20 @@ button.bnxt:hover{background:#158a5e;border-color:#158a5e}
 .sico{width:52px;height:52px;border-radius:50%;background:rgba(26,158,110,.1);border:2px solid #1a9e6e;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .sico svg{width:24px;height:24px;stroke:#1a9e6e;stroke-width:2.5;fill:none}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ── Responsive ─────────────────────────── */
+@media(max-width:600px){
+  .page{padding:16px 12px}
+  .ftop{padding:18px 16px 0}
+  .fbody{padding:16px 16px}
+  .nav-row{padding:12px 16px}
+  .rgrid{grid-template-columns:1fr 1fr}
+  .sl-grid{grid-template-columns:1fr}
+  .topnav{padding:0 16px}
+}
+@media(max-width:400px){
+  .rgrid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -131,7 +145,7 @@ button.bnxt:hover{background:#158a5e;border-color:#158a5e}
 <script>
 // ── Config ──
 const STORAGE_KEY = 'gxm_insights_v1';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxd3kTZIvPKYt6c-xPfPYEnhpdMqskJjsU_viWdH6Oh_n-gDmlZ7JhytIVTV9hlukYpPw/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz5EBfgCeDVBaIo6qV0DCjTXsl395KNXXgtdAdXl9kBwxIUvJEAVFzKtxAZujgoJ69ETQ/exec';
 
 // ── Data ──
 const TIMES = ['About 1 min','About 50s','About 42s','About 34s','About 26s','About 18s','About 12s','About 6s','Almost done'];
