@@ -712,7 +712,7 @@ body{display:flex;height:100vh;overflow:hidden}
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
 const SK_INITIATIVES='gxm_initiatives_v1';
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbz5EBfgCeDVBaIo6qV0DCjTXsl395KNXXgtdAdXl9kBwxIUvJEAVFzKtxAZujgoJ69ETQ/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbwjyX9daqx3WBY0U3uArhr8hKYWAJ4tFCthJ23UaOdCnwkCubqNpOSUQrfOc_3yvRlL5Q/exec';
 let _sheetsConnected=false;
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
@@ -746,23 +746,41 @@ const DEMO=[],DEMO_THEMES=[],DEMO_INITIATIVES=[];
 function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]').map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:i.confidenceScore||0.7})).sort((a,b)=>(b.ts||0)-(a.ts||0));}catch(e){return[];}}
 // Fetch from Google Sheets and merge with localStorage + demo
 async function loadAllFromSheets(){
-  if(!SHEETS_URL||SHEETS_URL==='YOUR_APPS_SCRIPT_URL_HERE')return null;
+  if(!SHEETS_URL||SHEETS_URL==='YOUR_APPS_SCRIPT_URL_HERE'){_dataLoaded=true;return null;}
   try{
     const res=await fetch(SHEETS_URL+'?t='+Date.now());
-    const data=await res.json();
-    if(!data.ok||!Array.isArray(data.insights))return null;
-    _sheetsConnected=true;
-    _dataLoaded=true;
+    if(!res.ok){
+      console.error('Sheets HTTP error:',res.status,res.statusText);
+      _sheetsConnected=false;_dataLoaded=true;updateConnectionStatus(false);return null;
+    }
+    const text=await res.text();
+    let data;
+    try{data=JSON.parse(text);}catch(e){
+      console.error('Sheets JSON parse error. Raw response:',text.slice(0,300));
+      _sheetsConnected=false;_dataLoaded=true;updateConnectionStatus(false);return null;
+    }
+    console.log('Sheets response:',data.ok,'count:',data.count,'insights:',Array.isArray(data.insights)?data.insights.length:'not array');
+    if(!data.ok){
+      console.error('Sheets error:',data.error);
+      _sheetsConnected=false;_dataLoaded=true;updateConnectionStatus(false);return null;
+    }
+    const insights=Array.isArray(data.insights)?data.insights:[];
+    _sheetsConnected=true;_dataLoaded=true;
     updateConnectionStatus(true);
-    // Sheets is the single source of truth — sync to localStorage for offline
-    localStorage.setItem(SK,JSON.stringify(data.insights));
-    return data.insights.map(i=>({...i,status:i.status||'new',aiSummary:i.aiSummary||'',problemType:i.problemType||i.painPattern||'',jobToBeDone:i.jobToBeDone||i.trying||'',primaryTheme:i.primaryTheme||'',confidenceScore:i.confidenceScore||0.7,clusterId:i.clusterId||'',duplicateOf:i.duplicateOf||null})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    localStorage.setItem(SK,JSON.stringify(insights));
+    return insights.map(i=>({...i,
+      status:i.status||'new',
+      aiSummary:i.aiSummary||'',
+      problemType:i.problemType||i.painPattern||'',
+      jobToBeDone:i.jobToBeDone||i.trying||'',
+      primaryTheme:i.primaryTheme||'',
+      confidenceScore:parseFloat(i.confidenceScore)||0.7,
+      clusterId:i.clusterId||'',
+      duplicateOf:i.duplicateOf||null
+    })).sort((a,b)=>(b.ts||0)-(a.ts||0));
   }catch(e){
-    console.warn('Sheets fetch failed, using localStorage:',e);
-    _sheetsConnected=false;
-    _dataLoaded=true;
-    updateConnectionStatus(false);
-    return null;
+    console.error('Sheets fetch exception:',e.message);
+    _sheetsConnected=false;_dataLoaded=true;updateConnectionStatus(false);return null;
   }
 }
 
