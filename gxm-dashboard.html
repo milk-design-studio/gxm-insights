@@ -184,7 +184,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .d-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .drawer-similar{padding:16px 24px 24px;border-top:1.5px solid var(--bd)}
 .similar-title{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
-.similar-item{padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:border-color .13s}
+.similar-item{padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s;background:var(--surf)}
 .similar-item:hover{border-color:var(--g)}
 .similar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .similar-name{font-size:12.5px;font-weight:600;color:var(--tx)}
@@ -338,6 +338,19 @@ body{display:flex;height:100vh;overflow:hidden}
 .section#sec-patterns{padding:28px 32px;overflow-y:auto}
 /* Inbox fills full height, no padding (handles its own) */
 .section#sec-inbox{overflow:hidden}
+
+.d-header{padding:20px 24px;border-bottom:1.5px solid var(--bd);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
+.d-body{padding:20px 24px;flex:1;overflow-y:auto}
+.d-title{font-size:17px;font-weight:700;color:var(--tx);line-height:1.3}
+.d-section{margin-bottom:20px}
+.d-section-title{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bd2)}
+.d-field{margin-bottom:10px}
+.d-label{font-size:11px;font-weight:600;color:var(--mu);margin-bottom:3px}
+.d-val{font-size:13.5px;color:var(--tx);line-height:1.5}
+.d-quote{font-size:13.5px;color:var(--tx2);line-height:1.55;border-left:3px solid var(--primary);padding-left:12px;font-style:italic}
+.d-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.similar-item:hover{border-color:var(--primary);background:#f0fdf4;transform:translateX(2px)}
 </style>
 </head>
 <body>
@@ -1203,7 +1216,7 @@ function renderInbox(all){
   const renderRow=ins=>{
     const isSelected=_selectedInboxId===ins.id;
     const isPriority=ins.severity==='Critical'&&ins.frequency==='Always';
-    const title=ins.aiSummary||ins.pain||'—';
+    const title=ins.aiSummary||ins.trying||ins.jobToBeDone||ins.pain||'Untitled insight';
     const company=[ins.company,ins.firstName?ins.firstName+(ins.lastName?' '+ins.lastName:''):''].filter(Boolean).join(' · ');
     const excerpt=ins.pain&&ins.aiSummary&&ins.pain!==ins.aiSummary?ins.pain:(ins.trying||'');
     return `<div class="iq-row${isPriority?' iq-priority':''}${isSelected?' iq-selected':''}" onclick="selectInboxItem('${ins.id}')">
@@ -1342,6 +1355,11 @@ function selectInboxItem(id,allData){
           </div>
         </div>`;
 
+  // Auto-generate recommendation if not cached
+  if(!ins.recommendation){
+    setTimeout(()=>generateRecommendation(id), 150);
+  }
+
   // ── Right metadata sidebar ─────────────────────────────────
   function metaField(label, value, dropdown=false) {
     return `<div style="margin-bottom:20px">
@@ -1381,14 +1399,11 @@ function triageInsight(id,status,mergeTargetId=null){
 async function generateRecommendation(id){
   const all=loadAll();
   const ins=all.find(i=>i.id===id);if(!ins)return;
-  const btn=document.getElementById('rec-btn-'+id);
-  const content=document.getElementById('rec-content-'+id);
-  if(!btn||!content)return;
-
-  // Show loading state
-  btn.disabled=true;
-  btn.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating…';
-  content.innerHTML='<span style="color:var(--di)">Claude is analysing this insight and generating a recommendation…</span>';
+  const contentEl=document.getElementById('rec-content-'+id);
+  if(!contentEl)return;
+  // If already has recommendation, don't re-generate
+  if(ins.recommendation&&contentEl.textContent.trim()&&!contentEl.textContent.includes('Generating'))return;
+  contentEl.innerHTML='<span style="color:var(--mu);font-size:13px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Generating recommendation…</span>';
 
   const prompt=`You are a senior product manager at GXM, a B2B global entity and payroll management platform.
 
@@ -1432,14 +1447,12 @@ Be direct and specific. Avoid generic advice. Write for a product team that will
     updateInsight(id,{recommendation:rec});
 
     // Render formatted recommendation
-    content.innerHTML=`<div style="font-size:14px;color:var(--tx);line-height:1.7;white-space:pre-wrap">${rec}</div>`;
-    btn.disabled=false;
-    btn.innerHTML='Regenerate <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    contentEl.innerHTML=`<div style="font-size:14px;color:var(--tx);line-height:1.7;white-space:pre-wrap">${rec}</div>`;
+
   } catch(err){
     console.error('Recommendation error:',err);
-    content.innerHTML=`<span style="color:var(--r)">Failed: ${err.message}. Check your API key is configured in Apps Script.</span>`;
-    btn.disabled=false;
-    btn.innerHTML='Try again <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    contentEl.innerHTML=`<span style="color:var(--r);font-size:13px">${err.message}</span>`;
+
   }
 }
 
