@@ -860,7 +860,6 @@ function renderKPIs(all,f){
     ['activity-thead','activity-tbody'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
     return;
   }
-  if (!_dataLoaded || !all.length) return; // still loading, don't render yet
   if (es) es.style.display = 'none';
   if (kpiRow) kpiRow.style.display = '';
   const t=f.length,c=f.filter(i=>i.severity==='Critical').length;
@@ -1091,7 +1090,7 @@ function resetActivityFilters(){
 // ── PATTERNS ──
 function renderPatterns(f){
   if (!f.length) {
-    if (!_dataLoaded) return; // still loading
+    if (!_dataLoaded) { return; } // still loading, skip empty state
     const containers = ['matrix-container','sl-bars','cat-bars','area-bars'];
     containers.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
     const chartsEl = document.getElementById('analytics-charts');
@@ -1199,7 +1198,7 @@ function renderInbox(all){
   });
   const listEl=document.getElementById('inbox-list');
   if(!items.length){
-    if (!_dataLoaded) return; // still loading
+    if (!_dataLoaded) { listEl.innerHTML=''; return; } // still loading
     listEl.innerHTML = renderEmptyInbox(_inboxTab);
     document.getElementById('inbox-detail').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--di);font-size:13px">Select an insight to review</div>';
     document.getElementById('inbox-meta').innerHTML = '';
