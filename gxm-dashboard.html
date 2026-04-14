@@ -1340,7 +1340,7 @@ function selectInboxItem(id,allData){
           <div id="panel-contact-${ins.id}" style="display:none;padding:16px">
             ${(ins.firstName||ins.lastName||ins.company||ins.contactEmail)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${[['Name',[ins.firstName,ins.lastName].filter(Boolean).join(' ')],['Role',ins.role],['Company',ins.company],['Email',ins.contactEmail],['Submitted by',ins.submitterName],['Source',ins.sourceLabel]].filter(([,v])=>v).map(([l,v])=>`<div><div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">${l}</div><div style="font-size:13px;color:var(--tx)">${v}</div></div>`).join('')}</div>`:'<div style="text-align:center;padding:16px;color:var(--mu);font-size:13px">No contact information captured</div>'}
           </div>
-        </div>
+        </div>`;
 
   // ── Right metadata sidebar ─────────────────────────────────
   function metaField(label, value, dropdown=false) {
