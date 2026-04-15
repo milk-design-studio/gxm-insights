@@ -723,7 +723,7 @@ body{display:flex;height:100vh;overflow:hidden}
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
 const SK_INITIATIVES='gxm_initiatives_v1';
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbwgadBmcfdWHiMrKV4oiXixUklTU-c8V_0PsY6lYnLroykYUoJCRelk8sks3OU3GCzh-A/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbxZ5PK_ors6gSVhbloaNKiKAxiyA7r6cgx2DhLs24GY4yPG9xy0e4quY2XyzlAxBmidpQ/exec';
 let _sheetsConnected=false,_dataLoaded=false;
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
 const SEV_BG={Critical:'rgba(220,38,38,.1)',Significant:'rgba(217,119,6,.1)',Minor:'rgba(26,158,110,.1)'};
@@ -1103,7 +1103,7 @@ function renderActivityTable(){
   tbody.innerHTML=rows.map(i=>{
     const sv=SEV_C[i.severity]||'#888';
     const svBg=SEV_BG[i.severity]||'#eee';
-    const painText=(i.aiSummary||i.pain||'—');
+    const painText=(isValidSummary(i.aiSummary)?i.aiSummary:'')||i.pain||'—';
     const painShort=painText.length>58?painText.slice(0,58)+'…':painText;
     const isPriority=i.severity==='Critical'&&i.frequency==='Always';
     const rowBg=isPriority?'background:#fffcfc':'';
@@ -1216,9 +1216,10 @@ function renderInbox(all){
   const renderRow=ins=>{
     const isSelected=_selectedInboxId===ins.id;
     const isPriority=ins.severity==='Critical'&&ins.frequency==='Always';
-    const title=ins.aiSummary||ins.trying||ins.jobToBeDone||ins.pain||'Untitled insight';
+    const rawSummary=isValidSummary(ins.aiSummary)?ins.aiSummary:'';
+    const title=rawSummary||ins.trying||ins.jobToBeDone||ins.pain||'Untitled insight';
     const company=[ins.company,ins.firstName?ins.firstName+(ins.lastName?' '+ins.lastName:''):''].filter(Boolean).join(' · ');
-    const excerpt=ins.pain&&ins.aiSummary&&ins.pain!==ins.aiSummary?ins.pain:(ins.trying||'');
+    const excerpt=ins.pain&&rawSummary&&ins.pain!==rawSummary?ins.pain:(ins.trying||'');
     return `<div class="iq-row${isPriority?' iq-priority':''}${isSelected?' iq-selected':''}" onclick="selectInboxItem('${ins.id}')">
       <div class="iq-row-title">${title}</div>
       ${company?`<div class="iq-row-company">${company}</div>`:''}
