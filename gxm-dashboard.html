@@ -90,8 +90,8 @@ body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,Blin
 .card.full{grid-column:1/-1}
 .card-title{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px}
 .card-sub{font-size:11px;color:var(--mu);margin-bottom:14px}
-.donut-wrap{display:flex;align-items:center;gap:16px}
-.donut-leg{display:flex;flex-direction:column;gap:8px;flex:1}
+.donut-wrap{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+.donut-leg{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px 16px;justify-content:center}
 .donut-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu)}
 .dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
@@ -720,7 +720,7 @@ function renderOverviewCharts() {
       <div class="card-title">By source</div>
       <div class="card-sub">Contribution per channel</div>
       <div class="donut-wrap">
-        <canvas id="source-chart" width="140" height="140" style="flex-shrink:0"></canvas>
+        <canvas id="source-chart" style="width:100%;max-height:180px"></canvas>
         <div class="donut-leg">${srcLabels.map((l,i)=>`<div class="donut-row"><div class="dl-dot" style="background:${SRC_COLORS[i%SRC_COLORS.length]}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${srcData[i]}</span></div>`).join('')}</div>
       </div>
     </div>
@@ -728,7 +728,7 @@ function renderOverviewCharts() {
       <div class="card-title">Severity</div>
       <div class="card-sub">Distribution across insights</div>
       <div class="donut-wrap">
-        <canvas id="sev-chart" width="140" height="140" style="flex-shrink:0"></canvas>
+        <canvas id="sev-chart" style="width:100%;max-height:180px"></canvas>
         <div class="donut-leg">${sevLabels.map((l,i)=>`<div class="donut-row"><div class="dl-dot" style="background:${sevColors[l]||SRC_COLORS[i]}"></div><span>${l}</span><span style="margin-left:auto;font-weight:700;color:var(--tx)">${sevData[i]}</span></div>`).join('')}</div>
       </div>
     </div>`;
@@ -737,11 +737,11 @@ function renderOverviewCharts() {
 
   charts['source-chart'] = new Chart(document.getElementById('source-chart'), {
     type:'doughnut', data:{labels:srcLabels,datasets:[{data:srcData,backgroundColor:SRC_COLORS,borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:false,cutout:'65%',plugins:{legend:{display:false}}}
+    options:{responsive:true,maintainAspectRatio:true,cutout:'60%',plugins:{legend:{display:false}}}
   });
   charts['sev-chart'] = new Chart(document.getElementById('sev-chart'), {
     type:'doughnut', data:{labels:sevLabels,datasets:[{data:sevData,backgroundColor:sevLabels.map(l=>sevColors[l]||'#888'),borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:false,cutout:'65%',plugins:{legend:{display:false}}}
+    options:{responsive:true,maintainAspectRatio:true,cutout:'60%',plugins:{legend:{display:false}}}
   });
   renderTrendChart('severity');
   document.getElementById('tmode-severity').classList.add('btn-primary');
