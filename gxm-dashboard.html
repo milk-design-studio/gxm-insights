@@ -1902,19 +1902,77 @@ const SB_TABS=['overview','inbox','themes','patterns'];
 
 function renderMarkdown(text) {
   if (!text) return '';
-  return text
-    // ## Heading 2
-    .replace(/^## (.+)$/gm, '<div style="font-size:13px;font-weight:700;color:var(--tx);text-transform:uppercase;letter-spacing:.06em;margin-top:18px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--bd2)">$1</div>')
-    // ### Heading 3
-    .replace(/^### (.+)$/gm, '<div style="font-size:13px;font-weight:700;color:var(--tx);margin-top:12px;margin-bottom:4px">$1</div>')
-    // **bold**
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    // - bullet points
-    .replace(/^- (.+)$/gm, '<div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--primary);font-weight:700;flex-shrink:0">·</span><span>$1</span></div>')
-    // blank lines → spacing
-    .replace(/\n\n/g, '<div style="height:8px"></div>')
-    // remaining newlines
-    .replace(/\n/g, '<br>');
+  // Split into lines and process
+  const lines = text.split('\n');
+  let html = '';
+  let inBulletBlock = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // # Title (h1) — document title, style as a subtle label above
+    if (/^# /.test(line)) {
+      if (inBulletBlock) { html += '</div>'; inBulletBlock = false; }
+      const title = line.replace(/^# /, '');
+      html += `<div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">${title}</div>`;
+
+    // ## Section heading — card-style section
+    } else if (/^## /.test(line)) {
+      if (inBulletBlock) { html += '</div>'; inBulletBlock = false; }
+      const heading = line.replace(/^## /, '');
+      // Add spacing before sections (except first)
+      const isFirst = !html.includes('rec-section');
+      html += `<div class="rec-section" style="background:#f8fafc;border:1px solid var(--bd);border-radius:6px;padding:12px 14px;margin-bottom:10px${isFirst?'':';margin-top:4px'}">
+        <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px">${getSectionIcon(heading)}<span>${heading}</span></div>
+        <div class="rec-section-body" style="font-size:13px;color:var(--tx2);line-height:1.65">`;
+
+    // ### Sub-heading
+    } else if (/^### /.test(line)) {
+      const h = line.replace(/^### /, '');
+      html += `<div style="font-size:12px;font-weight:700;color:var(--tx);margin-top:8px;margin-bottom:3px">${h}</div>`;
+
+    // - bullet
+    } else if (/^- /.test(line)) {
+      const bullet = line.replace(/^- /, '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html += `<div style="display:flex;gap:8px;margin-bottom:5px"><span style="color:var(--primary);font-weight:700;flex-shrink:0;margin-top:1px">·</span><span>${bullet}</span></div>`;
+
+    // blank line — close section if open
+    } else if (line.trim() === '') {
+      // ignore bare blank lines inside sections
+
+    // regular paragraph text
+    } else {
+      const para = line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html += `<div style="margin-bottom:4px">${para}</div>`;
+    }
+  }
+
+  // Close any open section div
+  if (html.includes('<div class="rec-section"')) {
+    // Count opens vs closes
+    const opens = (html.match(/rec-section-body/g)||[]).length;
+    const closes = (html.match(/rec-section-body[\s\S]*?<\/div>/g)||[]).length;
+    // Ensure sections are closed
+    const unclosed = html.split('<div class="rec-section-body"').length - 1 -
+                     (html.match(/<\/div>\s*<\/div>\s*(?=<div class="rec-section"|$)/g)||[]).length;
+    // Simple close: add closing tags for last open section
+    html += '</div></div>';
+  }
+
+  return html;
+}
+
+function getSectionIcon(heading) {
+  const h = heading.toLowerCase();
+  if (h.includes('root cause') || h.includes('cause'))
+    return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  if (h.includes('action') || h.includes('recommended'))
+    return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>';
+  if (h.includes('priority') || h.includes('rationale'))
+    return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>';
+  if (h.includes('success') || h.includes('metric'))
+    return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
+  return '<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/></svg>';
 }
 
 async function enrichInsight(id) {
