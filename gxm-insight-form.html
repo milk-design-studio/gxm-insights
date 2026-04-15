@@ -436,8 +436,8 @@ function pickServiceLine(k) { ans.serviceLine=k; ans._esl=false; ans.trying=''; 
 function pickGoal(idx) { const sl=SERVICE_LINES.find(s=>s.k===ans.serviceLine); ans.trying=(sl?sl.jobs:[])[idx]; ans._goalIsCustom=false; ans._customTrying=''; ans._et=false; renderStep(); }
 function pickGoalOther() { ans._goalIsCustom=true; ans.trying=''; ans._et=false; renderStep(); setTimeout(()=>{const el=document.getElementById('f-trying-custom');if(el)el.focus();},50); }
 function pickFriction(cat) { ans.frictionCat=cat; ans._efriction=false; ans._efrcat=false; if(cat!=='Other') ans._customFriction=''; renderStep(); setTimeout(()=>{if(cat==='Other'){const el=document.getElementById('f-friction-custom');if(el)el.focus();}},50); }
-function pickSev(k) { ans.severity=k; ans._esev=false; renderStep(); setTimeout(()=>advance(),300); }
-function pickFreq(k) { ans.frequency=k; ans._efreq=false; renderStep(); setTimeout(()=>advance(),300); }
+function pickSev(k) { ans.severity=k; ans._esev=false; renderStep(); }
+function pickFreq(k) { ans.frequency=k; ans._efreq=false; renderStep(); }
 
 // ── Guided validation ──
 function validate() {
