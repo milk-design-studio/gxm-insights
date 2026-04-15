@@ -762,8 +762,9 @@ async function doSubmit(prebuiltRec) {
 
   showChrome(false);
 
-  // Guided mode: enrich with Claude first
-  if (!prebuiltRec) {
+  // Always enrich — guided needs aiSummary, transcript may already have it but needs recommendation
+  const needsEnrich = !prebuiltRec || !rec.aiSummary || rec.aiSummary.length < 15;
+  if (needsEnrich) {
     showLoading('Claude is analysing your insight…', 'Classifying the GXM area and generating a summary.');
     try {
       const enrichRes = await fetch(SHEETS_URL, {
@@ -774,19 +775,47 @@ async function doSubmit(prebuiltRec) {
       const enrichData = await enrichRes.json();
       if (enrichData.ok && enrichData.enriched) {
         const en = enrichData.enriched;
-        rec.relatedFeature  = en.relatedFeature  || '';
-        rec.aiSummary       = en.aiSummary        || '';
-        rec.problemType     = en.problemType      || '';
-        rec.jobToBeDone     = en.jobToBeDone      || '';
-        rec.confidenceScore = en.confidenceScore  || 0.7;
+        rec.relatedFeature  = en.relatedFeature  || rec.relatedFeature || '';
+        rec.aiSummary       = en.aiSummary        || rec.aiSummary || '';
+        rec.problemType     = en.problemType      || rec.problemType || '';
+        rec.jobToBeDone     = en.jobToBeDone      || rec.jobToBeDone || '';
+        rec.confidenceScore = en.confidenceScore  || rec.confidenceScore || 0.7;
       } else {
-        rec.aiSummary = (rec.pain || '').slice(0, 120);
+        rec.aiSummary = rec.aiSummary || (rec.pain || '').slice(0, 120);
       }
     } catch (err) {
-      rec.aiSummary = (rec.pain || '').slice(0, 120);
+      rec.aiSummary = rec.aiSummary || (rec.pain || '').slice(0, 120);
     }
-    showLoading('Saving insight…', 'Almost done.');
   }
+
+  // Generate recommendation at submission time so dashboard has it immediately
+  showLoading('Generating product recommendation…', 'Claude is creating actionable next steps.');
+  try {
+    const recPrompt = `GXM senior PM. Insight: ${rec.aiSummary||rec.pain||''} | ${rec.serviceLine||''} | ${rec.severity||''} ${rec.frequency||''} | ${rec.relatedFeature||''}${rec.quote?' | Quote: "'+rec.quote+'"':''}.
+
+Reply with 4 short sections using ## headers:
+## Root Cause
+## Recommended Action
+## Priority Rationale
+## Success Metric
+
+Be specific and direct. Max 300 words total.`;
+
+    const recRes = await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'generateRecommendation', prompt: recPrompt, insightId: rec.id }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const recData = await recRes.json();
+    if (recData.ok && recData.recommendation) {
+      rec.recommendation = recData.recommendation;
+    }
+  } catch (err) {
+    console.warn('Recommendation generation failed:', err);
+    // Non-fatal — dashboard will generate on demand
+  }
+
+  showLoading('Saving insight…', 'Almost done.');
 
   // Save to localStorage
   const all = loadAll();

@@ -6,7 +6,7 @@
 <title>GXM Insight Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<style>
+<style><style>
 /* ── CSS PLACEHOLDER — filled by Python ── */
 :root{
   color-scheme:light only;
@@ -35,9 +35,7 @@
 }
 html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,sans-serif;font-size:14px;margin:0;padding:0;color-scheme:light only;display:flex;height:100vh;overflow:hidden}
 *{box-sizing:border-box;margin:0;padding:0}
-.shell{display:flex;height:100vh;overflow:hidden;width:100%}
 .sidebar{width:276px;background:#FFFFFF;border-right:1px solid #DFE7EF;flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .sb-logo{padding:20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
 .sb-mark{width:30px;height:30px;background:var(--primary);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
 .sb-name{font-size:14px;font-weight:700;color:#1F2937;line-height:1.2}
@@ -67,7 +65,6 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .btn-green:hover{background:#158a5e;border-color:#158a5e;color:#fff}
 .btn-red{background:var(--r);border-color:var(--r);color:#fff}
 .btn-red:hover{background:#b91c1c;border-color:#b91c1c;color:#fff}
-.section{display:none}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 /* KPI row */
 .kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:24px}
@@ -122,8 +119,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .score-high{background:rgba(220,38,38,.3);color:#fca5a5;border:1px solid rgba(220,38,38,.4)}
 .score-med{background:rgba(217,119,6,.3);color:#fcd34d;border:1px solid rgba(217,119,6,.4)}
 .score-low{background:rgba(26,158,110,.3);color:#4ade80;border:1px solid rgba(74,222,128,.4)}
-.ai-rec-body{font-size:12px;color:rgba(255,255,255,.6);line-height:1.55}
-.ai-rec-meta{display:flex;gap:12px;margin-top:8px}
+.ai-rec-.ai-rec-meta{display:flex;gap:12px;margin-top:8px}
 .ai-meta-chip{font-size:10.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px}
 .ai-meta-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
 .ai-loading{color:rgba(255,255,255,.4);font-size:13px;padding:20px 0;text-align:center}
@@ -172,8 +168,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 .drawer-close{background:none;border:none;cursor:pointer;color:var(--mu);padding:4px;border-radius:6px;transition:background .13s;margin-top:2px;flex-shrink:0}
 .drawer-close:hover{background:#f1f5f9;color:var(--tx)}
 .drawer-close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;display:block}
-.drawer-body{padding:22px 26px;flex:1}
-.d-section{margin-bottom:24px}
+.drawer-.d-section{margin-bottom:24px}
 .d-section-title{font-size:11px;font-weight:600;color:var(--mu);letter-spacing:.04em;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--bd)}
 .d-field{margin-bottom:14px}
 .d-label{font-size:11.5px;font-weight:600;color:var(--mu);margin-bottom:4px}
@@ -324,9 +319,8 @@ html,body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system
 
 
 /* ── Layout fixes ── */
-body{display:flex;height:100vh;overflow:hidden}
-.shell{display:flex;width:100%;height:100vh;overflow:hidden}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.shell{display:flex;width:100%;height:100vh;overflow:hidden}
 .page{flex:1;overflow:hidden;display:flex;flex-direction:column;width:100%;min-height:0}
 .section{display:none;flex:1;min-height:0;box-sizing:border-box}
 .section.active{display:flex;flex-direction:column}
@@ -338,8 +332,7 @@ body{display:flex;height:100vh;overflow:hidden}
 .section#sec-inbox{overflow:hidden}
 
 .d-header{padding:20px 24px;border-bottom:1.5px solid var(--bd);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
-.d-body{padding:20px 24px;flex:1;overflow-y:auto}
-.d-title{font-size:17px;font-weight:700;color:var(--tx);line-height:1.3}
+.d-.d-title{font-size:17px;font-weight:700;color:var(--tx);line-height:1.3}
 .d-section{margin-bottom:20px}
 .d-section-title{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bd2)}
 .d-field{margin-bottom:10px}
@@ -1408,9 +1401,20 @@ async function generateRecommendation(id){
   const ins=all.find(i=>i.id===id);if(!ins)return;
   const contentEl=document.getElementById('rec-content-'+id);
   if(!contentEl)return;
-  // If already has a valid recommendation, don't re-generate
+  // Check if we already tried generating for this insight this session
+  const recTriedKey = 'gxm_rec_tried';
+  const recTried = JSON.parse(localStorage.getItem(recTriedKey)||'[]');
   const validRec = ins.recommendation && typeof ins.recommendation === 'string' && ins.recommendation.length > 30;
-  if(validRec && contentEl.textContent.trim() && !contentEl.textContent.includes('Generating'))return;
+  if(validRec) {
+    contentEl.innerHTML = '<div style="font-size:14px;color:var(--tx);line-height:1.7">' + renderMarkdown(ins.recommendation) + '</div>';
+    return;
+  }
+  if(recTried.includes(id)) {
+    contentEl.innerHTML = '<span style="color:var(--mu);font-size:13px">Could not generate — try refreshing.</span>';
+    return;
+  }
+  recTried.push(id);
+  localStorage.setItem(recTriedKey, JSON.stringify(recTried));
   contentEl.innerHTML='<span style="color:var(--mu);font-size:13px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Generating recommendation…</span>';
 
   const prompt=`You are a senior product manager at GXM, a B2B global entity and payroll management platform.
@@ -1978,9 +1982,18 @@ function getSectionIcon(heading) {
 }
 
 async function enrichInsight(id) {
+  // Prevent re-enriching the same insight in this session or if already tried
+  const triedKey = 'gxm_enrich_tried';
+  const tried = JSON.parse(localStorage.getItem(triedKey)||'[]');
+  if (tried.includes(id)) return;
+  // Mark as tried immediately to prevent concurrent calls
+  tried.push(id);
+  localStorage.setItem(triedKey, JSON.stringify(tried));
+
   const all = loadAll();
   const ins = all.find(i => i.id === id);
-  if (!ins || ins.aiSummary) return;
+  if (!ins) return;
+  if (isValidSummary(ins.aiSummary)) return; // already has a good summary
   if (!SHEETS_URL || SHEETS_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
   try {
     const res = await fetch(SHEETS_URL, {
