@@ -1547,12 +1547,7 @@ function openDrawer(id) {
         <div><div class="d-label">Theme</div><div class="d-val" style="color:var(--primary)">${ins.primaryTheme||'—'}</div></div>
       </div>
     </div>
-    ${ins.firstName||ins.company?`<div class="d-section">
-      <div class="d-label">CONTACT</div>
-      <div class="d-grid2">
-        ${[[ins.firstName,ins.lastName].filter(Boolean).join(' '),'Name'],[ins.role,'Role'],[ins.company,'Company'],[ins.contactEmail,'Email']].filter(([v])=>v).map(([v,l])=>`<div><div class="d-label">${l}</div><div class="d-val">${v}</div></div>`).join('')}
-      </div>
-    </div>`:''}
+    ${ins.firstName||ins.company?(()=>{const fields=[[[ins.firstName,ins.lastName].filter(Boolean).join(' '),'Name'],[ins.role,'Role'],[ins.company,'Company'],[ins.contactEmail,'Email']].filter(([v])=>v).map(([v,l])=>`<div><div class="d-label">${l}</div><div class="d-val">${v}</div></div>`).join('');return`<div class="d-section"><div class="d-label">CONTACT</div><div class="d-grid2">${fields}</div></div>`;})():''}
     <div style="height:16px"></div>
   `;
 
