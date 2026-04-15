@@ -523,6 +523,17 @@ let _actSort={col:'ts',dir:-1};
 let _selectedInboxId=null;
 
 // ── Data ───────────────────────────────────────────────────────
+function isValidSummary(s) {
+  if (!s) return false;
+  const str = String(s).trim().toLowerCase();
+  if (str.length < 15) return false;
+  if (/^[\d.]+$/.test(str)) return false;
+  const BAD = ['transcript','guided','new','validated','rejected','in_review',
+               'merged','actioned','resolved','clustered'];
+  if (BAD.includes(str)) return false;
+  return true;
+}
+
 function loadAll(){
   try{
     return JSON.parse(localStorage.getItem(SK)||'[]')
@@ -903,7 +914,7 @@ function renderInbox() {
 function renderRow(ins) {
   const isSelected = _selectedInboxId === ins.id;
   const isPriority = ins.severity === 'Critical' && ins.frequency === 'Always';
-  const title = ins.aiSummary && ins.aiSummary.length > 10 ? ins.aiSummary
+  const title = isValidSummary(ins.aiSummary) ? ins.aiSummary
     : ins.trying || ins.jobToBeDone || ins.pain || 'Untitled insight';
   const company = [ins.company, ins.firstName ? ins.firstName+(ins.lastName?' '+ins.lastName:'') : ''].filter(Boolean).join(' · ');
   const excerpt = ins.pain && ins.pain !== ins.aiSummary ? ins.pain : (ins.trying||'');
@@ -977,7 +988,7 @@ function selectInboxItem(id) {
         <div class="iqd-section-label" style="margin-bottom:0">AI Summary</div>
       </div>
       <div class="iqd-ai-box" id="summary-content-${ins.id}">
-        ${ins.aiSummary && ins.aiSummary.length > 5
+        ${isValidSummary(ins.aiSummary)
           ? ins.aiSummary
           : '<span style="color:var(--mu);font-size:13px">Generating summary…</span>'}
       </div>
@@ -1049,7 +1060,7 @@ function selectInboxItem(id) {
 
   // Auto-generate AI content if missing (once per session)
   const enrich_tried = JSON.parse(localStorage.getItem('gxm_enrich_tried')||'[]');
-  if (!ins.aiSummary && !enrich_tried.includes(ins.id) && (ins.pain||ins.trying)) {
+  if (!isValidSummary(ins.aiSummary) && !enrich_tried.includes(ins.id) && (ins.pain||ins.trying)) {
     enrich_tried.push(ins.id);
     localStorage.setItem('gxm_enrich_tried', JSON.stringify(enrich_tried));
     setTimeout(() => enrichInsight(ins.id), 400);
@@ -1255,7 +1266,7 @@ Be specific and direct. Max 300 words total.`;
 async function enrichInsight(id) {
   const all = loadAll();
   const ins = all.find(i => i.id === id);
-  if (!ins || ins.aiSummary) return; // Only enrich if truly empty
+  if (!ins || isValidSummary(ins.aiSummary)) return; // Skip if already has valid summary
   if (!SHEETS_URL) return;
   try {
     const res = await fetch(SHEETS_URL, {
@@ -1526,7 +1537,7 @@ function openDrawer(id) {
   document.getElementById('d-title').textContent=ins.jobToBeDone||ins.trying||ins.aiSummary||ins.pain||'Insight';
   document.getElementById('d-body').innerHTML=`
     <div class="d-section">
-      ${ins.aiSummary?`<div class="d-label">AI SUMMARY</div><div style="font-size:14px;background:var(--b-bg);border:1px solid var(--b-light);border-radius:6px;padding:12px;color:var(--tx);line-height:1.6;margin-bottom:16px">${ins.aiSummary}</div>`:''}
+      ${isValidSummary(ins.aiSummary)?`<div class="d-label">AI SUMMARY</div><div style="font-size:14px;background:var(--b-bg);border:1px solid var(--b-light);border-radius:6px;padding:12px;color:var(--tx);line-height:1.6;margin-bottom:16px">${ins.aiSummary}</div>`:''}
       <div class="d-label">WHAT HAPPENED</div>
       <div class="d-val" style="margin-bottom:12px">${ins.pain||'—'}</div>
       ${ins.quote?`<div class="d-label">DIRECT QUOTE</div><div class="d-quote">${ins.quote}</div>`:''}
