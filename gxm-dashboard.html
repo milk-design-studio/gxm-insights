@@ -74,7 +74,7 @@ body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,Blin
 .btn-primary:hover{opacity:.9;color:#fff}
 
 /* ── KPI Cards ── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.kpi-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-bottom:20px}
 .kpi{background:var(--surf);border:1px solid var(--bd);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;transition:box-shadow .15s}
 .kpi:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .kpi-accent{position:absolute;top:0;left:0;width:3px;height:100%}
@@ -96,7 +96,7 @@ body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,Blin
 .dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* ── Activity table ── */
-.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:380px}
+.tbl-wrap{overflow-x:auto}
 .itbl{width:100%;border-collapse:collapse}
 .itbl th{font-size:11px;font-weight:600;color:var(--mu);text-align:left;padding:9px 12px;border-bottom:1.5px solid var(--bd);white-space:nowrap;background:var(--surf);position:sticky;top:0;z-index:1;letter-spacing:.02em;cursor:pointer;user-select:none}
 .itbl th:hover{color:var(--tx)}
@@ -158,7 +158,6 @@ body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,Blin
 .iqd-ai-box{background:var(--b-bg);border:1px solid var(--b-light);border-radius:6px;padding:14px;font-size:14px;color:var(--tx);line-height:1.65;min-height:52px}
 .iqd-rec-section{background:#f8fafc;border:1px solid var(--bd);border-radius:6px;padding:12px 14px;margin-bottom:8px}
 .iqd-rec-label{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.iqd-rec-body{font-size:13px;color:var(--tx2);line-height:1.65}
 .triage-row{display:flex;gap:8px;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);margin-bottom:20px}
 .triage-btn{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bd);background:#fff;color:var(--mu);font-family:inherit;transition:all .12s}
 .triage-btn:hover{border-color:var(--primary);color:var(--primary)}
@@ -229,7 +228,6 @@ body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,Blin
 .drawer{position:fixed;right:0;top:0;bottom:0;width:500px;background:var(--surf);border-left:1.5px solid var(--bd);z-index:101;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
 .drawer.open{transform:translateX(0)}
 .d-header{padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;gap:12px;flex-shrink:0;position:sticky;top:0;background:var(--surf);z-index:1}
-.d-body{padding:20px 24px;flex:1}
 .d-title{font-size:17px;font-weight:700;color:var(--tx);line-height:1.3}
 .d-section{margin-bottom:20px}
 .d-label{font-size:11px;font-weight:600;color:var(--mu);margin-bottom:3px}
@@ -639,7 +637,7 @@ function renderKPIs() {
   const valPct = all.length ? Math.round(validated/all.length*100) : 0;
 
   const kpis = [
-    { label:'Total insights', val:all.length, sub:`${awaiting} awaiting triage`, accent:'#188A42' },
+    { label:'Total insights', val:all.length, sub:`${awaiting} awaiting triage`, accent:'#2563eb' },
     { label:'Critical', val:critical, sub:`${critPct}% of total`, accent:'#dc2626' },
     { label:'Validated', val:validated, sub:`${valPct}% triage rate`, accent:'#16a34a' },
     { label:'Recurring issues', val:recurring, sub:'happening always', accent:'#d97706' },
@@ -668,17 +666,15 @@ function renderKPIs() {
   const form = all.filter(i => i.captureMethod !== 'transcript').length;
   const transcript = all.filter(i => i.captureMethod === 'transcript').length;
   const tPct = all.length ? Math.round(transcript/all.length*100) : 0;
-  const existingExtra = document.getElementById('kpi-extra');
-  const extraEl = existingExtra || document.createElement('div');
-  extraEl.id = 'kpi-extra';
-  extraEl.style.cssText = 'margin-bottom:20px';
-  extraEl.innerHTML = `<div class="kpi" style="max-width:280px;display:inline-flex;flex-direction:column">
-    <div class="kpi-accent" style="background:#8b5cf6"></div>
-    <div class="kpi-label"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#8b5cf6;fill:none;stroke-width:2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Capture method</div>
-    <div style="font-size:14px;font-weight:700;color:var(--tx)"><strong>${form}</strong> form &nbsp;<strong>${transcript}</strong> transcript</div>
+  // Append capture method card directly into the kpi-row
+  const kpiRow = document.getElementById('kpi-row');
+  const captureCard = `<div class="kpi">
+    <div class="kpi-accent" style="background:#0891b2"></div>
+    <div class="kpi-label"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#0891b2;fill:none;stroke-width:2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Capture method</div>
+    <div class="kpi-val" style="font-size:20px;color:#0891b2">${form}<span style="font-size:13px;font-weight:500;color:var(--mu);margin-left:3px">form</span> ${transcript}<span style="font-size:13px;font-weight:500;color:var(--mu);margin-left:3px">transcript</span></div>
     <div class="kpi-sub">${tPct}% via transcript</div>
   </div>`;
-  if (!existingExtra) document.getElementById('kpi-row').after(extraEl);
+  kpiRow.innerHTML = kpiRow.innerHTML + captureCard;
 }
 
 function destroyChart(id) {
@@ -699,6 +695,7 @@ function renderOverviewCharts() {
   const sevColors = { Critical:'#dc2626', Significant:'#d97706', Minor:'#16a34a' };
   const SRC_COLORS = ['#188A42','#2563eb','#d85a30','#7f77dd','#d97706','#6b7280'];
 
+  el.className = 'chart-row';
   el.innerHTML = `
     <div class="card">
       <div class="card-title">Insights over time</div>
