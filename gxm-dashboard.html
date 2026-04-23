@@ -507,7 +507,7 @@ body{background:var(--bg);color:var(--tx);font-family:"Inter",-apple-system,Blin
 const SK='gxm_insights_v1';
 const SK_THEMES='gxm_themes_v1';
 const SK_INITIATIVES='gxm_initiatives_v1';
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbxZ5PK_ors6gSVhbloaNKiKAxiyA7r6cgx2DhLs24GY4yPG9xy0e4quY2XyzlAxBmidpQ/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbwVL_WJo8aqigWBO_8-eUCGToFVgzWYc37wIUp0J3JdiTeDSEBQIs4WF02bA2iLG1arvQ/exec';
 let _sheetsConnected=false;
 const _enriching=new Set();
 const SEV_C={Critical:'#dc2626',Significant:'#d97706',Minor:'#16a34a'};
@@ -1107,6 +1107,15 @@ function renderMetaSidebar(ins) {
       <div class="conf-bar"><div class="conf-fill" style="width:${Math.round((ins.confidenceScore||0.7)*100)}%"></div></div>
       <div style="font-size:11px;color:var(--mu);margin-top:3px">${Math.round((ins.confidenceScore||0.7)*100)}%</div>
     </div>
+    ${(()=>{
+      if (!ins.sessionId) return '';
+      const siblings = loadAll().filter(i => i.sessionId === ins.sessionId && i.id !== ins.id);
+      if (!siblings.length) return '';
+      return `<div style="margin-top:4px;padding-top:14px;border-top:1px solid var(--bd)">
+        <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">From same call (${siblings.length})</div>
+        ${siblings.map(s=>`<div onclick="selectInboxItem('${s.id}')" style="padding:8px 10px;border:1px solid var(--bd);border-radius:6px;margin-bottom:6px;cursor:pointer;font-size:12px;color:var(--tx);line-height:1.4;transition:all .12s" onmouseover="this.style.borderColor='var(--primary)';this.style.background='var(--primary-bg)'" onmouseout="this.style.borderColor='var(--bd)';this.style.background='#fff'">${(s.aiSummary||s.pain||'Insight').slice(0,60)}…</div>`).join('')}
+      </div>`;
+    })()}
   `;
 }
 
