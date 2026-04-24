@@ -145,7 +145,7 @@ button.bnxt:hover{background:#158a5e;border-color:#158a5e}
 <script>
 // ── Config ──
 const STORAGE_KEY = 'gxm_insights_v1';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwVL_WJo8aqigWBO_8-eUCGToFVgzWYc37wIUp0J3JdiTeDSEBQIs4WF02bA2iLG1arvQ/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyP5af0Izf7K21reqCt80LBkRRKVO7sqqPNDBDRROPKEY5_i_EVtc1Dlc1A_w_kH6otQw/exec';
 
 // ── Data ──
 const TIMES = ['About 1 min','About 50s','About 42s','About 34s','About 26s','About 18s','About 12s','About 6s','Almost done'];
@@ -181,8 +181,8 @@ let mode = null;        // null = mode select | 'guided' | 'transcript'
 let cur = 0;
 let ans = {};
 let extracted = null;
-let extractedInsights = [];
-let extractedSessionId = null;  // transcript extraction result
+var extractedInsights = [];
+var extractedSessionId = null;  // transcript extraction result
 
 // ── Helpers ──
 function radio(label, sub, selected, onclick) {
@@ -511,31 +511,13 @@ function showTranscriptPaste() {
       </button>
       <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:6px">Paste your transcript</div>
       <div style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.55">Works with Copilot meeting summaries, call transcripts, email threads, or raw notes. Claude will extract and structure the insight.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="fld">
-          <label class="flbl">Your name<span class="req">*</span></label>
-          <input class="inp" id="tr-name" placeholder="Steven Cooper" autocomplete="name" value="${ans._trName||''}">
-        </div>
-        <div class="fld">
-          <label class="flbl">Your email<span class="req">*</span></label>
-          <input class="inp" id="tr-email" type="email" placeholder="steven@hspgroup.com" autocomplete="email" value="${ans._trEmail||''}">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="fld">
-          <label class="flbl">Contact name <span style="color:#94a3b8;font-weight:400">(optional)</span></label>
-          <input class="inp" id="tr-contact" placeholder="Maria González" value="${ans._trContact||''}">
-        </div>
-        <div class="fld">
-          <label class="flbl">Company <span style="color:#94a3b8;font-weight:400">(optional)</span></label>
-          <input class="inp" id="tr-company" placeholder="Grupo Fiscal BR" value="${ans._trCompany||''}">
-        </div>
+      <div class="fld" style="margin-bottom:16px">
+        <label class="flbl">Your name<span class="req">*</span></label>
+        <input class="inp" id="tr-name" placeholder="e.g. Steven Cooper" autocomplete="name" value="${ans._trName||''}">
       </div>
       <div class="fld" style="margin-bottom:16px">
-        <label class="flbl">Source</label>
-        <select class="inp" id="tr-source" style="cursor:pointer">
-          ${['LSP','Customer','Sales','Ops','Internal','Other'].map(s=>\`<option value="\${s}" \${(ans._trSource||'LSP')===s?'selected':''}>\${s}</option>\`).join('')}
-        </select>
+        <label class="flbl">Your email<span class="req">*</span></label>
+        <input class="inp" id="tr-email" type="email" placeholder="e.g. steven@hspgroup.com" autocomplete="email" value="${ans._trEmail||''}">
       </div>
       <div class="fld" style="margin-bottom:20px">
         <label class="flbl">Transcript or notes<span class="req">*</span></label>
@@ -552,9 +534,6 @@ function showTranscriptPaste() {
 async function extractTranscript() {
   const name = document.getElementById('tr-name')?.value.trim() || '';
   const email = document.getElementById('tr-email')?.value.trim() || '';
-  const company = document.getElementById('tr-company')?.value.trim() || '';
-  const contact = document.getElementById('tr-contact')?.value.trim() || '';
-  const source = document.getElementById('tr-source')?.value || 'LSP';
   const text = document.getElementById('tr-text')?.value.trim() || '';
   const errEl = document.getElementById('tr-err');
 
@@ -569,16 +548,13 @@ async function extractTranscript() {
     return;
   }
 
+  // Store submitter info (preserved across back navigation)
   ans.submitterName = name;
   ans.submitterEmail = email;
   ans._trName = name;
   ans._trEmail = email;
 
-  // Word count estimate for UX feedback
-  const wordCount = text.split(/\s+/).length;
-  const estParts = Math.ceil(wordCount / 2500);
-  const estTime = wordCount > 2500 ? `~${estParts * 15}–${estParts * 25}s` : '~10–15s';
-
+  // Show loading
   document.getElementById('fbody').innerHTML = `
     <div style="padding:60px 28px;text-align:center">
       <div class="sico" style="animation:spin 1s linear infinite;margin:0 auto 20px">
@@ -587,30 +563,29 @@ async function extractTranscript() {
         </svg>
       </div>
       <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:6px">Claude is reading your transcript…</div>
-      <div style="font-size:13px;color:#94a3b8">${wordCount.toLocaleString()} words${estParts > 1 ? ` · processing in ${estParts} parts` : ''} · estimated ${estTime}</div>
+      <div style="font-size:13px;color:#94a3b8">Extracting insight, contact details, severity and GXM area</div>
     </div>`;
 
   let rawResponse = null;
   try {
-    const sessionMeta = {
-      submitterName: name, submitterEmail: email,
-      company, sourceLabel: source,
-      firstName: contact.split(' ')[0] || '',
-      lastName: contact.split(' ').slice(1).join(' ') || '',
-    };
     const res = await fetch(SHEETS_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'extractMultiple', transcript: text, sessionMeta }),
+      body: JSON.stringify({ action: 'extractMultiple', transcript: text, sessionMeta: { submitterName: name, submitterEmail: email, sourceLabel: 'LSP' } }),
       headers: { 'Content-Type': 'text/plain' }
     });
     rawResponse = await res.text();
     const data = JSON.parse(rawResponse);
-    if (!data.ok) throw new Error(data.error || 'Extraction failed');
-    if (!data.insights || data.insights.length === 0) throw new Error('No insights found in transcript. Try adding more detail about what went wrong.');
-    // Store results globally
-    extractedInsights = data.insights;
-    extractedSessionId = data.sessionId;
-    showReviewScreen();
+    if (!data.ok || !data.extracted) throw new Error(data.error || 'Apps Script returned ok:false with no error message');
+    if (data.insights && data.insights.length > 0) {
+      extractedInsights = data.insights;
+      extractedSessionId = data.sessionId || null;
+      showMultiReviewScreen();
+    } else if (data.extracted) {
+      extracted = data.extracted;
+      showReviewScreen();
+    } else {
+      throw new Error('No insights found in transcript.');
+    }
   } catch (err) {
     console.error('Extraction failed:', err, 'Raw response:', rawResponse);
     const errDetail = (err.message || String(err)).replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -646,56 +621,430 @@ function reviewSelectField(label, key, value, options) {
 }
 
 function showReviewScreen() {
-  const insights = extractedInsights;
-  const SEV_C = {Critical:'#dc2626',Significant:'#d97706',Minor:'#16a34a'};
+  const e = extracted;
+  const SEV_C = {Critical:'#dc2626',Significant:'#d97706',Minor:'#1a9e6e'};
+
+  function reviewField(label, key, value, editable=true) {
+    return `<div class="review-field">
+      <div class="review-label">
+        ${label}
+        ${editable ? `<span class="review-edit" onclick="toggleEdit('${key}')">Edit</span>` : ''}
+      </div>
+      <div class="review-val" id="rv-${key}">${value||'—'}</div>
+      <input class="review-input" id="re-${key}" value="${(value||'').replace(/"/g,'&quot;')}" style="display:none" oninput="extracted['${key}']=this.value;document.getElementById('rv-${key}').textContent=this.value||'—'">
+    </div>`;
+  }
 
   document.getElementById('fbody').innerHTML = `
     <div style="padding:24px 28px">
-      <div style="margin-bottom:20px">
-        <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px">
-          ${insights.length} insight${insights.length>1?'s':''} found
-        </div>
-        <div style="font-size:13px;color:#64748b">Review each one, remove any that don't apply, then submit all at once.</div>
-        ${extractedSessionId ? `<div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#16a34a">
-          <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="9 11 12 14 22 4"/></svg>
-          Linked by session ${extractedSessionId}
-        </div>` : ''}
+      <button onclick="startTranscript()" style="background:none;border:none;font-size:13px;color:#64748b;cursor:pointer;font-family:inherit;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#64748b;fill:none;stroke-width:2"><polyline points="15 18 9 12 15 6"/></svg>
+        Edit transcript
+      </button>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:4px">Review extracted insight</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5">Claude extracted the following from your transcript. Review and edit anything before saving.</div>
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#1a9e6e;fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
+        <span style="font-size:12px;color:#166534;font-weight:500">AI-extracted — click <strong>Edit</strong> on any field to correct it</span>
       </div>
-      <div id="insight-cards" style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
-        ${insights.map((ins, idx) => `
-          <div class="review-card" id="card-${idx}" data-idx="${idx}" style="border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#fff">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:24px;height:24px;border-radius:50%;background:#188A42;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${idx+1}</div>
-                <div style="font-size:13px;font-weight:600;color:#1e293b">${(ins.jobToBeDone||ins.trying||'Insight '+(idx+1)).slice(0,60)}</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;background:${ins.severity==='Critical'?'#fef2f2':ins.severity==='Significant'?'#fffbeb':'#f0fdf4'};color:${SEV_C[ins.severity]||'#888'}">${ins.severity||'—'}</span>
-                <button onclick="removeInsight(${idx})" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:12px;color:#94a3b8;cursor:pointer;font-family:inherit">Remove</button>
-              </div>
-            </div>
-            <div style="padding:16px 18px">
-              <div style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">What happened</div>
-              <div style="font-size:13px;color:#475569;line-height:1.55;margin-bottom:12px">${ins.pain||'—'}</div>
-              ${ins.quote ? `<div style="font-size:13px;color:#475569;font-style:italic;border-left:3px solid #188A42;padding-left:10px;margin-bottom:12px">"${ins.quote}"</div>` : ''}
-              <div style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">AI Summary</div>
-              <div style="font-size:13px;color:#475569;line-height:1.55;margin-bottom:12px;background:#f0fdf4;padding:8px 12px;border-radius:6px">${ins.aiSummary||'—'}</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <span style="font-size:11px;background:#f1f5f9;color:#475569;padding:3px 9px;border-radius:4px;font-weight:500">${ins.serviceLine||'—'}</span>
-                <span style="font-size:11px;background:#f1f5f9;color:#475569;padding:3px 9px;border-radius:4px;font-weight:500">${ins.frequency||'—'}</span>
-                <span style="font-size:11px;background:#f1f5f9;color:#475569;padding:3px 9px;border-radius:4px;font-weight:500">${ins.relatedFeature||'—'}</span>
-              </div>
-            </div>
-          </div>`).join('')}
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px">
-        <button onclick="showTranscriptPaste()" style="padding:12px 24px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:14px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit">← Back</button>
-        <button onclick="submitAllInsights()" style="padding:12px 24px;background:#188A42;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">
-          Submit ${insights.length} insight${insights.length>1?'s':''} →
-        </button>
-      </div>
+
+      ${reviewField('Summary (AI)', 'aiSummary', e.aiSummary)}
+      ${reviewField('Who — contact name', 'firstName', e.firstName)}
+      ${reviewField('Company', 'company', e.company)}
+      ${reviewField('Source type', 'sourceLabel', e.sourceLabel)}
+      ${reviewField('Service line', 'serviceLine', e.serviceLine)}
+      ${reviewField('Friction category', 'frictionCategory', e.frictionCategory||e.frictionCat||e.painPattern||'')}
+      ${reviewField('What they were trying to do', 'trying', e.trying)}
+      ${reviewField('What happened (friction detail)', 'pain', e.pain)}
+      ${reviewField('Direct quote', 'quote', e.quote||'')}
+      ${reviewSelectField('Severity', 'severity', e.severity, ['Critical','Significant','Minor'])}
+      ${reviewSelectField('Frequency', 'frequency', e.frequency, ['Always','Sometimes','First time'])}
+      ${reviewField('GXM area', 'relatedFeature', e.relatedFeature)}
+
+      <button class="bnxt" style="width:100%;margin-top:8px" onclick="submitExtracted()">
+        Save insight →
+      </button>
     </div>`;
 }
+
+function toggleEdit(key) {
+  const valEl = document.getElementById(`rv-${key}`);
+  const inputEl = document.getElementById(`re-${key}`);
+  if (!inputEl) return;
+  const isHidden = inputEl.style.display === 'none';
+  valEl.style.display = isHidden ? 'none' : '';
+  inputEl.style.display = isHidden ? '' : 'none';
+  if (isHidden) { inputEl.focus(); inputEl.select(); }
+}
+
+async function submitExtracted() {
+  const e = extracted;
+
+  // Normalise enums — Claude sometimes returns slight variations
+  const VALID_SOURCES   = ['LSP','Customer','Sales','Ops','Internal','Other'];
+  const VALID_SL        = ['Payroll','Entities','Entities Plus','HR','Books & Tax','Tax','EoR','Not service-specific'];
+  const VALID_FRICTION  = ['Navigation & Findability','System Feedback','Process Complexity','Data & Accuracy','Performance & Reliability','Access & Permissions','Other'];
+  const VALID_SEV       = ['Critical','Significant','Minor'];
+  const VALID_FREQ      = ['Always','Sometimes','First time'];
+  const VALID_AREAS     = ['Access & Entry Points','Dashboard','Entity Management','Process & Workflow Engine','Task Execution Layer','Communication Layer','Calendar & Time Navigation','File Management','Notifications & Feedback','Approval & Release Flow','Employee Self-Service','Data Layer & Matching'];
+
+  function closest(val, list) {
+    if (!val) return '';
+    const v = val.trim();
+    // Exact match first
+    const exact = list.find(x => x.toLowerCase() === v.toLowerCase());
+    if (exact) return exact;
+    // Partial match
+    const partial = list.find(x => x.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(x.toLowerCase()));
+    return partial || '';
+  }
+
+  const sourceLabel   = closest(e.sourceLabel, VALID_SOURCES) || 'Other';
+  const serviceLine   = closest(e.serviceLine, VALID_SL)      || '';
+  const frictionCat   = closest(e.frictionCategory || e.painPattern || e.frictionCat, VALID_FRICTION) || 'Other';
+  const severity      = closest(e.severity, VALID_SEV)        || 'Significant';
+  const frequency     = closest(e.frequency, VALID_FREQ)      || 'Sometimes';
+  const relatedFeature = closest(e.relatedFeature, VALID_AREAS) || '';
+
+  const rec = {
+    submitterName:   ans.submitterName,
+    submitterEmail:  ans.submitterEmail,
+    sourceType:      sourceLabel,
+    sourceLabel:     sourceLabel,
+    firstName:       e.firstName    || '',
+    lastName:        e.lastName     || '',
+    company:         e.company      || '',
+    role:            e.role         || '',
+    contactEmail:    e.contactEmail || '',
+    contact: [e.firstName, e.lastName].filter(Boolean).join(' ') + (e.company ? ', ' + e.company : ''),
+    serviceLine:     serviceLine,
+    trying:          e.trying       || '',
+    painPattern:     frictionCat,
+    frictionCat:     frictionCat,
+    pain:            e.pain         || '',
+    quote:           e.quote        || '',
+    severity:        severity,
+    frequency:       frequency,
+    aiSummary:       e.aiSummary    || '',
+    relatedFeature:  relatedFeature,
+    problemType:     e.problemType  || '',
+    jobToBeDone:     e.jobToBeDone  || '',
+    confidenceScore: e.confidenceScore || 0.7,
+    date:  new Date().toISOString().split('T')[0],
+    ts:    Date.now(),
+    id:    Date.now().toString(36),
+    status: 'new',
+    captureMethod: 'transcript',
+  };
+  await doSubmit(rec);
+}
+
+// ════════════════════════════════════════════
+// SHARED SUBMIT + SUCCESS
+// ════════════════════════════════════════════
+async function doSubmit(prebuiltRec) {
+  let rec;
+
+  if (prebuiltRec) {
+    // Transcript mode — record already built
+    rec = prebuiltRec;
+  } else {
+    // Guided mode — build from ans
+    const sourceLabel = ans.sourceType === 'Other' ? (ans.otherSource || 'Other') : ans.sourceType;
+    rec = {
+      ...ans,
+      sourceLabel,
+      painPattern: ans.painPattern || ans.frictionCat || '',
+      date: new Date().toISOString().split('T')[0],
+      ts: Date.now(),
+      id: Date.now().toString(36),
+      status: 'new',
+      captureMethod: 'guided',
+      aiSummary: '',
+      relatedFeature: '',
+      problemType: '',
+      jobToBeDone: '',
+      confidenceScore: 0.7,
+    };
+    Object.keys(rec).filter(k => k.startsWith('_')).forEach(k => delete rec[k]);
+  }
+
+  showChrome(false);
+
+  // Always enrich — guided needs aiSummary, transcript may already have it but needs recommendation
+  const needsEnrich = !prebuiltRec || !rec.aiSummary || rec.aiSummary.length < 15;
+  if (needsEnrich) {
+    showLoading('Claude is analysing your insight…', 'Classifying the GXM area and generating a summary.');
+    try {
+      const enrichRes = await fetch(SHEETS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'enrich', insight: rec }),
+        headers: { 'Content-Type': 'text/plain' }
+      });
+      const enrichData = await enrichRes.json();
+      if (enrichData.ok && enrichData.enriched) {
+        const en = enrichData.enriched;
+        rec.relatedFeature  = en.relatedFeature  || rec.relatedFeature || '';
+        rec.aiSummary       = en.aiSummary        || rec.aiSummary || '';
+        rec.problemType     = en.problemType      || rec.problemType || '';
+        rec.jobToBeDone     = en.jobToBeDone      || rec.jobToBeDone || '';
+        rec.confidenceScore = en.confidenceScore  || rec.confidenceScore || 0.7;
+      } else {
+        rec.aiSummary = rec.aiSummary || (rec.pain || '').slice(0, 120);
+      }
+    } catch (err) {
+      rec.aiSummary = rec.aiSummary || (rec.pain || '').slice(0, 120);
+    }
+  }
+
+  // Generate recommendation at submission time so dashboard has it immediately
+  showLoading('Generating product recommendation…', 'Claude is creating actionable next steps.');
+  try {
+    const recPrompt = `GXM senior PM. Insight: ${rec.aiSummary||rec.pain||''} | ${rec.serviceLine||''} | ${rec.severity||''} ${rec.frequency||''} | ${rec.relatedFeature||''}${rec.quote?' | Quote: "'+rec.quote+'"':''}.
+
+Reply with 4 short sections using ## headers:
+## Root Cause
+## Recommended Action
+## Priority Rationale
+## Success Metric
+
+Be specific and direct. Max 300 words total.`;
+
+    const recRes = await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'generateRecommendation', prompt: recPrompt, insightId: rec.id }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const recData = await recRes.json();
+    if (recData.ok && recData.recommendation) {
+      rec.recommendation = recData.recommendation;
+    }
+  } catch (err) {
+    console.warn('Recommendation generation failed:', err);
+    // Non-fatal — dashboard will generate on demand
+  }
+
+  showLoading('Saving insight…', 'Almost done.');
+
+  // Save to localStorage
+  const all = loadAll();
+  all.push(rec);
+  saveAll(all);
+
+  // Save to Sheets
+  let sheetsSaved = false;
+  try {
+    const res = await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify(rec),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const data = await res.json();
+    sheetsSaved = data.ok === true;
+  } catch (err) {
+    console.warn('Sheets POST failed:', err);
+  }
+
+  const savedMsg = sheetsSaved ? 'Saved and shared with your team.' : 'Saved locally — will sync when Sheets is reachable.';
+
+  document.getElementById('fbody').innerHTML = `
+    <div class="succ">
+      <div class="sico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:16px">Insight captured</div>
+      ${rec.aiSummary ? `
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:14px;text-align:left">
+        <div style="font-size:10.5px;font-weight:700;color:#1a9e6e;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Summary</div>
+        <div style="font-size:13.5px;color:#1e293b;line-height:1.6">${rec.aiSummary}</div>
+      </div>` : ''}
+      ${rec.relatedFeature ? `
+      <div style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#166534;margin-bottom:16px">
+        <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#1a9e6e;fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        ${rec.relatedFeature}
+      </div>` : ''}
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:20px">${savedMsg}</div>
+      <button class="bnxt" style="width:100%;max-width:260px" onclick="showModeSelect()">Log another insight</button>
+    </div>`;
+}
+
+function showLoading(title, sub) {
+  document.getElementById('fbody').innerHTML = `
+    <div style="padding:60px 28px;text-align:center">
+      <div class="sico" style="animation:spin 1s linear infinite;margin:0 auto 20px">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#1a9e6e;fill:none;stroke-width:2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:6px">${title}</div>
+      <div style="font-size:13px;color:#94a3b8">${sub}</div>
+    </div>`;
+}
+
+// ── Storage ──
+function loadAll() { try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return [];} }
+function saveAll(data) { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){} }
+
+// ── Init ──
+showModeSelect();
+
+// ---- Multi-insight functions (ASCII only, no template literals) ----
+function removeInsight(idx) {
+  extractedInsights.splice(idx, 1);
+  if (extractedInsights.length === 0) { showTranscriptPaste(); return; }
+  showMultiReviewScreen();
+}
+
+function showMultiReviewScreen() {
+  var ins = extractedInsights;
+  var SC = {Critical:'#dc2626', Significant:'#d97706', Minor:'#1a9e6e'};
+  var SB = {Critical:'#fef2f2', Significant:'#fffbeb', Minor:'#f0fdf4'};
+
+  var sessionHtml = '';
+  if (extractedSessionId) {
+    sessionHtml = '<div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#16a34a">Session: ' + extractedSessionId + '</div>';
+  }
+
+  var cards = '';
+  for (var i = 0; i < ins.length; i++) {
+    var it = ins[i];
+    var sc = SC[it.severity] || '#888';
+    var sb = SB[it.severity] || '#f1f5f9';
+    var title = (it.jobToBeDone || it.trying || ('Insight ' + (i + 1))).slice(0, 60);
+    var quoteHtml = it.quote
+      ? '<div style="font-size:13px;color:#475569;font-style:italic;border-left:3px solid #1a9e6e;padding-left:10px;margin-bottom:10px">' + it.quote + '</div>'
+      : '';
+    var summaryHtml = it.aiSummary
+      ? '<div style="font-size:13px;color:#16a34a;background:#f0fdf4;padding:8px 12px;border-radius:6px;margin-bottom:10px">' + it.aiSummary + '</div>'
+      : '';
+    cards += '<div style="border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#fff;margin-bottom:14px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0">'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+          + '<div style="width:22px;height:22px;border-radius:50%;background:#1a9e6e;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + (i + 1) + '</div>'
+          + '<div style="font-size:13px;font-weight:600;color:#1e293b">' + title + '</div>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+          + '<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:' + sb + ';color:' + sc + '">' + (it.severity || '') + '</span>'
+          + '<button onclick="removeInsight(' + i + ')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;font-size:12px;color:#94a3b8;cursor:pointer;font-family:inherit">Remove</button>'
+        + '</div>'
+      + '</div>'
+      + '<div style="padding:14px 16px">'
+        + '<div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">What happened</div>'
+        + '<div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:10px">' + (it.pain || '') + '</div>'
+        + quoteHtml
+        + summaryHtml
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          + '<span style="font-size:11px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px">' + (it.serviceLine || '') + '</span>'
+          + '<span style="font-size:11px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px">' + (it.frequency || '') + '</span>'
+          + '<span style="font-size:11px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px">' + (it.relatedFeature || '') + '</span>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }
+
+  var plural = ins.length === 1 ? '' : 's';
+  document.getElementById('fbody').innerHTML = '<div style="padding:28px 32px">'
+    + '<div style="margin-bottom:20px">'
+      + '<div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px">' + ins.length + ' insight' + plural + ' found</div>'
+      + '<div style="font-size:13px;color:#64748b">Review and remove any that do not apply, then submit.</div>'
+      + sessionHtml
+    + '</div>'
+    + cards
+    + '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">'
+      + '<button onclick="showTranscriptPaste()" style="padding:10px 20px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:14px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit">Back</button>'
+      + '<button onclick="submitAllInsights()" style="padding:10px 22px;background:#1a9e6e;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">Submit ' + ins.length + ' insight' + plural + '</button>'
+    + '</div>'
+  + '</div>';
+}
+
+async function submitAllInsights() {
+  var VALID_SL = ['Payroll','Entities','Entities Plus','HR','Books & Tax','Tax','EoR','Not service-specific'];
+  var VALID_SEV = ['Critical','Significant','Minor'];
+  var VALID_FREQ = ['Always','Sometimes','First time'];
+  var VALID_AREAS = ['Access & Entry Points','Dashboard','Entity Management','Process & Workflow Engine',
+    'Task Execution Layer','Communication Layer','Calendar & Time Navigation','File Management',
+    'Notifications & Feedback','Approval & Release Flow','Employee Self-Service','Data Layer & Matching'];
+  var VALID_FRICTION = ['Navigation & Findability','System Feedback','Process Complexity',
+    'Data & Accuracy','Performance & Reliability','Access & Permissions','Other'];
+  var VALID_SOURCES = ['LSP','Customer','Sales','Ops','Internal','Other'];
+
+  function cl(v, list) {
+    if (!v) return '';
+    var lv = v.trim().toLowerCase();
+    for (var i = 0; i < list.length; i++) { if (list[i].toLowerCase() === lv) return list[i]; }
+    for (var i = 0; i < list.length; i++) { if (list[i].toLowerCase().indexOf(lv) >= 0 || lv.indexOf(list[i].toLowerCase()) >= 0) return list[i]; }
+    return list[list.length - 1] || '';
+  }
+
+  document.getElementById('fbody').innerHTML = '<div style="padding:60px 32px;text-align:center">'
+    + '<div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:6px">Saving ' + extractedInsights.length + ' insights...</div>'
+    + '<div style="font-size:13px;color:#94a3b8">Please wait</div></div>';
+
+  var now = Date.now();
+  var records = [];
+  for (var i = 0; i < extractedInsights.length; i++) {
+    var e = extractedInsights[i];
+    records.push({
+      id: (now + i).toString(36),
+      date: new Date().toISOString().split('T')[0],
+      ts: now + i,
+      submitterName: ans.submitterName || '',
+      submitterEmail: ans.submitterEmail || '',
+      sessionId: extractedSessionId || '',
+      sourceType: cl(e.sourceLabel, VALID_SOURCES) || 'Other',
+      sourceLabel: cl(e.sourceLabel, VALID_SOURCES) || 'Other',
+      firstName: e.firstName || '',
+      lastName: e.lastName || '',
+      company: e.company || '',
+      role: e.role || '',
+      contactEmail: e.contactEmail || '',
+      serviceLine: cl(e.serviceLine, VALID_SL) || '',
+      trying: e.trying || '',
+      painPattern: cl(e.frictionCategory || e.painPattern, VALID_FRICTION) || 'Other',
+      pain: e.pain || '',
+      quote: e.quote || '',
+      severity: cl(e.severity, VALID_SEV) || 'Significant',
+      frequency: cl(e.frequency, VALID_FREQ) || 'Sometimes',
+      aiSummary: e.aiSummary || '',
+      relatedFeature: cl(e.relatedFeature, VALID_AREAS) || '',
+      problemType: e.problemType || '',
+      jobToBeDone: e.jobToBeDone || '',
+      confidenceScore: parseFloat(e.confidenceScore) || 0.7,
+      status: 'new',
+      captureMethod: 'transcript',
+      recommendation: ''
+    });
+  }
+
+  var all = loadAll();
+  for (var i = 0; i < records.length; i++) all.push(records[i]);
+  saveAll(all);
+
+  var sheetsSaved = false;
+  try {
+    var res = await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'insertBatch', insights: records }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    var data = await res.json();
+    sheetsSaved = data.ok === true;
+  } catch(err) { console.warn('Batch insert failed:', err); }
+
+  var plural = records.length === 1 ? '' : 's';
+  var msg = sheetsSaved
+    ? records.length + ' insight' + plural + ' saved and shared with your team.'
+    : records.length + ' insight' + plural + ' saved locally.';
+
+  document.getElementById('fbody').innerHTML = '<div class="succ">'
+    + '<div class="sico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>'
+    + '<div style="font-size:20px;font-weight:700;color:#1e293b;margin-bottom:8px">' + records.length + ' insight' + plural + ' captured</div>'
+    + '<div style="font-size:13px;color:#64748b;margin-bottom:6px">' + msg + '</div>'
+    + '<div style="display:flex;gap:10px;margin-top:24px;justify-content:center;flex-wrap:wrap">'
+      + '<a href="gxm-insight-form.html" style="padding:10px 22px;background:#1a9e6e;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">Log another</a>'
+      + '<a href="gxm-dashboard.html" style="padding:10px 22px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none">View dashboard</a>'
+    + '</div></div>';
+}
+
 </script>
 </body>
 </html>
